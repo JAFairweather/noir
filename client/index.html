@@ -73,9 +73,10 @@
   }
   .drum-line {
     position: absolute;
-    width: min(72ch, 84%);
+    left: 13%;
+    width: min(68ch, 72%);
     text-align: left;
-    font-size: 17px; line-height: 1.5;
+    font-size: 15px; line-height: 1.5;
     white-space: pre-wrap;
     color: var(--accent);
     backface-visibility: hidden;
@@ -84,8 +85,8 @@
   .drum-line.focal { color: #f4efe4; text-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent); }
   #flat {
     position: absolute; inset: 0; overflow-y: auto;
-    padding: 24px clamp(16px, 12vw, 140px) 40vh;
-    font-size: 16px; line-height: 1.6;
+    padding: 24px clamp(24px, 14vw, 180px) 40vh;
+    font-size: 15px; line-height: 1.6;
   }
   .flat-line { white-space: pre-wrap; }
   .hidden { display: none !important; }
@@ -127,7 +128,7 @@
   footer .prompt { color: var(--accent); }
   #cmd {
     flex: 1; background: transparent; border: none; outline: none;
-    color: #f4efe4; font-family: var(--era-font); font-size: 17px;
+    color: #f4efe4; font-family: var(--era-font); font-size: 16px;
     caret-shape: block;
   }
   footer .hint { color: var(--accent-dim); font-size: 11px; letter-spacing: 0.1em; }
