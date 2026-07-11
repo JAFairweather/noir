@@ -13,7 +13,8 @@
 
 import { ERAS, duotone } from './art.mjs'
 
-const W = 960, H = 540
+const W = 960, H = 540           // painter coordinate space
+const DPR = 2                    // render at 2x so fullscreen stays crisp
 
 function hash(str) {
   let h = 2166136261
@@ -234,12 +235,14 @@ export function setScene(kind, eraId, seed = '') {
   currentKind = kind + seed
 
   const canvas = document.createElement('canvas')
-  canvas.width = W; canvas.height = H
+  canvas.width = W * DPR; canvas.height = H * DPR
   const ctx = canvas.getContext('2d')
+  ctx.scale(DPR, DPR)
   const rand = mulberry32(hash(kind + '|' + seed))
   paint(ctx, rand)
 
-  const toned = duotone(canvas, eraId, { grain: 0.05 })
+  // brighter than the model-art defaults: backdrops must read through the drum
+  const toned = duotone(canvas, eraId, { grain: 0.035, gain: 1.45, lift: 0.07, vignette: 0.38 })
   toned.className = 'backdrop-canvas'
   const holder = document.getElementById('backdrop')
   const old = [...holder.querySelectorAll('.backdrop-canvas')]

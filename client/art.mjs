@@ -53,7 +53,7 @@ export function applyEra(eraId) {
  * Takes anything drawable (ImageBitmap, <img>, canvas), returns a canvas
  * mapped to the era's tone over near-black, with grain and vignette.
  */
-export function duotone(source, eraId, { grain = 0.06 } = {}) {
+export function duotone(source, eraId, { grain = 0.06, gain = 1, lift = 0, vignette = 0.55 } = {}) {
   const era = ERAS[eraId] ?? ERAS['berlin-1938']
   const [r2, g2, b2] = hex(era.accent)
   const [r1, g1, b1] = hex(era.ink)
@@ -67,6 +67,7 @@ export function duotone(source, eraId, { grain = 0.06 } = {}) {
   for (let i = 0; i < d.length; i += 4) {
     let y = (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]) / 255
     y = y * y * (3 - 2 * y)                             // tone curve: crush + lift
+    y = y * gain + lift                                 // exposure push (backdrops)
     const n = (Math.random() - 0.5) * grain             // grain
     const t = Math.min(1, Math.max(0, y + n))
     d[i] = r1 + (r2 - r1) * t
@@ -79,7 +80,7 @@ export function duotone(source, eraId, { grain = 0.06 } = {}) {
     canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.35,
     canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) * 0.72)
   g.addColorStop(0, 'rgba(0,0,0,0)')
-  g.addColorStop(1, 'rgba(0,0,0,0.55)')
+  g.addColorStop(1, `rgba(0,0,0,${vignette})`)
   ctx.fillStyle = g
   ctx.fillRect(0, 0, canvas.width, canvas.height)
   return canvas
