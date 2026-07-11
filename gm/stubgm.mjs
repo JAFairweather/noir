@@ -116,6 +116,10 @@ export class StubGM {
     const t = normalize(text)
     if (!t) return
 
+    if (t === 'HELP' && this.case.helpText) {
+      return this.dispatch(this.case.helpText)
+    }
+
     // Homage winks (§8) — one dry line each, never load-bearing.
     if (t === 'XYZZY') {
       return this.dispatch('Nothing happens. This is not that kind of cave, agent. It was worth trying exactly once.')
@@ -143,6 +147,13 @@ export class StubGM {
       if (edge.match(t)) {
         await this.grantScope(edge.to)
         return this.dispatch(edge.response, { granted: edge.to })
+      }
+      // A recognizable wrong attempt at this edge (e.g. a bad timeline order)
+      // gets the edge's own rebuke instead of the generic one.
+      if (edge.failMatch?.(t)) {
+        this.addHeat(this.case.heat.wrongAnswer)
+        await this.dispatch(edge.failResponse)
+        return this.checkHeat()
       }
     }
 

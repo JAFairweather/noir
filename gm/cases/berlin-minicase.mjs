@@ -1,5 +1,6 @@
-// berlin-minicase.mjs — the hand-authored M1 case: "The Last Visa" (mini).
-// Five scopes, one burnable informant, one endgame accusation, one Vigenère.
+// berlin-minicase.mjs — the hand-authored M1 case: "The Last Visa".
+// Eight scopes, two red herrings, one burnable informant, a cipher, a
+// timeline reconstruction, and an accusation endgame.
 //
 // This file is the *skeleton* in spec §4 terms: topology, documents, answers,
 // culprit — all fixed. The stub GM serves it verbatim; from M3 the director
@@ -8,7 +9,7 @@
 // Scope ids are opaque on the wire (spec §4/SPEC.md): the human names below
 // never appear in a d tag — the GM maps them to random ids per session.
 
-export const CASE_ID = 'berlin-last-visa-mini'
+export const CASE_ID = 'berlin-last-visa'
 export const ERA = 'berlin-1938'
 
 // Vigenère, key SILBER (Weiss's workname, stated in the briefing footer):
@@ -32,6 +33,9 @@ export const scopes = {
         'ciphered under his workname. Decode it and you have his fallback.',
         '',
         '    INTERCEPT 11/8:  RWZMS TCMCO MEW',
+        '',
+        'The trail may also touch the travel office on Kantstrasse — VOSS,',
+        'the proprietor, sells more than tickets. Tread there if you must.',
         '',
         'Report in plain language. Submit the decoded fallback when you have it.',
         '',
@@ -61,6 +65,27 @@ export const scopes = {
     },
   },
 
+  kasse: {
+    name: 'Reisebüro Voss — Kantstrasse',
+    burnable: false,
+    payload: {
+      kind: 'dossier',
+      title: 'VISIT — REISEBÜRO VOSS, KANTSTRASSE 112',
+      body: [
+        'Voss sells queue-jumping: an appointment at the visa section window',
+        'for triple the official fee, cash, no receipt. Shabby, profitable,',
+        'and — you conclude after an hour of his sweating — not our man.',
+        'He buys access. He has none of his own to sell.',
+        '',
+        'One thing sticks. His appointment book, Thursday last:',
+        '"WEISS — 16:00 — single passage, Hamburg–New York, paid in full."',
+        '',
+        'The courier bought himself a ticket out. Three days before he',
+        'went quiet. A man planning to run keeps his own schedule.',
+      ].join('\n'),
+    },
+  },
+
   adler: {
     name: 'Informant — Frau Adler',
     burnable: true,
@@ -76,10 +101,58 @@ export const scopes = {
         '',
         'Which one? I never learned his name. But he was DUTY those nights —',
         'they come straight from the evening window, still wearing the badge.',
-        'Check who held the Tuesday window. That is your seller."',
+        'Check who held the Tuesday window. That is your seller.',
         '',
-        'She will not repeat any of this to anyone with a uniform.',
+        'And you are not the first to watch this room. Your own people kept',
+        'streetwork on Josty for a month. Ask Station for the watcher log."',
+        '',
         'Handle her gently. She is the only pair of eyes we have.',
+      ].join('\n'),
+    },
+  },
+
+  watcher: {
+    name: 'Station Streetwork — Watcher Log',
+    burnable: false,
+    payload: {
+      kind: 'evidence',
+      title: 'WATCHER LOG — JOSTY DETAIL (EXTRACTS, OUT OF ORDER)',
+      body: [
+        'Three index cards survive from the last Tuesday. The clerk who',
+        'filed them dropped the box. Reconstruct the evening; submit the',
+        'order (e.g. "timeline C A B").',
+        '',
+        '  [A]  23:40 — Subject WEISS departs Josty alone. Carrying nothing.',
+        '       Turns east, toward the freight side of Anhalter.',
+        '',
+        '  [B]  21:15 — Subject WEISS arrives Josty. Courier satchel,',
+        '       left hand. Takes the last table. Orders nothing.',
+        '',
+        '  [C]  22:30 — Second man joins last table. Armband, embassy',
+        '       cut. Satchel moves under the table. An envelope crosses it.',
+      ].join('\n'),
+    },
+  },
+
+  freight: {
+    name: 'Anhalter Freight Sidings',
+    burnable: false,
+    payload: {
+      kind: 'evidence',
+      title: 'FINDINGS — ANHALTER BAHNHOF, FREIGHT SIDE',
+      body: [
+        'A yard man found him Wednesday, between the coal wagons.',
+        'The satchel was gone. The list was not — Weiss kept it separate,',
+        'sewn into his coat, the way he was trained to.',
+        '',
+        'Forty names, safe. The blanks are still moving.',
+        '',
+        'In his breast pocket, a torn corner of visa stock. Printed edge:',
+        'evening-window series. Whoever met him at Josty came straight',
+        'from the Tuesday duty window — and went back to it.',
+        '',
+        'He was running, and he stayed one more Tuesday to finish the job.',
+        'Remember that, whatever the file ends up saying about him.',
       ].join('\n'),
     },
   },
@@ -117,9 +190,9 @@ export const scopes = {
         'The forty names are recovered. Thirty-one of the visas will still',
         'be honored. That is the arithmetic you get to keep.',
         '',
-        'Weiss was found at the Anhalter freight sidings. He had kept the',
-        'list separate from the blanks, the way he was trained to.',
-        'The list is why thirty-one families board a train this winter.',
+        'Weiss had a ticket out — Hamburg to New York, paid in full — and',
+        'he stayed one more Tuesday anyway. The list is why thirty-one',
+        'families board a train this winter.',
         '',
         'Station notes your handling of the Adler asset in the file.',
         'The file does not say thank you. It never does.',
@@ -128,8 +201,17 @@ export const scopes = {
   },
 }
 
+// Timeline reconstruction (§5.6): the true order of the watcher cards.
+const timelineAnswer = 'BCA'
+const timelineAttempt = (t) => {
+  const kws = ['TIMELINE', 'ORDER', 'SEQUENCE'].map(k => t.indexOf(k)).filter(i => i >= 0)
+  if (!kws.length) return null
+  return t.slice(Math.min(...kws) + 5).replace(/[^ABC]/g, '')
+}
+
 // The case graph: how field reports unlock scopes. `match` runs against a
 // normalized command (uppercased, punctuation stripped). First hit wins.
+// `failMatch`/`failResponse`: a recognizable wrong attempt at this edge.
 export const edges = [
   {
     to: 'locker',
@@ -138,10 +220,33 @@ export const edges = [
     response: 'The attendant takes your pfennigs without looking. Locker nine opens on the second key.',
   },
   {
+    to: 'kasse',
+    requires: ['briefing'],
+    match: (t) => t.includes('VOSS') || t.includes('REISEBURO') || t.includes('KANTSTRASSE') || (t.includes('TRAVEL') && (t.includes('OFFICE') || t.includes('AGENT'))),
+    response: 'Kantstrasse 112. Dust on the model liners in the window, none on the appointment book.',
+  },
+  {
     to: 'adler',
     requires: ['locker'],
     match: (t) => t.includes('ADLER') || (t.includes('JOSTY') && (t.includes('COAT') || t.includes('ASK') || t.includes('TICKET'))),
     response: 'Café Josty, four in the afternoon. The coat-check counter, and the woman Weiss trusted behind it.',
+  },
+  {
+    to: 'watcher',
+    requires: ['adler'],
+    match: (t) => t.includes('WATCHER') || t.includes('STREETWORK') || (t.includes('STATION') && t.includes('LOG')),
+    response: 'Station is not pleased to be asked, which is how you know the log exists. A box of index cards, dropped once.',
+  },
+  {
+    to: 'freight',
+    requires: ['watcher'],
+    match: (t) => timelineAttempt(t) === timelineAnswer,
+    failMatch: (t) => {
+      const a = timelineAttempt(t)
+      return a !== null && a.length >= 2 && a !== timelineAnswer
+    },
+    failResponse: 'You shuffle the cards that way and the evening argues back: a man cannot leave before he arrives. (Heat rises.)',
+    response: 'Arrive, meet, depart — 21:15, 22:30, 23:40. He walked east toward the freight side, and now so do you.',
   },
   {
     to: 'roster',
@@ -154,7 +259,7 @@ export const edges = [
 // The accusation endgame (§5.8). Culprit fixed by the skeleton.
 export const accusation = {
   culprit: 'BRANDT',
-  wrong: ['KELLER', 'ADLER', 'WEISS'],
+  wrong: ['KELLER', 'VOSS', 'ADLER', 'WEISS'],
   unlocks: 'resolution',
   correctResponse: 'Station moves before the evening window opens.',
   wrongResponse: (name) =>
@@ -178,6 +283,20 @@ export const burnTriggers = {
 // Heat deltas (§5.4, mini version).
 export const heat = { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, max: 100, tail: 60 }
 
+export const helpText = [
+  'FIELD PROCEDURE — what Station expects of a report:',
+  '',
+  '  Speak plainly. The desk reads intent, not syntax.',
+  '  GO somewhere, ASK someone, CHECK a thing, OPEN what is closed.',
+  '  Decoded a cipher? Submit the plaintext.',
+  '  Reconstructing an evening? "timeline A B C" in the order you believe.',
+  '  Certain? "accuse <name>" — you file that once, and you live with it.',
+  '',
+  'Your notebook (right) holds every scope you have been granted.',
+  'Click an entry to reread it on the drum. Burned entries are gone forward —',
+  'you keep exactly what you already read. Mind the heat.',
+].join('\n')
+
 // Fair-play commitment (§4.3): sha256 of this canonical string is published
 // in the case's public kind-0 before play begins.
 export const solutionCommitment = {
@@ -193,5 +312,5 @@ export const opening = [
   'encrypted on relays that would sell you for the price of the coal.',
   '',
   'Your notebook holds what you have been granted. Nothing else is yours.',
-  'Read the briefing. Type plainly. Mind the heat.',
+  'Read the briefing. Type plainly. Type "help" for field procedure.',
 ].join('\n')

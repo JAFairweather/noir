@@ -46,7 +46,7 @@ const say = async (text) => {
 console.log('\n1. GM authors the world before play')
 const { commitment } = await gm.start(playerPub)
 const worldEvents = relay.query({ kinds: [30440] })
-check('all five scopes published as 30440 before first command', worldEvents.length === 5)
+check('all eight scopes published as 30440 before first command', worldEvents.length === 8)
 check('inciting grant received', (await notebook()).length === 1)
 check('briefing decrypts', (await readable())[0]?.data?.title?.includes('BRIEFING'))
 
@@ -58,16 +58,29 @@ check('kind-0 carries solution commitment', (() => {
 check('commitment matches the skeleton solution', commitment === await sha256hex(berlin.solutionCommitment.canonical()))
 
 console.log('\n3. Progression is grant issuance')
+await say('help')
+check('help costs nothing', gm.heat === 0 && (await notebook()).length === 1)
 await say('The intercept decodes to zoo locker nine. Going there now.')
 check('cipher answer grants the locker scope', (await notebook()).length === 2)
 await say('completely wrong nonsense answer')
 check('wrong answer raises heat, grants nothing', gm.heat === berlin.heat.wrongAnswer && (await notebook()).length === 2)
+await say('Pay a visit to Voss at the travel office')
+check('red herring (Reisebüro Voss) is reachable', (await notebook()).length === 3)
 await say('Take the cloakroom ticket to Josty and ask Adler about Weiss')
-check('informant scope granted', (await notebook()).length === 3)
+check('informant scope granted', (await notebook()).length === 4)
 const adlerBefore = (await readable()).find(s => s.data?.kind === 'npc')
 check('informant statement decrypts', adlerBefore?.status === 'ok')
 
-console.log('\n4. The burn is a real rotation + 441')
+console.log('\n4. Timeline reconstruction')
+await say('ask station for the watcher log')
+check('watcher log granted', (await notebook()).some(g => g.scopeName?.includes('Watcher')))
+const heatBefore = gm.heat
+await say('timeline A B C')
+check('wrong order rebuked with heat', gm.heat === heatBefore + berlin.heat.wrongAnswer)
+await say('timeline B C A')
+check('correct order grants the freight scope', (await notebook()).some(g => g.scopeName?.includes('Freight')))
+
+console.log('\n5. The burn is a real rotation + 441')
 await say('press Adler for the name')
 const afterBurn = await readable()
 const adlerAfter = afterBurn.find(g => g.scopeId === adlerBefore.scopeId)
@@ -76,7 +89,7 @@ const burns = await receiveRumors(relay, player, [KIND_BURN_NOTICE])
 check('kind-441 burn notice delivered', burns.length === 1 && JSON.parse(burns[0].content).reason.includes('pressed'))
 check('441 addresses the rotated scope', burns[0].tags.find(t => t[0] === 'a')[1].endsWith(adlerBefore.scopeId))
 
-console.log('\n5. Finish the case anyway')
+console.log('\n6. Finish the case anyway')
 await say('check who held the tuesday duty window')
 check('roster granted after the burn', (await notebook()).some(g => g.scopeName?.includes('Roster')))
 await say('accuse Brandt')
@@ -85,11 +98,11 @@ check('accusation grants the resolution scope', final.some(s => s.data?.kind ===
 const dispatches = await receiveRumors(relay, player, [KIND_GM_DISPATCH])
 check('case marked solved', dispatches.some(d => JSON.parse(d.content).ended === 'solved'))
 
-console.log('\n6. Adversarial observer (what a relay operator learns)')
+console.log('\n7. Adversarial observer (what a relay operator learns)')
 // The case's *title* is public by design (it lives in the kind-0 alongside
 // the commitment). Its *contents* — people, places, answers — must not be.
 const view = relay.observerView()
-const leaked = JSON.stringify(view).match(/BRANDT|KELLER|ADLER|WEISS|JOSTY|SILBER|LOCKER|ROSTER/i)
+const leaked = JSON.stringify(view).match(/BRANDT|KELLER|ADLER|WEISS|JOSTY|SILBER|LOCKER|ROSTER|VOSS|ANHALTER/i)
 check('no case secrets visible to the relay', !leaked, leaked ? `leaked: ${leaked[0]}` : '')
 check('grants indistinguishable (only 1059 wraps visible)', view.every(e => [0, 1059, 30440].includes(e.kind)))
 
