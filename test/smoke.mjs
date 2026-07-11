@@ -163,5 +163,23 @@ console.log('\n10. Scripted interrogation (dialogue state, hints)')
   })())
 }
 
+console.log('\n11. Director voice seam fails soft')
+{
+  const r4 = new Relay()
+  const p4 = generateSecretKey()
+  const gmV = new StubGM(r4, berlin)
+  await gmV.start(getPublicKey(p4))
+  gmV.voice = async () => { throw new Error('service down') }
+  await sendFieldReport(r4, p4, gmV.pub, 'the intercept decodes to zoo locker nine', berlin.CASE_ID)
+  await gmV.poll()
+  const d = await receiveRumors(r4, p4, [KIND_GM_DISPATCH])
+  check('voice failure falls back to scripted prose', d.some(x => JSON.parse(x.content).text.includes('pfennigs')))
+  gmV.voice = async ({ canned }) => 'THE DIRECTOR SPEAKS: ' + canned.slice(0, 20)
+  await sendFieldReport(r4, p4, gmV.pub, 'ask adler at josty about weiss', berlin.CASE_ID)
+  await gmV.poll()
+  const d2 = await receiveRumors(r4, p4, [KIND_GM_DISPATCH])
+  check('voice rewrites the beat when available', d2.some(x => JSON.parse(x.content).text.startsWith('THE DIRECTOR SPEAKS')))
+}
+
 console.log(`\n${passed} passed, ${failed} failed`)
 process.exit(failed ? 1 : 0)

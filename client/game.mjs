@@ -24,6 +24,7 @@ import { Wheel } from './wheel.mjs'
 import { Score } from './audio.mjs'
 import { applyEra } from './art.mjs'
 import { setScene } from './scenes.mjs'
+import { detectDirector, makeVoice } from './director.mjs'
 import { showBurnCard, showEndCard, showSaveCard, showCaseSelect } from './burn.mjs'
 import { getOrCreatePlayerKey, getFlatMode, setFlatMode, getCaseId, setCaseId, getTradecraft, setTradecraft } from './settings.mjs'
 
@@ -247,6 +248,8 @@ $('#score-toggle').addEventListener('change', (e) => {
 
 // ------------------------------------------------------------------- start
 
+let director = null   // resolved once at boot
+
 function applyCase(mod) {
   CASE = mod
   setCaseId(mod.CASE_ID)
@@ -256,10 +259,25 @@ function applyCase(mod) {
   setScene(mod.openingScene ?? 'street', mod.ERA, mod.CASE_ID)
 }
 
+// The Director voices beats when its local service is running (M3);
+// otherwise the scripted prose plays. Attached to whatever GM is current.
+function attachVoice() {
+  if (!director?.live) return
+  gm.voice = makeVoice({
+    url: director.url,
+    era: CASE.ERA,
+    caseTitle: CASE.scopes.briefing?.name ?? CASE.CASE_ID,
+    getTail: () => transcript.slice(-6).map(l => l.text).filter(t => t.length > 2),
+  })
+  $('#director-status').textContent = `DIRECTOR: ${director.model}`
+  $('#director-status').classList.remove('hidden')
+}
+
 async function freshStart(caseId) {
   clearSave()
   applyCase(CASES[caseId] ?? CASE)
   gm = new StubGM(relay, CASE)
+  attachVoice()
   put('N O I R', 'title-line')
   put('Cases you unlock. Assets you burn.', 'gm dim')
   await gm.start(playerPub)
@@ -271,6 +289,7 @@ async function resumeSave(save) {
   applyCase(CASES[save.caseId])
   relay.events = save.events
   gm = StubGM.restore(relay, CASE, save.gm)
+  attachVoice()
   gameOver = save.gameOver
   save.seen.forEach(id => seen.add(id))
   save.knownScopes.forEach(id => knownScopes.add(id))
@@ -286,6 +305,7 @@ async function resumeSave(save) {
 
 const pickCase = () => showCaseSelect(CASE_LIST, (id) => freshStart(id))
 applyEra(CASE.ERA)
+director = await detectDirector()
 $('#npub').textContent = nip19.npubEncode(playerPub).slice(0, 20) + '…' + nip19.npubEncode(playerPub).slice(-6)
 $('#npub').title = nip19.npubEncode(playerPub) +
   '\n\nA per-browser field identity for the demo. Sign-in with a NIP-07 extension' +

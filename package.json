@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "smoke": "node test/smoke.mjs",
-    "serve": "npx http-server -c-1 . -o /client/"
+    "serve": "npx http-server -c-1 . -o /client/",
+    "gm": "node gm/director-service.mjs"
   },
+  "bin": { "noir-gm": "gm/director-service.mjs" },
   "dependencies": {
     "nostr-tools": "^2.0.0",
     "ws": "^8.0.0"

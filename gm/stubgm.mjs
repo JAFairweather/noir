@@ -114,9 +114,19 @@ export class StubGM {
     await grant(this.relay, this.secret, this.playerPub, { ...wire, scopeName: def.name })
   }
 
-  dispatch(text, extra = {}) {
+  /** Send narrative to the player. If a Director voice is attached (M3),
+   *  it rewrites the beat in era prose — the mechanical outcome (grants,
+   *  burns, heat, verdicts) is already decided and never changes. The
+   *  scripted line is always the fallback: the game must play without AI. */
+  async dispatch(text, extra = {}) {
+    let out = text
+    if (this.voice && !extra.noVoice) {
+      try {
+        out = (await this.voice({ canned: text, extra, heat: this.heat })) || text
+      } catch { out = text }
+    }
     return sendDispatch(this.relay, this.secret, this.playerPub, {
-      caseId: this.case.CASE_ID, text, extra: { heat: this.heat, ...extra },
+      caseId: this.case.CASE_ID, text: out, extra: { heat: this.heat, ...extra },
     })
   }
 

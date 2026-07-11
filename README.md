@@ -40,8 +40,23 @@ casegen from seeds, structured verdicts) is M3.
 ```bash
 npm install
 npm run smoke        # full protocol loop in-memory: world → grants → burn → verdict
-npm run serve        # then open /client/ — the playable Berlin mini-case
+npm run serve        # then open /client/ — two playable cases
 ```
+
+### With the Director (Claude voices the case)
+
+```bash
+ANTHROPIC_API_KEY=sk-ant-… npm run gm    # local Director service on :8787
+npm run serve                            # client detects it automatically
+```
+
+The engine keeps deciding everything mechanical — grants, burns, heat,
+verdicts, all deterministic and fair-play-committed. The Director rewrites
+each beat's prose fresh in the era's voice, guided by the era bible. It is
+never shown the solution or the case graph (spec §4.4), and every path
+fails soft to the scripted line: no key, no service, slow response — the
+game plays identically. `NOIR_MODEL` overrides the model (default
+`claude-sonnet-5`).
 
 The demo runs everything in-page: an in-memory relay, the stub GM, and you.
 Every dossier you read arrived as ciphertext and was unlocked by a grant;
@@ -81,7 +96,7 @@ the full provable-vs-trusted split.
 
 - **M1** ✅ The Wheel + canned case over the real protocol
 - **M2** Grant-Index-as-notebook everywhere, nsec device recovery mid-case, NIP-49 keys at rest, live relays
-- **M3** The Director: Claude narrative + interrogations, casegen from seeds, structured verdicts; FLUX stills with duotone + Ken Burns motion
+- **M3** The Director *(in progress: beat-voicing via local noir-gm service ✅)* — next: live interrogations, casegen from seeds, structured verdicts; FLUX stills with duotone + Ken Burns motion
 - **M4** Line-draw engine spike; encrypted imagery on Blossom, photo-analysis puzzles, reveal choreography
 - **M5** All four eras, Meridian overland layer, homages, surveillance minigame
 - **M6** Multiplayer: fragment dealing, trades, watermark leak detection, betrayal

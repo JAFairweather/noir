@@ -48,6 +48,7 @@
     letter-spacing: 0.15em;
   }
   header .wordmark { color: var(--accent); font-size: 15px; letter-spacing: 0.5em; }
+  #director-status { margin-right: 1.4em; color: var(--accent); letter-spacing: 0.2em; }
   #heat-lamp {
     --heat: 0;
     display: inline-block; margin-left: 1em;
@@ -210,7 +211,8 @@
   <header>
     <span class="wordmark">NOIR</span>
     <span id="era-label"></span>
-    <span>HEAT <span id="heat-value">0</span><span id="heat-lamp">●</span></span>
+    <span><span id="director-status" class="hidden" title="A local Director service is voicing this case"></span>
+    HEAT <span id="heat-value">0</span><span id="heat-lamp">●</span></span>
   </header>
   <main>
     <div id="stage" aria-label="Case transcript on the wheel">
