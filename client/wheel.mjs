@@ -15,10 +15,14 @@
 // Flat mode renders the identical transcript as plain scrollable text and is
 // the default under prefers-reduced-motion. Same data, same order, always.
 
-const RADIUS = 900              // px — a LARGE drum: flat, grand curvature
+const RADIUS = 1800             // px — shoulder curvature beyond the flat band
 const LINE_PX = 27              // arc length per line at the focal band
-const STEP_DEG = LINE_PX / (RADIUS * Math.PI / 180)   // ≈1.7° between lines
-const VISIBLE_DEG = 27          // ≈ full viewport height at this radius
+const STEP_DEG = LINE_PX / (RADIUS * Math.PI / 180)   // ≈0.86° between lines
+const VISIBLE_DEG = 14          // cull beyond this
+const FLAT_LINES = 4            // lines each side of focal rendered perfectly flat
+const FLAT_DEG = STEP_DEG * FLAT_LINES
+const PX_PER_DEG = LINE_PX / STEP_DEG
+const RAD = Math.PI / 180
 const FRICTION = 0.955
 const DETENT_PULL = 0.12        // gentle snap toward paragraph boundaries
 const CURSOR = '▌'
@@ -142,7 +146,7 @@ export class Wheel {
       e.preventDefault()
       this._target = null
       this._follow = false
-      this.velocity += e.deltaY * 0.0034
+      this.velocity += e.deltaY * 0.0017
     }, { passive: false })
 
     let touchY = null
@@ -151,15 +155,15 @@ export class Wheel {
       if (touchY == null || this.flatMode) return
       this._target = null
       this._follow = false
-      this.velocity += (touchY - e.touches[0].clientY) * 0.009
+      this.velocity += (touchY - e.touches[0].clientY) * 0.0046
       touchY = e.touches[0].clientY
     }, { passive: true })
     stage.addEventListener('touchend', () => { touchY = null })
 
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' && !['ArrowUp', 'ArrowDown'].includes(e.key)) return
-      if (e.key === 'ArrowUp') { this._target = null; this._follow = false; this.velocity -= 0.45 }
-      if (e.key === 'ArrowDown') { this._target = null; this._follow = false; this.velocity += 0.45 }
+      if (e.key === 'ArrowUp') { this._target = null; this._follow = false; this.velocity -= 0.23 }
+      if (e.key === 'ArrowDown') { this._target = null; this._follow = false; this.velocity += 0.23 }
     })
   }
 
@@ -175,7 +179,7 @@ export class Wheel {
         this.rotation += this.velocity
         this.velocity *= FRICTION
         // Gentle detent at paragraph boundaries once momentum is nearly spent.
-        if (Math.abs(this.velocity) < 0.11) {
+        if (Math.abs(this.velocity) < 0.055) {
           const nearest = Math.round(this.rotation / STEP_DEG) * STEP_DEG
           this.rotation += (nearest - this.rotation) * DETENT_PULL
         }
@@ -189,20 +193,36 @@ export class Wheel {
   }
 
   _renderAll() {
+    // The drum face: a FLAT reading band (±FLAT_LINES around focal, every
+    // line identical width) with cylindrical shoulders curving away beyond
+    // it. Fade/blur apply only on the shoulders.
     for (let i = 0; i < this.lines.length; i++) {
       const delta = i * STEP_DEG - this.rotation      // angular distance from focal line
       const el = this.lines[i].el
-      if (Math.abs(delta) > VISIBLE_DEG) {
+      const ad = Math.abs(delta)
+      if (ad > VISIBLE_DEG) {
         if (el.style.display !== 'none') el.style.display = 'none'
         continue
       }
-      const t = Math.abs(delta) / VISIBLE_DEG          // 0 at focus → 1 at edge
       el.style.display = ''
-      el.style.transform =
-        `rotateX(${-delta}deg) translateZ(${RADIUS}px) scale(${1 - t * 0.06})`
-      el.style.opacity = Math.max(0, (1 - t ** 1.5)) ** 1.1
-      el.style.filter = t > 0.62 ? `blur(${(t - 0.62) * 2.6}px)` : ''
-      el.classList.toggle('focal', Math.abs(delta) < STEP_DEG * 0.55)
+      if (ad <= FLAT_DEG) {
+        // flat band: pure vertical placement, zero rotation, zero depth
+        el.style.transform = `translateZ(${RADIUS}px) translateY(${delta * PX_PER_DEG}px)`
+        el.style.opacity = 1
+        el.style.filter = ''
+      } else {
+        // shoulder: cylinder tangent to the flat band's edge
+        const sgn = Math.sign(delta)
+        const ex = ad - FLAT_DEG                       // degrees into the curve
+        const y = sgn * (FLAT_DEG * PX_PER_DEG + RADIUS * Math.sin(ex * RAD))
+        const zoff = RADIUS * (1 - Math.cos(ex * RAD))
+        const t = ex / (VISIBLE_DEG - FLAT_DEG)        // 0 at band edge → 1 at cull
+        el.style.transform =
+          `translateZ(${RADIUS - zoff}px) translateY(${y}px) rotateX(${-sgn * ex}deg) scale(${1 - t * 0.02})`
+        el.style.opacity = Math.max(0, (1 - t ** 1.4)) ** 1.1
+        el.style.filter = t > 0.55 ? `blur(${(t - 0.55) * 2.4}px)` : ''
+      }
+      el.classList.toggle('focal', ad < STEP_DEG * 0.55)
     }
   }
 }

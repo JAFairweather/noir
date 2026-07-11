@@ -59,7 +59,7 @@
   /* ------------------------------------------------ the Wheel (spec §6) */
   #stage {
     flex: 1; position: relative;
-    perspective: 1400px; perspective-origin: 50% 50%;
+    perspective: 3000px; perspective-origin: 50% 50%;
     overflow: hidden;
     /* fade the drum's wrap-away at the window edges */
     mask-image: linear-gradient(to bottom, transparent 0%, black 22%, black 78%, transparent 100%);
@@ -74,7 +74,7 @@
   .drum-line {
     position: absolute;
     left: 13%;
-    width: min(68ch, 72%);
+    width: min(72ch, 76%);
     text-align: left;
     font-size: 15px; line-height: 1.5;
     white-space: pre-wrap;
@@ -94,7 +94,9 @@
   .player { color: #f4efe4; }
   .dim { opacity: 0.7; }
   .doc { color: color-mix(in srgb, var(--accent) 82%, white); }
-  .doc-title { color: #f4efe4; letter-spacing: 0.2em; margin-top: 8px; }
+  .doc-title { color: #f4efe4; letter-spacing: 0.14em; margin-top: 8px; }
+  /* titles own one drum slot: never wrap into the next line's row */
+  .drum-line.doc-title { white-space: nowrap; width: max-content; max-width: 84%; overflow: hidden; text-overflow: ellipsis; }
   .grant-line { color: #9fd08a; letter-spacing: 0.08em; }
   .burn-line { color: #d0442c; letter-spacing: 0.12em; }
   .title-line { letter-spacing: 0.9em; color: #f4efe4; }
