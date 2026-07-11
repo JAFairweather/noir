@@ -11,8 +11,8 @@
 
 const STEP_DEG = 4.6            // angular distance between lines
 const RADIUS = 460              // px — big drum, gentle curvature
-const VISIBLE_DEG = 34          // cull beyond this
-const FRICTION = 0.94
+const VISIBLE_DEG = 46          // cull beyond this — taller reading window
+const FRICTION = 0.955
 const DETENT_PULL = 0.12        // gentle snap toward paragraph boundaries
 
 export class Wheel {
@@ -80,7 +80,7 @@ export class Wheel {
       if (this.flatMode) return
       e.preventDefault()
       this._target = null
-      this.velocity += e.deltaY * 0.012
+      this.velocity += e.deltaY * 0.008
     }, { passive: false })
 
     let touchY = null
@@ -88,15 +88,15 @@ export class Wheel {
     stage.addEventListener('touchmove', (e) => {
       if (touchY == null || this.flatMode) return
       this._target = null
-      this.velocity += (touchY - e.touches[0].clientY) * 0.03
+      this.velocity += (touchY - e.touches[0].clientY) * 0.021
       touchY = e.touches[0].clientY
     }, { passive: true })
     stage.addEventListener('touchend', () => { touchY = null })
 
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' && !['ArrowUp', 'ArrowDown'].includes(e.key)) return
-      if (e.key === 'ArrowUp') { this._target = null; this.velocity -= 1.4 }
-      if (e.key === 'ArrowDown') { this._target = null; this.velocity += 1.4 }
+      if (e.key === 'ArrowUp') { this._target = null; this.velocity -= 1.0 }
+      if (e.key === 'ArrowDown') { this._target = null; this.velocity += 1.0 }
     })
   }
 
@@ -106,7 +106,7 @@ export class Wheel {
         // Eased travel toward a requested position (new text, Space beat).
         const d = this._target - this.rotation
         if (Math.abs(d) < 0.05) { this.rotation = this._target; this._target = null }
-        else this.rotation += d * 0.09
+        else this.rotation += d * 0.065
         this._renderAll()
       } else if (Math.abs(this.velocity) > 0.002) {
         this.rotation += this.velocity
@@ -135,8 +135,8 @@ export class Wheel {
       el.style.display = ''
       el.style.transform =
         `rotateX(${-delta}deg) translateZ(${RADIUS}px) scale(${1 - t * 0.06})`
-      el.style.opacity = (1 - t) ** 1.6
-      el.style.filter = t > 0.45 ? `blur(${(t - 0.45) * 2.2}px)` : ''
+      el.style.opacity = (1 - t) ** 1.35
+      el.style.filter = t > 0.55 ? `blur(${(t - 0.55) * 2.4}px)` : ''
       el.classList.toggle('focal', Math.abs(delta) < STEP_DEG * 0.55)
     }
   }
