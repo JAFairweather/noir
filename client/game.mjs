@@ -24,7 +24,7 @@ import { Wheel } from './wheel.mjs'
 import { Score } from './audio.mjs'
 import { applyEra } from './art.mjs'
 import { setScene } from './scenes.mjs'
-import { detectDirector, makeVoice } from './director.mjs'
+import { detectDirector, makeVoice, makeInterrogator } from './director.mjs'
 import { showBurnCard, showEndCard, showSaveCard, showCaseSelect } from './burn.mjs'
 import { getOrCreatePlayerKey, getFlatMode, setFlatMode, getCaseId, setCaseId, getTradecraft, setTradecraft } from './settings.mjs'
 
@@ -263,12 +263,14 @@ function applyCase(mod) {
 // otherwise the scripted prose plays. Attached to whatever GM is current.
 function attachVoice() {
   if (!director?.live) return
+  const getTail = () => transcript.slice(-6).map(l => l.text).filter(t => t.length > 2)
   gm.voice = makeVoice({
     url: director.url,
     era: CASE.ERA,
     caseTitle: CASE.scopes.briefing?.name ?? CASE.CASE_ID,
-    getTail: () => transcript.slice(-6).map(l => l.text).filter(t => t.length > 2),
+    getTail,
   })
+  gm.interrogator = makeInterrogator({ url: director.url, era: CASE.ERA, getTail })
   $('#director-status').textContent = `DIRECTOR: ${director.model}`
   $('#director-status').classList.remove('hidden')
 }

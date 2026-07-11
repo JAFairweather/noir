@@ -207,11 +207,32 @@ export class StubGM {
       }
     }
 
-    // Interrogation (§5.3, scripted): talking to an unlocked, unburned NPC.
+    // Interrogation (§5.3): talking to an unlocked, unburned NPC.
+    // With the Director present, the NPC is played live — bounded to the
+    // dossier the player already holds plus the facts the scripted lines
+    // would currently be willing to reveal. Burns stay mechanical (above).
     for (const [key, npc] of Object.entries(this.case.npcs ?? {})) {
       if (!this.unlocked.has(key) || this.burned.has(key)) continue
       if (!npc.aliases.some(a => t.includes(a))) continue
       const st = this.npcState[key]
+      if (this.interrogator) {
+        try {
+          const out = await this.interrogator({
+            name: this.case.scopes[key].name,
+            statement: `${this.case.scopes[key].payload.title}\n${this.case.scopes[key].payload.body}`,
+            reveals: npc.lines
+              .filter((l, i) => !st.used.includes(i) && (l.minDisposition ?? 0) <= st.disposition)
+              .map(l => l.response),
+            disposition: st.disposition,
+            playerText: text,
+          })
+          if (out?.reply) {
+            st.disposition = Math.max(0, Math.min(3, st.disposition + (out.disposition_delta | 0)))
+            await this.dispatch(out.reply, { noVoice: true })
+            return this.checkHeat()
+          }
+        } catch { /* live NPC unavailable — the scripted lines still know their part */ }
+      }
       for (let i = 0; i < npc.lines.length; i++) {
         const line = npc.lines[i]
         if (st.used.includes(i)) continue

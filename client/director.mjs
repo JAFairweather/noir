@@ -38,3 +38,23 @@ export function makeVoice({ url, era, caseTitle, getTail }) {
     }
   }
 }
+
+/** Build an interrogator: NPC turn in, in-character reply + disposition delta out. */
+export function makeInterrogator({ url, era, getTail }) {
+  return async (npc) => {
+    const ctrl = new AbortController()
+    const timer = setTimeout(() => ctrl.abort(), 15000)
+    try {
+      const res = await fetch(`${url}/interrogate`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        signal: ctrl.signal,
+        body: JSON.stringify({ era, npc, tail: getTail() }),
+      })
+      const out = await res.json()
+      return out?.reply ? out : null
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+}

@@ -181,5 +181,29 @@ console.log('\n11. Director voice seam fails soft')
   check('voice rewrites the beat when available', d2.some(x => JSON.parse(x.content).text.startsWith('THE DIRECTOR SPEAKS')))
 }
 
+console.log('\n12. Live interrogation seam (Director NPCs)')
+{
+  const r5 = new Relay()
+  const p5 = generateSecretKey()
+  const gmI = new StubGM(r5, berlin)
+  await gmI.start(getPublicKey(p5))
+  const say5 = async (text) => { await sendFieldReport(r5, p5, gmI.pub, text, berlin.CASE_ID); await gmI.poll() }
+  await say5('the intercept decodes to zoo locker nine')
+  await say5('ask adler at josty about weiss')
+  let captured = null
+  gmI.interrogator = async (npc) => { captured = npc; return { reply: 'LIVE: she considers you.', disposition_delta: 1 } }
+  await say5('adler, tell me about your son')
+  const d5 = await receiveRumors(r5, p5, [KIND_GM_DISPATCH])
+  check('live NPC reply dispatched', d5.some(x => JSON.parse(x.content).text.startsWith('LIVE:')))
+  check('live NPC sees only held statement + willing reveals', captured.statement.includes('COAT-CHECK') && Array.isArray(captured.reveals))
+  check('disposition delta applied and clamped', gmI.npcState.adler.disposition === 1)
+  gmI.interrogator = async () => null
+  await say5('ask adler about weiss')
+  const d6 = await receiveRumors(r5, p5, [KIND_GM_DISPATCH])
+  check('null from live NPC falls back to scripted line', d6.some(x => JSON.parse(x.content).text.includes('apologizing')))
+  await say5('press adler for the name')
+  check('burns stay mechanical with a live NPC attached', gmI.burned.has('adler'))
+}
+
 console.log(`\n${passed} passed, ${failed} failed`)
 process.exit(failed ? 1 : 0)
