@@ -55,3 +55,30 @@ Richest spy grammar, and M1 shipped its bible plus a hand-authored case to
 tune against. The sensitivity hard lines in `eras/berlin-1938.md` are
 acceptance criteria for Director output, enforced by the M3 prompt-policy
 test suite (spec §12), not aspirations.
+
+## 6. Soundtrack — **original score in 19-TET** (added post-spec)
+
+Kismet made law: the project was accidentally born in the 19TeamT repo
+(19-tone equal temperament exploration), and the tuning is right for the
+game — familiar shapes, wrong shadows; the score does for the ear what
+duotone does for the eye. `client/audio.mjs` (the sax voice is ported from
+19TeamT's synth).
+
+- **Form:** long slow tones, generative, fully synthesized in-client
+  (`f = ref × 2^(step/19)`, Web Audio, no samples, no assets). Deterministic
+  per case seed — same themes on the same seed, never the same performance.
+  Same skeleton/flesh split as prose and imagery.
+- **Era instruments:** Berlin 1938 = **viola** (formant-filtered bowed
+  saws). Meridian 1849 = **guitar** (Karplus-Strong strums). New Orleans
+  1968 = **brass**, rooted in the 1910s funeral-dirge tradition — patience,
+  swell, procession. Paris 1954 = **sax** in the cool-cellar idiom of the
+  era's classic records: *idiom and instrumentation only — no melody is
+  ever quoted.* Same rule as the literary touchstones: evoke, never
+  reproduce.
+- **Game-state hooks:** heat compresses the tempo and lifts the register
+  (patience → pulse). A **burn stops the theme mid-phrase** — four seconds
+  of true silence, then the room breathes again, quieter. The meter is
+  something you hear.
+- **It's a reading game:** the score is furniture — far under the drum,
+  never competing with text. Off by default; one notebook toggle
+  ("score (original 19-TET)").

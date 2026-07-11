@@ -13,6 +13,7 @@ import {
 import { StubGM } from '../gm/stubgm.mjs'
 import * as berlin from '../gm/cases/berlin-minicase.mjs'
 import { Wheel } from './wheel.mjs'
+import { Score } from './audio.mjs'
 import { applyEra } from './art.mjs'
 import { showBurnCard, showEndCard } from './burn.mjs'
 import { getOrCreatePlayerKey, getFlatMode, setFlatMode, getEra } from './settings.mjs'
@@ -32,6 +33,11 @@ $('#flat-toggle').checked = getFlatMode()
 const seen = new Set()          // wrap ids already rendered
 const knownScopes = new Set()   // scopeIds already announced on the drum
 let gameOver = false
+
+// The 19-TET score (docs/DECISIONS.md §6). Off until the player opts in —
+// this is a reading game; the music is furniture, and silence is a choice.
+const score = new Score()
+score.setEra(getEra())
 
 // ---------------------------------------------------------------- notebook
 
@@ -74,6 +80,7 @@ async function syncFromGM() {
       const grants = latestGrants(await receiveGrants(relay, playerSk))
       const scopeName = grants.find(g => g.scopeId === scopeId)?.scopeName
       wheel.append(`■ BURN NOTICE — ${scopeName ?? 'asset'} ■`, 'burn-line')
+      score.burn()              // the theme stops mid-phrase
       showBurnCard({ scopeName, reason })
     } else {
       const { text, granted, ended } = JSON.parse(r.content)
@@ -108,6 +115,7 @@ async function syncFromGM() {
     wheel.append(res.data.body ?? '', 'doc')
   }
   await refreshNotebook()
+  score.setHeat(gm.heat)
 }
 
 // ---------------------------------------------------------------- commands
@@ -140,6 +148,11 @@ window.addEventListener('keydown', (e) => {
 $('#flat-toggle').addEventListener('change', (e) => {
   setFlatMode(e.target.checked)
   wheel.setFlatMode(e.target.checked)
+})
+
+$('#score-toggle').addEventListener('change', (e) => {
+  if (e.target.checked) score.start()   // user gesture — autoplay-safe
+  else score.stop()
 })
 
 // ------------------------------------------------------------------- start
