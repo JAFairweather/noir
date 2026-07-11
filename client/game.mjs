@@ -1,12 +1,19 @@
 // game.mjs — command input, notebook (Grant Index view), case state (spec §3).
 //
-// M1 runs in demo mode: an in-memory relay and the stub GM live in-page, so
+// M1+ runs in demo mode: an in-memory relay and the stub GM live in-page, so
 // the whole game — scopes, grants, burns — is real protocol traffic you can
 // inspect, with zero infrastructure. Pointing this at LiveRelay + a remote
 // GM (M2/M3) changes the transport, not this file's logic.
+//
+// The case survives reloads: relay events, GM state, and the transcript
+// autosave to localStorage after every exchange, and the player's notebook
+// is additionally published as a real kind-10440 Grant Index — the same
+// record a live-relay client would recover from the nsec alone.
 
 import { Relay } from '../lib/relay.mjs'
-import { receiveGrants, latestGrants, fetchScope } from '../lib/nipxx.mjs'
+import {
+  receiveGrants, latestGrants, fetchScope, saveGrantIndex, toReceivedEntry,
+} from '../lib/nipxx.mjs'
 import {
   sendFieldReport, receiveRumors, KIND_GM_DISPATCH, KIND_BURN_NOTICE,
 } from '../shared/wrap.mjs'
@@ -15,16 +22,17 @@ import * as berlin from '../gm/cases/berlin-minicase.mjs'
 import { Wheel } from './wheel.mjs'
 import { Score } from './audio.mjs'
 import { applyEra } from './art.mjs'
-import { showBurnCard, showEndCard } from './burn.mjs'
+import { showBurnCard, showEndCard, showSaveCard } from './burn.mjs'
 import { getOrCreatePlayerKey, getFlatMode, setFlatMode, getEra } from './settings.mjs'
 
 const $ = (sel) => document.querySelector(sel)
+const SAVE_KEY = 'noir.save.v1'
 
 const era = applyEra(getEra())
 const { sk: playerSk, pub: playerPub } = getOrCreatePlayerKey()
 
 const relay = new Relay()
-const gm = new StubGM(relay, berlin)
+let gm = new StubGM(relay, berlin)
 
 const wheel = new Wheel($('#drum'), $('#flat'))
 wheel.setFlatMode(getFlatMode())
@@ -32,12 +40,44 @@ $('#flat-toggle').checked = getFlatMode()
 
 const seen = new Set()          // wrap ids already rendered
 const knownScopes = new Set()   // scopeIds already announced on the drum
+const transcript = []           // { text, cls } — replayed on restore
 let gameOver = false
 
 // The 19-TET score (docs/DECISIONS.md §6). Off until the player opts in —
 // this is a reading game; the music is furniture, and silence is a choice.
 const score = new Score()
 score.setEra(getEra())
+
+// write to the drum AND the save file
+function put(text, cls = '') {
+  transcript.push({ text, cls })
+  wheel.append(text, cls)
+}
+
+// ------------------------------------------------------------- persistence
+
+function saveGame() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      caseId: berlin.CASE_ID,
+      events: relay.events,
+      gm: gm.serialize(),
+      transcript,
+      seen: [...seen],
+      knownScopes: [...knownScopes],
+      gameOver,
+    }))
+  } catch { /* storage full/blocked: the game still plays, it just won't keep */ }
+}
+
+function loadSave() {
+  try {
+    const save = JSON.parse(localStorage.getItem(SAVE_KEY) ?? 'null')
+    return save?.caseId === berlin.CASE_ID && save.events?.length ? save : null
+  } catch { return null }
+}
+
+function clearSave() { localStorage.removeItem(SAVE_KEY) }
 
 // ---------------------------------------------------------------- notebook
 
@@ -54,8 +94,9 @@ async function refreshNotebook() {
     if (res.status === 'ok') {
       li.title = 'Read on the drum'
       li.addEventListener('click', () => {
-        wheel.append(`— ${res.data.title ?? g.scopeName} —`, 'doc-title')
-        wheel.append(res.data.body ?? '', 'doc')
+        put(`— ${res.data.title ?? g.scopeName} —`, 'doc-title')
+        put(res.data.body ?? '', 'doc')
+        saveGame()
       })
     } else {
       li.title = 'Burned. You keep exactly what you already read.'
@@ -79,12 +120,12 @@ async function syncFromGM() {
       const scopeId = r.tags.find(t => t[0] === 'a')?.[1].split(':')[2]
       const grants = latestGrants(await receiveGrants(relay, playerSk))
       const scopeName = grants.find(g => g.scopeId === scopeId)?.scopeName
-      wheel.append(`■ BURN NOTICE — ${scopeName ?? 'asset'} ■`, 'burn-line')
+      put(`■ BURN NOTICE — ${scopeName ?? 'asset'} ■`, 'burn-line')
       score.burn()              // the theme stops mid-phrase
       showBurnCard({ scopeName, reason })
     } else {
-      const { text, granted, ended } = JSON.parse(r.content)
-      wheel.append(text, 'gm')
+      const { text, ended } = JSON.parse(r.content)
+      put(text, 'gm')
       if (ended) {
         gameOver = true
         if (ended !== 'solved') showEndCard({ ended })
@@ -94,10 +135,11 @@ async function syncFromGM() {
           for (const g of grants) {
             const res = await fetchScope(relay, g)
             if (res.status === 'ok' && res.data.kind === 'epilogue') {
-              wheel.append(`— ${res.data.title} —`, 'doc-title')
-              wheel.append(res.data.body, 'doc')
+              put(`— ${res.data.title} —`, 'doc-title')
+              put(res.data.body, 'doc')
             }
           }
+          saveGame()
           showEndCard({ ended })
         }, 600)
       }
@@ -110,19 +152,33 @@ async function syncFromGM() {
     knownScopes.add(g.scopeId)
     const res = await fetchScope(relay, g)
     if (res.status !== 'ok') continue
-    wheel.append(`▸ NEW INTEL — ${g.scopeName}`, 'grant-line')
-    wheel.append(`— ${res.data.title ?? g.scopeName} —`, 'doc-title')
-    wheel.append(res.data.body ?? '', 'doc')
+    put(`▸ NEW INTEL — ${g.scopeName}`, 'grant-line')
+    put(`— ${res.data.title ?? g.scopeName} —`, 'doc-title')
+    put(res.data.body ?? '', 'doc')
   }
   await refreshNotebook()
   score.setHeat(gm.heat)
+  // Publish the notebook as a real kind-10440 Grant Index (M2): on a live
+  // relay this is what device recovery from the nsec reads back.
+  try {
+    await saveGrantIndex(relay, playerSk, {
+      issued: [],
+      received: grants.map(g => toReceivedEntry(g, g.scopeName)),
+    })
+  } catch { /* index is a convenience record; play continues without it */ }
+  saveGame()
 }
 
 // ---------------------------------------------------------------- commands
 
+const history = []
+let historyAt = -1
+
 async function submit(text) {
   if (!text.trim() || gameOver) return
-  wheel.append(`> ${text}`, 'player')
+  history.push(text)
+  historyAt = history.length
+  put(`> ${text}`, 'player')
   await sendFieldReport(relay, playerSk, gm.pub, text, berlin.CASE_ID)
   await gm.poll()               // demo mode: the GM lives in-page
   await syncFromGM()
@@ -134,13 +190,22 @@ input.addEventListener('keydown', (e) => {
     const text = input.value
     input.value = ''
     submit(text)
+  } else if (e.key === 'ArrowUp' && history.length) {
+    e.preventDefault()
+    historyAt = Math.max(0, historyAt - 1)
+    input.value = history[historyAt] ?? ''
+  } else if (e.key === 'ArrowDown' && history.length) {
+    e.preventDefault()
+    historyAt = Math.min(history.length, historyAt + 1)
+    input.value = history[historyAt] ?? ''
   }
 })
 window.addEventListener('keydown', (e) => {
-  if (e.key === ' ' && document.activeElement !== input) {
+  if (e.target === input) return          // input owns its keys (incl. history)
+  if (e.key === ' ') {
     e.preventDefault()
     wheel.advanceBeat()
-  } else if (e.key.length === 1 && document.activeElement !== input) {
+  } else if (e.key.length === 1) {
     input.focus()
   }
 })
@@ -157,9 +222,35 @@ $('#score-toggle').addEventListener('change', (e) => {
 
 // ------------------------------------------------------------------- start
 
+async function freshStart() {
+  clearSave()
+  put('N O I R', 'title-line')
+  put('Cases you unlock. Assets you burn.', 'gm dim')
+  await gm.start(playerPub)
+  await syncFromGM()
+  input.focus()
+}
+
+async function resumeSave(save) {
+  relay.events = save.events
+  gm = StubGM.restore(relay, berlin, save.gm)
+  gameOver = save.gameOver
+  save.seen.forEach(id => seen.add(id))
+  save.knownScopes.forEach(id => knownScopes.add(id))
+  for (const { text, cls } of save.transcript) {
+    transcript.push({ text, cls })
+    wheel.append(text, cls, { instant: true })
+  }
+  put('— the file reopens where you left it —', 'gm dim')
+  await refreshNotebook()
+  score.setHeat(gm.heat)
+  input.focus()
+}
+
 $('#era-label').textContent = era.label
-wheel.append('N O I R', 'title-line')
-wheel.append('Cases you unlock. Assets you burn.', 'gm dim')
-await gm.start(playerPub)
-await syncFromGM()
-input.focus()
+const save = loadSave()
+if (save && !save.gameOver) {
+  showSaveCard({ onLoad: () => resumeSave(save), onNew: freshStart })
+} else {
+  freshStart()
+}

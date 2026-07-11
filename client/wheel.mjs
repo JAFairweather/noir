@@ -57,8 +57,8 @@ export class Wheel {
 
   /** Append a block of text. Each block is one paragraph detent.
    *  GM/document text types out; player echoes and titles land instantly. */
-  append(text, cls = '') {
-    const instant = this.flatMode || /player|title-line/.test(cls)
+  append(text, cls = '', { instant: forceInstant = false } = {}) {
+    const instant = forceInstant || this.flatMode || /player|title-line/.test(cls)
     if (/player/.test(cls)) this.flush()    // new command: finish pending type
     const wasAtTail = this.atTail() || this.lines.length === 0
     this.paraStarts.push(this.lines.length)

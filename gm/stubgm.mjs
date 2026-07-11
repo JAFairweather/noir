@@ -24,6 +24,11 @@ async function sha256hex(str) {
 
 const randomScopeId = () => 's' + [...crypto.getRandomValues(new Uint8Array(6))].map(b => (b % 36).toString(36)).join('')
 
+const toHex = (b) => [...b].map(x => x.toString(16).padStart(2, '0')).join('')
+const fromHex = (h) => Uint8Array.from(h.match(/../g), (x) => parseInt(x, 16))
+const b64 = (bytes) => btoa(String.fromCharCode(...bytes))
+const unb64 = (str) => Uint8Array.from(atob(str), (c) => c.charCodeAt(0))
+
 export class StubGM {
   constructor(relay, caseModule, gmSecret = generateSecretKey()) {
     this.relay = relay
@@ -37,6 +42,35 @@ export class StubGM {
     this.heat = 0
     this.over = false
     this.seenReports = new Set()
+  }
+
+  /** Snapshot everything a saved game needs to resume this GM. */
+  serialize() {
+    return {
+      secret: toHex(this.secret),
+      playerPub: this.playerPub,
+      scopes: [...this.scopes.entries()].map(([name, w]) =>
+        [name, { scopeId: w.scopeId, generation: w.generation, scopeKey: b64(w.scopeKey) }]),
+      unlocked: [...this.unlocked],
+      burned: [...this.burned],
+      heat: this.heat,
+      over: this.over,
+      seenReports: [...this.seenReports],
+    }
+  }
+
+  /** Rebuild a GM from a snapshot. The relay must already hold the world's events. */
+  static restore(relay, caseModule, state) {
+    const gm = new StubGM(relay, caseModule, fromHex(state.secret))
+    gm.playerPub = state.playerPub
+    gm.scopes = new Map(state.scopes.map(([name, w]) =>
+      [name, { scopeId: w.scopeId, generation: w.generation, scopeKey: unb64(w.scopeKey) }]))
+    gm.unlocked = new Set(state.unlocked)
+    gm.burned = new Set(state.burned)
+    gm.heat = state.heat
+    gm.over = state.over
+    gm.seenReports = new Set(state.seenReports)
+    return gm
   }
 
   /** Author the whole world up front (§4.3), commit to the solution, deal the inciting grant. */

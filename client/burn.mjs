@@ -37,6 +37,31 @@ export function showEndCard({ ended }, onDismiss) {
   return showCard(cards[ended] ?? cards.failed, onDismiss)
 }
 
+/** The §8 save-file homage: LOAD GAME / NEW GAME in period teletype caps. */
+export function showSaveCard({ onLoad, onNew }) {
+  const overlay = document.createElement('div')
+  overlay.className = 'card-overlay'
+  overlay.innerHTML = `
+    <div class="card save-card" role="dialog" aria-label="Saved case found">
+      <div class="card-stamp">CASE FILE FOUND</div>
+      <div class="card-body">An open case sits in the drawer where you left it.</div>
+      <div class="save-actions">
+        <button class="save-btn" data-act="load">LOAD GAME</button>
+        <button class="save-btn" data-act="new">NEW GAME</button>
+      </div>
+      <div class="card-footer">a new game shreds the open file</div>
+    </div>`
+  document.body.appendChild(overlay)
+  requestAnimationFrame(() => overlay.classList.add('shown'))
+  overlay.addEventListener('click', (e) => {
+    const act = e.target?.dataset?.act
+    if (!act) return
+    overlay.classList.remove('shown')
+    setTimeout(() => overlay.remove(), 300)
+    act === 'load' ? onLoad() : onNew()
+  })
+}
+
 function showCard({ stamp, title, body, footer }, onDismiss) {
   const overlay = document.createElement('div')
   overlay.className = 'card-overlay'

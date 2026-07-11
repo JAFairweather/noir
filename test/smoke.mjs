@@ -106,5 +106,13 @@ const leaked = JSON.stringify(view).match(/BRANDT|KELLER|ADLER|WEISS|JOSTY|SILBE
 check('no case secrets visible to the relay', !leaked, leaked ? `leaked: ${leaked[0]}` : '')
 check('grants indistinguishable (only 1059 wraps visible)', view.every(e => [0, 1059, 30440].includes(e.kind)))
 
+console.log('\n8. GM save/restore (mid-case device recovery)')
+const snapshot = gm.serialize()
+const gm2 = StubGM.restore(relay, berlin, snapshot)
+check('restored GM keeps identity and world', gm2.pub === gm.pub && gm2.scopes.size === 8)
+check('restored GM keeps progress', gm2.unlocked.size === gm.unlocked.size && gm2.heat === gm.heat && gm2.over)
+check('restored GM keeps the burn (rotated generation)', gm2.scopes.get('adler').generation === 2)
+check('player notebook rebuilds against restored world', (await readable()).filter(s => s.status === 'ok').length >= 6)
+
 console.log(`\n${passed} passed, ${failed} failed`)
 process.exit(failed ? 1 : 0)
