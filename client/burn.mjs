@@ -37,6 +37,33 @@ export function showEndCard({ ended }, onDismiss) {
   return showCard(cards[ended] ?? cards.failed, onDismiss)
 }
 
+/** Case selection: which night, which city. */
+export function showCaseSelect(cases, onPick) {
+  const overlay = document.createElement('div')
+  overlay.className = 'card-overlay'
+  const buttons = cases.map(c =>
+    `<button class="save-btn case-btn" data-id="${c.id}">
+       <span class="case-era">${c.label}</span>
+       <span class="case-title">${c.title}</span>
+       <span class="case-blurb">${c.blurb}</span>
+     </button>`).join('')
+  overlay.innerHTML = `
+    <div class="card save-card" role="dialog" aria-label="Choose a case">
+      <div class="card-stamp">OPEN CASES</div>
+      <div class="save-actions case-actions">${buttons}</div>
+      <div class="card-footer">every case is a sealed world — solve it or wear it</div>
+    </div>`
+  document.body.appendChild(overlay)
+  requestAnimationFrame(() => overlay.classList.add('shown'))
+  overlay.addEventListener('click', (e) => {
+    const btn = e.target.closest('.case-btn')
+    if (!btn) return
+    overlay.classList.remove('shown')
+    setTimeout(() => overlay.remove(), 300)
+    onPick(btn.dataset.id)
+  })
+}
+
 /** The §8 save-file homage: LOAD GAME / NEW GAME in period teletype caps. */
 export function showSaveCard({ onLoad, onNew }) {
   const overlay = document.createElement('div')

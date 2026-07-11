@@ -20,6 +20,7 @@ export const scopes = {
     burnable: false,
     payload: {
       kind: 'dossier',
+      scene: 'office',
       title: 'BRIEFING — OPERATION REISEBÜRO',
       body: [
         'Berlin. November 1938. The city smells of coal smoke and wet wool,',
@@ -49,6 +50,7 @@ export const scopes = {
     burnable: false,
     payload: {
       kind: 'evidence',
+      scene: 'station',
       title: 'CONTENTS — LOCKER 9, ZOO BAHNHOF',
       body: [
         'A courier satchel, empty of blanks. Inside the lining:',
@@ -70,6 +72,7 @@ export const scopes = {
     burnable: false,
     payload: {
       kind: 'dossier',
+      scene: 'office',
       title: 'VISIT — REISEBÜRO VOSS, KANTSTRASSE 112',
       body: [
         'Voss sells queue-jumping: an appointment at the visa section window',
@@ -91,6 +94,7 @@ export const scopes = {
     burnable: true,
     payload: {
       kind: 'npc',
+      scene: 'cafe',
       title: 'STATEMENT — FRAU ADLER, CAFÉ JOSTY (COAT-CHECK)',
       body: [
         'She talks with her hands below the counter, where hands can\'t be seen.',
@@ -116,6 +120,7 @@ export const scopes = {
     burnable: false,
     payload: {
       kind: 'evidence',
+      scene: 'street',
       title: 'WATCHER LOG — JOSTY DETAIL (EXTRACTS, OUT OF ORDER)',
       body: [
         'Three index cards survive from the last Tuesday. The clerk who',
@@ -139,6 +144,7 @@ export const scopes = {
     burnable: false,
     payload: {
       kind: 'evidence',
+      scene: 'yard',
       title: 'FINDINGS — ANHALTER BAHNHOF, FREIGHT SIDE',
       body: [
         'A yard man found him Wednesday, between the coal wagons.',
@@ -162,6 +168,7 @@ export const scopes = {
     burnable: false,
     payload: {
       kind: 'dossier',
+      scene: 'office',
       title: 'DUTY ROSTER — VISA SECTION, EVENING WINDOW (NOV)',
       body: [
         'Photographed through glass; the corner is flared but legible.',
@@ -183,6 +190,7 @@ export const scopes = {
     burnable: false,
     payload: {
       kind: 'epilogue',
+      scene: 'epilogue',
       title: 'RESOLUTION — OPERATION REISEBÜRO',
       body: [
         'BRANDT, visa section, second window. He sold the blanks by the',
@@ -303,6 +311,19 @@ export const solutionCommitment = {
   salt: 'reisebuero-1938-salz',
   canonical: () => JSON.stringify({ case: CASE_ID, culprit: accusation.culprit, salt: solutionCommitment.salt }),
 }
+
+export const openingScene = 'street'
+
+// data-driven happy path, used by the smoke suite
+export const walkthrough = [
+  'the intercept decodes to zoo locker nine',
+  'visit voss at the travel office',
+  'ask adler at josty about weiss',
+  'ask station for the watcher log',
+  'timeline b c a',
+  'check who held the tuesday duty window',
+  'accuse brandt',
+]
 
 export const opening = [
   'BERLIN — NOVEMBER 1938',

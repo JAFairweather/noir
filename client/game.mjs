@@ -19,21 +19,22 @@ import {
   sendFieldReport, receiveRumors, KIND_GM_DISPATCH, KIND_BURN_NOTICE,
 } from '../shared/wrap.mjs'
 import { StubGM } from '../gm/stubgm.mjs'
-import * as berlin from '../gm/cases/berlin-minicase.mjs'
+import { CASES, CASE_LIST } from '../gm/cases/registry.mjs'
 import { Wheel } from './wheel.mjs'
 import { Score } from './audio.mjs'
 import { applyEra } from './art.mjs'
-import { showBurnCard, showEndCard, showSaveCard } from './burn.mjs'
-import { getOrCreatePlayerKey, getFlatMode, setFlatMode, getEra, getTradecraft, setTradecraft } from './settings.mjs'
+import { setScene } from './scenes.mjs'
+import { showBurnCard, showEndCard, showSaveCard, showCaseSelect } from './burn.mjs'
+import { getOrCreatePlayerKey, getFlatMode, setFlatMode, getCaseId, setCaseId, getTradecraft, setTradecraft } from './settings.mjs'
 
 const $ = (sel) => document.querySelector(sel)
 const SAVE_KEY = 'noir.save.v1'
 
-const era = applyEra(getEra())
 const { sk: playerSk, pub: playerPub } = getOrCreatePlayerKey()
 
 const relay = new Relay()
-let gm = new StubGM(relay, berlin)
+let CASE = CASES[getCaseId()] ?? CASES[CASE_LIST[0].id]
+let gm = new StubGM(relay, CASE)
 
 const wheel = new Wheel($('#drum'), $('#flat'))
 wheel.setFlatMode(getFlatMode())
@@ -48,7 +49,6 @@ let gameOver = false
 // The 19-TET score (docs/DECISIONS.md §6). Off until the player opts in —
 // this is a reading game; the music is furniture, and silence is a choice.
 const score = new Score()
-score.setEra(getEra())
 
 // write to the drum AND the save file
 function put(text, cls = '') {
@@ -61,7 +61,7 @@ function put(text, cls = '') {
 function saveGame() {
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
-      caseId: berlin.CASE_ID,
+      caseId: CASE.CASE_ID,
       events: relay.events,
       gm: gm.serialize(),
       transcript,
@@ -75,7 +75,7 @@ function saveGame() {
 function loadSave() {
   try {
     const save = JSON.parse(localStorage.getItem(SAVE_KEY) ?? 'null')
-    return save?.caseId === berlin.CASE_ID && save.events?.length ? save : null
+    return CASES[save?.caseId] && save.events?.length ? save : null
   } catch { return null }
 }
 
@@ -102,6 +102,7 @@ async function refreshNotebook() {
     if (res.status === 'ok') {
       li.title = 'Read on the drum'
       li.addEventListener('click', () => {
+        if (res.data.scene) setScene(res.data.scene, CASE.ERA, g.scopeId)
         put(`— ${res.data.title ?? g.scopeName} —`, 'doc-title')
         put(res.data.body ?? '', 'doc')
         saveGame()
@@ -152,6 +153,7 @@ async function syncFromGM() {
           for (const g of grants) {
             const res = await fetchScope(relay, g)
             if (res.status === 'ok' && res.data.kind === 'epilogue') {
+              if (res.data.scene) setScene(res.data.scene, CASE.ERA, g.scopeId)
               put(`— ${res.data.title} —`, 'doc-title')
               put(res.data.body, 'doc')
             }
@@ -169,6 +171,7 @@ async function syncFromGM() {
     knownScopes.add(g.scopeId)
     const res = await fetchScope(relay, g)
     if (res.status !== 'ok') continue
+    if (res.data.scene) setScene(res.data.scene, CASE.ERA, g.scopeId)
     put(`▸ NEW INTEL — ${g.scopeName}`, 'grant-line')
     put(`— ${res.data.title ?? g.scopeName} —`, 'doc-title')
     put(res.data.body ?? '', 'doc')
@@ -196,7 +199,7 @@ async function submit(text) {
   history.push(text)
   historyAt = history.length
   put(`> ${text}`, 'player')
-  await sendFieldReport(relay, playerSk, gm.pub, text, berlin.CASE_ID)
+  await sendFieldReport(relay, playerSk, gm.pub, text, CASE.CASE_ID)
   await gm.poll()               // demo mode: the GM lives in-page
   await syncFromGM()
 }
@@ -244,8 +247,19 @@ $('#score-toggle').addEventListener('change', (e) => {
 
 // ------------------------------------------------------------------- start
 
-async function freshStart() {
+function applyCase(mod) {
+  CASE = mod
+  setCaseId(mod.CASE_ID)
+  const era = applyEra(mod.ERA)
+  score.setEra(mod.ERA)
+  $('#era-label').textContent = era.label
+  setScene(mod.openingScene ?? 'street', mod.ERA, mod.CASE_ID)
+}
+
+async function freshStart(caseId) {
   clearSave()
+  applyCase(CASES[caseId] ?? CASE)
+  gm = new StubGM(relay, CASE)
   put('N O I R', 'title-line')
   put('Cases you unlock. Assets you burn.', 'gm dim')
   await gm.start(playerPub)
@@ -254,8 +268,9 @@ async function freshStart() {
 }
 
 async function resumeSave(save) {
+  applyCase(CASES[save.caseId])
   relay.events = save.events
-  gm = StubGM.restore(relay, berlin, save.gm)
+  gm = StubGM.restore(relay, CASE, save.gm)
   gameOver = save.gameOver
   save.seen.forEach(id => seen.add(id))
   save.knownScopes.forEach(id => knownScopes.add(id))
@@ -269,14 +284,15 @@ async function resumeSave(save) {
   input.focus()
 }
 
-$('#era-label').textContent = era.label
+const pickCase = () => showCaseSelect(CASE_LIST, (id) => freshStart(id))
+applyEra(CASE.ERA)
 $('#npub').textContent = nip19.npubEncode(playerPub).slice(0, 20) + '…' + nip19.npubEncode(playerPub).slice(-6)
 $('#npub').title = nip19.npubEncode(playerPub) +
   '\n\nA per-browser field identity for the demo. Sign-in with a NIP-07 extension' +
   ' (Alby/nos2x) or nsec import arrives with live relays — then your notebook follows your real npub.'
 const save = loadSave()
 if (save && !save.gameOver) {
-  showSaveCard({ onLoad: () => resumeSave(save), onNew: freshStart })
+  showSaveCard({ onLoad: () => resumeSave(save), onNew: pickCase })
 } else {
-  freshStart()
+  pickCase()
 }

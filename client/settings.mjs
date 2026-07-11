@@ -39,6 +39,9 @@ export function setFlatMode(on) { localStorage.setItem(FLAT, on ? '1' : '0') }
 export function getEra() { return localStorage.getItem(ERA) ?? 'berlin-1938' }
 export function setEra(era) { localStorage.setItem(ERA, era) }
 
+export function getCaseId() { return localStorage.getItem('noir.caseid') }
+export function setCaseId(id) { localStorage.setItem('noir.caseid', id) }
+
 /** Tradecraft view (DECISIONS §3): expose raw protocol artifacts. Off by default. */
 export function getTradecraft() { return localStorage.getItem('noir.tradecraft') === '1' }
 export function setTradecraft(on) { localStorage.setItem('noir.tradecraft', on ? '1' : '0') }

@@ -12,6 +12,7 @@ import { receiveGrants, latestGrants, fetchScope } from '../lib/nipxx.mjs'
 import { sendFieldReport, receiveRumors, KIND_GM_DISPATCH, KIND_BURN_NOTICE } from '../shared/wrap.mjs'
 import { StubGM } from '../gm/stubgm.mjs'
 import * as berlin from '../gm/cases/berlin-minicase.mjs'
+import { CASES } from '../gm/cases/registry.mjs'
 
 let passed = 0, failed = 0
 const check = (name, ok, detail = '') => {
@@ -113,6 +114,22 @@ check('restored GM keeps identity and world', gm2.pub === gm.pub && gm2.scopes.s
 check('restored GM keeps progress', gm2.unlocked.size === gm.unlocked.size && gm2.heat === gm.heat && gm2.over)
 check('restored GM keeps the burn (rotated generation)', gm2.scopes.get('adler').generation === 2)
 check('player notebook rebuilds against restored world', (await readable()).filter(s => s.status === 'ok').length >= 6)
+
+console.log('\n9. Every registered case: walkthrough to the epilogue')
+for (const mod of Object.values(CASES)) {
+  const r2 = new Relay()
+  const p2 = generateSecretKey()
+  const gmN = new StubGM(r2, mod)
+  await gmN.start(getPublicKey(p2))
+  for (const cmd of mod.walkthrough) {
+    await sendFieldReport(r2, p2, gmN.pub, cmd, mod.CASE_ID)
+    await gmN.poll()
+  }
+  const docs = []
+  for (const gr of latestGrants(await receiveGrants(r2, p2))) docs.push(await fetchScope(r2, gr))
+  check(`${mod.CASE_ID}: walkthrough reaches the epilogue`, docs.some(d => d.status === 'ok' && d.data?.kind === 'epilogue'))
+  check(`${mod.CASE_ID}: no heat spent on the happy path`, gmN.heat === 0)
+}
 
 console.log(`\n${passed} passed, ${failed} failed`)
 process.exit(failed ? 1 : 0)
