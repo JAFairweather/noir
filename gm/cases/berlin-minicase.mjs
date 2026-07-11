@@ -292,9 +292,9 @@ export const helpText = [
   '  Reconstructing an evening? "timeline A B C" in the order you believe.',
   '  Certain? "accuse <name>" — you file that once, and you live with it.',
   '',
-  'Your notebook (right) holds every scope you have been granted.',
-  'Click an entry to reread it on the drum. Burned entries are gone forward —',
-  'you keep exactly what you already read. Mind the heat.',
+  'Your notebook (right) holds every document you have been handed.',
+  'Click an entry to reread it on the drum. A burned contact is gone for',
+  'good — you keep exactly what you already read. Mind the heat.',
 ].join('\n')
 
 // Fair-play commitment (§4.3): sha256 of this canonical string is published
@@ -307,10 +307,10 @@ export const solutionCommitment = {
 export const opening = [
   'BERLIN — NOVEMBER 1938',
   '',
-  'The briefing reaches you as a grant: one scope, one key, one courier',
-  'who has gone quiet. Everything else in this city is somebody\'s secret,',
-  'encrypted on relays that would sell you for the price of the coal.',
+  'The case reaches you as a single dossier and a courier who has gone',
+  'quiet. Everything else in this city is somebody\'s secret, held close,',
+  'and the city sells its secrets for the price of the coal.',
   '',
-  'Your notebook holds what you have been granted. Nothing else is yours.',
+  'Your notebook holds what you have earned. Nothing else is yours.',
   'Read the briefing. Type plainly. Type "help" for field procedure.',
 ].join('\n')

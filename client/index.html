@@ -59,17 +59,16 @@
   /* ------------------------------------------------ the Wheel (spec §6) */
   #stage {
     flex: 1; position: relative;
-    perspective: 900px; perspective-origin: 50% 50%;
+    perspective: 1400px; perspective-origin: 50% 50%;
     overflow: hidden;
     /* fade the drum's wrap-away at the window edges */
-    mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 22%, black 78%, transparent 100%);
   }
   #drum {
     position: absolute; inset: 0;
     transform-style: preserve-3d;
-    /* pull the drum back by its radius (wheel.mjs RADIUS) so the focal line
-       sits at z≈0 — curvature without magnification */
-    transform: translateZ(-460px);
+    /* depth offset (translateZ = -RADIUS) is set by wheel.mjs so the focal
+       line sits at z≈0 — curvature without magnification */
     display: grid; place-items: center;
   }
   .drum-line {
@@ -184,12 +183,13 @@
     </div>
     <div id="flat" class="hidden" aria-label="Case transcript, flat mode"></div>
     <aside id="notebook">
-      <h2>NOTEBOOK — GRANT INDEX</h2>
+      <h2>CASE NOTEBOOK</h2>
       <ul id="notebook-list"></ul>
       <label class="toggle"><input type="checkbox" id="flat-toggle"> flat mode (no motion)</label>
       <label class="toggle"><input type="checkbox" id="score-toggle"> score (original 19-TET)</label>
-      <p class="note">Everything you hold is a kind-440 grant. Burned entries stay legible
-      exactly as far as you already read — the key rotated past you, which is the point.</p>
+      <p class="note">Everything here was earned or handed to you, and it can be taken back.
+      A burned contact stays legible exactly as far as you already read. Nothing in this
+      city is yours forever.</p>
     </aside>
   </main>
   <footer>

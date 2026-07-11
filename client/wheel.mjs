@@ -9,15 +9,17 @@
 // Flat mode renders the identical transcript as plain scrollable text and is
 // the default under prefers-reduced-motion. Same data, same order, always.
 
-const STEP_DEG = 4.6            // angular distance between lines
-const RADIUS = 460              // px — big drum, gentle curvature
-const VISIBLE_DEG = 46          // cull beyond this — taller reading window
+const RADIUS = 900              // px — a LARGE drum: flat, grand curvature
+const LINE_PX = 30              // arc length per line at the focal band
+const STEP_DEG = LINE_PX / (RADIUS * Math.PI / 180)   // ≈1.9° between lines
+const VISIBLE_DEG = 27          // ≈ full viewport height at this radius
 const FRICTION = 0.955
 const DETENT_PULL = 0.12        // gentle snap toward paragraph boundaries
 
 export class Wheel {
   constructor(drumEl, flatEl) {
     this.drum = drumEl
+    this.drum.style.transform = `translateZ(${-RADIUS}px)`   // focal line at z≈0
     this.flat = flatEl
     this.lines = []               // { text, cls, el, flatEl, para }
     this.rotation = 0             // degrees; line i sits at i * STEP_DEG
@@ -80,7 +82,7 @@ export class Wheel {
       if (this.flatMode) return
       e.preventDefault()
       this._target = null
-      this.velocity += e.deltaY * 0.008
+      this.velocity += e.deltaY * 0.0034
     }, { passive: false })
 
     let touchY = null
@@ -88,15 +90,15 @@ export class Wheel {
     stage.addEventListener('touchmove', (e) => {
       if (touchY == null || this.flatMode) return
       this._target = null
-      this.velocity += (touchY - e.touches[0].clientY) * 0.021
+      this.velocity += (touchY - e.touches[0].clientY) * 0.009
       touchY = e.touches[0].clientY
     }, { passive: true })
     stage.addEventListener('touchend', () => { touchY = null })
 
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' && !['ArrowUp', 'ArrowDown'].includes(e.key)) return
-      if (e.key === 'ArrowUp') { this._target = null; this.velocity -= 1.0 }
-      if (e.key === 'ArrowDown') { this._target = null; this.velocity += 1.0 }
+      if (e.key === 'ArrowUp') { this._target = null; this.velocity -= 0.45 }
+      if (e.key === 'ArrowDown') { this._target = null; this.velocity += 0.45 }
     })
   }
 
@@ -112,7 +114,7 @@ export class Wheel {
         this.rotation += this.velocity
         this.velocity *= FRICTION
         // Gentle detent at paragraph boundaries once momentum is nearly spent.
-        if (Math.abs(this.velocity) < 0.25) {
+        if (Math.abs(this.velocity) < 0.11) {
           const nearest = Math.round(this.rotation / STEP_DEG) * STEP_DEG
           this.rotation += (nearest - this.rotation) * DETENT_PULL
         }
@@ -135,8 +137,8 @@ export class Wheel {
       el.style.display = ''
       el.style.transform =
         `rotateX(${-delta}deg) translateZ(${RADIUS}px) scale(${1 - t * 0.06})`
-      el.style.opacity = (1 - t) ** 1.35
-      el.style.filter = t > 0.55 ? `blur(${(t - 0.55) * 2.4}px)` : ''
+      el.style.opacity = Math.max(0, (1 - t ** 1.5)) ** 1.1
+      el.style.filter = t > 0.62 ? `blur(${(t - 0.62) * 2.6}px)` : ''
       el.classList.toggle('focal', Math.abs(delta) < STEP_DEG * 0.55)
     }
   }

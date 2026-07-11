@@ -9,7 +9,7 @@ export function showBurnCard({ scopeName, reason }, onDismiss) {
     stamp: 'BURN NOTICE',
     title: scopeName ?? 'ASSET',
     body: reason,
-    footer: 'kind-441 · key rotated · access to future updates severed',
+    footer: 'contact severed — you keep exactly what you already read',
   }, onDismiss)
 }
 

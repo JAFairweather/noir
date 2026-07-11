@@ -58,7 +58,7 @@ async function refreshNotebook() {
         wheel.append(res.data.body ?? '', 'doc')
       })
     } else {
-      li.title = 'Key rotated past your grant. You keep what you already read.'
+      li.title = 'Burned. You keep exactly what you already read.'
     }
     list.appendChild(li)
   }
@@ -110,7 +110,7 @@ async function syncFromGM() {
     knownScopes.add(g.scopeId)
     const res = await fetchScope(relay, g)
     if (res.status !== 'ok') continue
-    wheel.append(`▸ GRANT RECEIVED — ${g.scopeName} (kind-440)`, 'grant-line')
+    wheel.append(`▸ NEW INTEL — ${g.scopeName}`, 'grant-line')
     wheel.append(`— ${res.data.title ?? g.scopeName} —`, 'doc-title')
     wheel.append(res.data.body ?? '', 'doc')
   }
