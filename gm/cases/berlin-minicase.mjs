@@ -275,6 +275,64 @@ export const accusation = {
     'By the time the error is plain, the blanks are gone and so is the seller. The case file closes unresolved.',
 }
 
+// Interrogation (§5.3): multi-turn, scripted. Disposition opens doors;
+// money closes this one. Pressing is handled by burnTriggers below.
+export const npcs = {
+  adler: {
+    aliases: ['ADLER', 'COAT CHECK', 'COATCHECK'],
+    fallback: 'She wipes a counter that is already clean and waits for a better question.',
+    lines: [
+      {
+        match: (t) => t.includes('WEISS'),
+        disposition: 1,
+        response: '"He tipped like a man apologizing for something. Always the coat, never the hat — ' +
+          'a man who keeps his hat is a man planning to leave quickly." She almost smiles. ' +
+          '"He asked after my son once. Nobody asks after my son."',
+      },
+      {
+        match: (t) => t.includes('SELLER') || t.includes('ARMBAND') || t.includes('INK') || t.includes('MAN'),
+        response: '"Ink on the right thumb, here—" she presses her own, "—the stamping hand. A man who stamps ' +
+          'all evening and then comes to drink where nobody outranks him. That is all the face I have for you."',
+      },
+      {
+        match: (t) => t.includes('BRANDT') || t.includes('KELLER'),
+        minDisposition: 1,
+        response: '"Names are your trade. Faces were mine." She glances at the door once. ' +
+          '"But the one who came — he came FROM somewhere, still wearing the evening on him. ' +
+          'Find out who the evening belonged to."',
+      },
+      {
+        match: (t) => t.includes('BRIBE') || t.includes('PAY') || t.includes('MONEY') || t.includes('REICHSMARK'),
+        heat: 5,
+        response: 'She looks at the money the way you look at weather. "The visa section pays better, ' +
+          'and I do not talk to them either." The coins stay on the counter, and so does a little of your standing. (Heat rises.)',
+      },
+    ],
+  },
+}
+
+// Near-miss nudges: the desk answers a bad guess with tradecraft, not silence.
+export const hints = [
+  {
+    match: (t) => t.includes('SILBER'),
+    response: 'SILBER is the key, not the message. Lay it against the intercept, letter over letter, and subtract.',
+  },
+  {
+    match: (t) => t.includes('CIPHER') || t.includes('DECODE') || t.includes('VIGENERE') || t.includes('INTERCEPT'),
+    response: 'Weiss keyed the old way: a running keyword under the text. His workname is printed at the bottom of the briefing. Six letters.',
+  },
+  {
+    requires: ['locker'],
+    match: (t) => t.includes('LEDGER') || t.includes('INITIALS'),
+    response: 'Two clerks sign B. and K. The ledger tells you WHEN. You still need an eye that saw WHO — and paper that says WHERE they stood.',
+  },
+  {
+    requires: ['watcher'],
+    match: (t) => t.includes('CARD') || t.includes('INDEX') || t.includes('RECONSTRUCT'),
+    response: 'Read the hours on the cards. A man arrives before he meets; he meets before he leaves. Submit it as "timeline" and three letters.',
+  },
+]
+
 // Pressing the informant burns her (§5.3): real rotation, permanent this run.
 export const burnTriggers = {
   press: {

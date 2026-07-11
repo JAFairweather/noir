@@ -276,6 +276,82 @@ export const accusation = {
     'The wet negative goes into an evidence room whose keys you now know better than to trust. The case closes the way the river closes.',
 }
 
+// Interrogation (§5.3): Remy warms if you talk about the right people;
+// a bribe works on him — this is New Orleans. Fontaine performs.
+export const npcs = {
+  remy: {
+    aliases: ['REMY', 'BARTENDER', 'BARKEEP'],
+    fallback: 'Remy finds a spot on the glass that isn\'t there and works it. The fan turns. You can wait him out; the beer can\'t.',
+    lines: [
+      {
+        match: (t) => t.includes('THIBODEAUX') || t.includes('PHOTOGRAPHER'),
+        disposition: 1,
+        response: '"Shot my girl\'s wedding for nothing but the meal. Man had a way of being invisible in a room ' +
+          'until you saw the pictures and realized he\'d seen everything." He sets the glass down gently. ' +
+          '"Whatever he pointed that camera at, it wasn\'t worth him."',
+      },
+      {
+        match: (t) => t.includes('BRIBE') || t.includes('TWENTY') || t.includes('PAY') || t.includes('MONEY'),
+        disposition: 1,
+        response: 'The twenty is gone before you finish sliding it. "Route order. That\'s the church key, podna — ' +
+          'patrols move when paper moves. And paper doesn\'t move for less than a sergeant." He rings nothing up.',
+      },
+      {
+        match: (t) => t.includes('BROUSSARD') || t.includes('SERGEANT'),
+        minDisposition: 1,
+        response: 'The rag stops. "Some names don\'t get said over this bar." He says it to the taps, quietly. ' +
+          '"You want that name, get it off paper. Paper can\'t get hurt."',
+      },
+      {
+        match: (t) => t.includes('ARCENEAUX') || t.includes('VICE'),
+        response: '"Arceneaux?" A short laugh with no joke in it. "Takes with both hands, sure. But that man ' +
+          'was in Biloxi pulling redfish all week and showing everybody the pictures. Wrong tree, podna."',
+      },
+    ],
+  },
+  fontaine: {
+    aliases: ['FONTAINE'],
+    fallback: 'Fontaine spreads his hands: the gesture of a man who has already told you everything he intends to.',
+    lines: [
+      {
+        match: (t) => t.includes('PAYOFF') || t.includes('VICE') || t.includes('LAUNDER') || t.includes('MONEY'),
+        response: '"Commerce," he corrects, pained. "This city runs on tribute like the river runs downhill. ' +
+          'I am a landmark, not a criminal." He relights a cigar that was not out.',
+      },
+      {
+        match: (t) => (t.includes('PRESS') || t.includes('THREATEN')) && t.includes('FONTAINE'),
+        heat: 10,
+        response: 'He listens to your leverage the way a man listens to rain. "My attorney enjoys this kind of ' +
+          'conversation more than I do." The room cools by a lawyer\'s degree. (Heat rises.)',
+      },
+      {
+        match: (t) => t.includes('PAPER') || t.includes('POLICEMAN') || t.includes('WHO'),
+        response: '"I told you: the paper man." He examines his ring. "In this parish, murder is occasionally ' +
+          'forgiven. Filing the wrong form, never. Go read forms, detective."',
+      },
+    ],
+  },
+}
+
+export const hints = [
+  {
+    match: (t) => t.includes('AD') || t.includes('CLASSIFIED') || t.includes('ACROSTIC') || t.includes('PICAYUNE'),
+    response: 'Top to bottom, first things first — the way he read. Eight lines, eight letters. They spell a street.',
+  },
+  {
+    requires: ['darkroom'],
+    match: (t) => t.includes('FRAME') || t.includes('CONTACT SHEET') || t.includes('NEGATIVE'),
+    response: 'Frame 14 is the handoff. The frame AFTER the handoff left town in a mail sack. Find where the negatives went — or who they show.',
+  },
+  {
+    requires: ['patrol'],
+    match: (t) => t.includes('PHOTOSTAT') || t.includes('ENTRIES') || t.includes('RECONSTRUCT'),
+    response: 'Put the night in order: seen, then moved, then "found." Submit it as "timeline" and three letters.',
+  },
+]
+
+export const missResponse = 'Nothing moves. A screen door claps somewhere, and a man on a gallery marks you without looking up. (Heat rises.)'
+
 export const burnTriggers = {
   press: {
     scope: 'remy',

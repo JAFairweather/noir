@@ -42,6 +42,10 @@ export class StubGM {
     this.heat = 0
     this.over = false
     this.seenReports = new Set()
+    // interrogation state per NPC (§5.3): disposition + which lines are spent
+    this.npcState = {}
+    for (const key of Object.keys(caseModule.npcs ?? {}))
+      this.npcState[key] = { disposition: 0, used: [] }
   }
 
   /** Snapshot everything a saved game needs to resume this GM. */
@@ -56,6 +60,7 @@ export class StubGM {
       heat: this.heat,
       over: this.over,
       seenReports: [...this.seenReports],
+      npcState: this.npcState,
     }
   }
 
@@ -70,6 +75,7 @@ export class StubGM {
     gm.heat = state.heat
     gm.over = state.over
     gm.seenReports = new Set(state.seenReports)
+    gm.npcState = state.npcState ?? gm.npcState
     return gm
   }
 
@@ -191,9 +197,34 @@ export class StubGM {
       }
     }
 
+    // Interrogation (§5.3, scripted): talking to an unlocked, unburned NPC.
+    for (const [key, npc] of Object.entries(this.case.npcs ?? {})) {
+      if (!this.unlocked.has(key) || this.burned.has(key)) continue
+      if (!npc.aliases.some(a => t.includes(a))) continue
+      const st = this.npcState[key]
+      for (let i = 0; i < npc.lines.length; i++) {
+        const line = npc.lines[i]
+        if (st.used.includes(i)) continue
+        if ((line.minDisposition ?? 0) > st.disposition) continue
+        if (!line.match(t)) continue
+        st.used.push(i)
+        st.disposition += line.disposition ?? 0
+        if (line.heat) this.addHeat(line.heat)
+        await this.dispatch(line.response)
+        return this.checkHeat()
+      }
+      return this.dispatch(npc.fallback)   // engaged, but no new ground
+    }
+
+    // Contextual hints: a near-miss earns a nudge, not the cold shoulder.
+    for (const hint of this.case.hints ?? []) {
+      if (hint.requires && !hint.requires.every(r => this.unlocked.has(r))) continue
+      if (hint.match(t)) return this.dispatch(hint.response)
+    }
+
     // No edge matched: the city notices people who ask the wrong questions.
     this.addHeat(this.case.heat.wrongAnswer)
-    await this.dispatch(
+    await this.dispatch(this.case.missResponse ??
       'Nothing gives. A doorman remembers your face; somewhere a telephone is lifted and set down again. (Heat rises.)',
     )
     return this.checkHeat()

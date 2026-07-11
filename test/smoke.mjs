@@ -131,5 +131,37 @@ for (const mod of Object.values(CASES)) {
   check(`${mod.CASE_ID}: no heat spent on the happy path`, gmN.heat === 0)
 }
 
+console.log('\n10. Scripted interrogation (dialogue state, hints)')
+{
+  const r3 = new Relay()
+  const p3 = generateSecretKey()
+  const gmB = new StubGM(r3, berlin)
+  await gmB.start(getPublicKey(p3))
+  const talk = async (text) => {
+    await sendFieldReport(r3, p3, gmB.pub, text, berlin.CASE_ID)
+    await gmB.poll()
+    const d = await receiveRumors(r3, p3, [KIND_GM_DISPATCH])
+    return JSON.parse(d[d.length - 1].content).text
+  }
+  await talk('the intercept decodes to zoo locker nine')
+  await talk('ask adler at josty about weiss')             // unlock edge
+  const gated = await talk('ask adler about brandt')
+  check('deep line gated behind disposition', !gated.includes('evening belonged'))
+  const warm = await talk('ask adler about weiss')          // dialogue, +1 disposition
+  check('dialogue line responds in character', warm.includes('apologizing'))
+  const open_ = await talk('ask adler about brandt')
+  check('disposition opens the deeper line', open_.includes('evening belonged'))
+  const heatBefore = gmB.heat
+  await talk('offer adler money')
+  check('bribing the wrong person costs heat', gmB.heat === heatBefore + 5)
+  const hint = await talk('I want to decode the cipher')
+  check('near-miss earns a hint, not the generic miss', hint.includes('workname'))
+  check('hints and dialogue cost no wrong-answer heat', gmB.heat === heatBefore + 5)
+  check('npc state survives serialize/restore', (() => {
+    const g2 = StubGM.restore(r3, berlin, gmB.serialize())
+    return g2.npcState.adler.disposition >= 1 && g2.npcState.adler.used.length >= 2
+  })())
+}
+
 console.log(`\n${passed} passed, ${failed} failed`)
 process.exit(failed ? 1 : 0)

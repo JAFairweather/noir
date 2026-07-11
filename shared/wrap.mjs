@@ -15,8 +15,11 @@ export const KIND_FIELD_REPORT = 14
 export const KIND_GM_DISPATCH = 15
 export const KIND_BURN_NOTICE = 441
 
-const now = () => Math.floor(Date.now() / 1000)
-const fuzz = () => now() - Math.floor(Math.random() * 2 * 24 * 60 * 60)
+// Monotonic, like nipxx.mjs: rapid exchanges must not tie on created_at,
+// or rumor ordering falls back to the FUZZED wrap timestamps (random).
+let lastTs = 0
+const now = () => (lastTs = Math.max(Math.floor(Date.now() / 1000), lastTs + 1))
+const fuzz = () => Math.floor(Date.now() / 1000) - Math.floor(Math.random() * 2 * 24 * 60 * 60)
 const conv = (sk, pk) => nip44.v2.utils.getConversationKey(sk, pk)
 
 // Every keyholder parameter accepts a raw 32-byte secret key OR a *signer*
