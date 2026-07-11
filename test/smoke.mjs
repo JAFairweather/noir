@@ -205,5 +205,33 @@ console.log('\n12. Live interrogation seam (Director NPCs)')
   check('burns stay mechanical with a live NPC attached', gmI.burned.has('adler'))
 }
 
+console.log('\n13. Structured verdicts (judge seam)')
+{
+  const r6 = new Relay()
+  const p6 = generateSecretKey()
+  const gmJ = new StubGM(r6, berlin)
+  await gmJ.start(getPublicKey(p6))
+  let judged = 0
+  gmJ.judge = async ({ answers }) => { judged++; return answers[0].id }
+  const say6 = async (text) => { await sendFieldReport(r6, p6, gmJ.pub, text, berlin.CASE_ID); await gmJ.poll() }
+  await say6('the intercept decodes to zoo locker nine')
+  check('exact match wins without consulting the judge', judged === 0 && gmJ.unlocked.has('locker'))
+  gmJ.judge = async ({ attempt, answers }) =>
+    attempt.toUpperCase().includes('NINTH BOX') ? (answers.find(a => a.id === 'adler') ? null : null) : null
+  // reset for a paraphrase test on a fresh case
+  const r7 = new Relay(), p7 = generateSecretKey()
+  const gmK = new StubGM(r7, berlin)
+  await gmK.start(getPublicKey(p7))
+  gmK.judge = async ({ answers }) => answers.find(a => a.canonical.includes('ZOO LOCKER NINE'))?.id ?? null
+  await sendFieldReport(r7, p7, gmK.pub, 'the message says the ninth box at the zoo terminal', berlin.CASE_ID)
+  await gmK.poll()
+  check('judge match grants the edge on a paraphrase', gmK.unlocked.has('locker') && gmK.heat === 0)
+  gmK.judge = async () => null
+  const heatBefore = gmK.heat
+  await sendFieldReport(r7, p7, gmK.pub, 'random flailing about nothing', berlin.CASE_ID)
+  await gmK.poll()
+  check('null verdict falls through to the normal miss', gmK.heat === heatBefore + berlin.heat.wrongAnswer)
+}
+
 console.log(`\n${passed} passed, ${failed} failed`)
 process.exit(failed ? 1 : 0)

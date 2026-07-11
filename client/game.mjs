@@ -24,7 +24,7 @@ import { Wheel } from './wheel.mjs'
 import { Score } from './audio.mjs'
 import { applyEra } from './art.mjs'
 import { setScene } from './scenes.mjs'
-import { detectDirector, makeVoice, makeInterrogator } from './director.mjs'
+import { detectDirector, makeVoice, makeInterrogator, makeJudge } from './director.mjs'
 import { showBurnCard, showEndCard, showSaveCard, showCaseSelect } from './burn.mjs'
 import { getOrCreatePlayerKey, getFlatMode, setFlatMode, getCaseId, setCaseId, getTradecraft, setTradecraft } from './settings.mjs'
 
@@ -271,6 +271,7 @@ function attachVoice() {
     getTail,
   })
   gm.interrogator = makeInterrogator({ url: director.url, era: CASE.ERA, getTail })
+  gm.judge = makeJudge({ url: director.url })
   $('#director-status').textContent = `DIRECTOR: ${director.model}`
   $('#director-status').classList.remove('hidden')
 }

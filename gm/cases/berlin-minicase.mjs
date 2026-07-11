@@ -224,6 +224,7 @@ export const edges = [
   {
     to: 'locker',
     requires: ['briefing'],
+    answerKey: 'The decoded intercept reads ZOO LOCKER NINE — locker 9 at Zoo Bahnhof (the Zoo railway station), Berlin.',
     match: (t) => t.includes('ZOO') && t.includes('LOCKER') && (t.includes('NINE') || /\b9\b/.test(t)),
     response: 'The attendant takes your pfennigs without looking. Locker nine opens on the second key.',
   },

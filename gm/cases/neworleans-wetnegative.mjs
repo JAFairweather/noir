@@ -226,6 +226,7 @@ export const edges = [
   {
     to: 'darkroom',
     requires: ['briefing'],
+    answerKey: 'The classified ad is an acrostic spelling DAUPHINE — it points to Thibodeaux\'s darkroom on Dauphine Street.',
     match: (t) => t.includes('DAUPHINE') || t.includes('DARKROOM'),
     response: 'First letters, top to bottom, the way he read: DAUPHINE. The landlady is sweeping the step like she\'s been waiting.',
   },

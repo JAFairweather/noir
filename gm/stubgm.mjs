@@ -207,6 +207,25 @@ export class StubGM {
       }
     }
 
+    // Structured verdict (§5): if exact match failed but a judge is
+    // attached, let it compare the attempt against the canonical answers
+    // of reachable puzzle edges — ground truth in, one id out, never prose.
+    const judgeable = this.case.edges.filter(e =>
+      e.answerKey && !this.unlocked.has(e.to) && e.requires.every(r => this.unlocked.has(r)))
+    if (this.judge && judgeable.length) {
+      try {
+        const match = await this.judge({
+          attempt: text,
+          answers: judgeable.map(e => ({ id: e.to, canonical: e.answerKey })),
+        })
+        const edge = judgeable.find(e => e.to === match)
+        if (edge) {
+          await this.grantScope(edge.to)
+          return this.dispatch(edge.response, { granted: edge.to })
+        }
+      } catch { /* judge unavailable — exact matching already had its turn */ }
+    }
+
     // Interrogation (§5.3): talking to an unlocked, unburned NPC.
     // With the Director present, the NPC is played live — bounded to the
     // dossier the player already holds plus the facts the scripted lines

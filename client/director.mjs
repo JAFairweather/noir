@@ -58,3 +58,22 @@ export function makeInterrogator({ url, era, getTail }) {
     }
   }
 }
+
+/** Build a judge: free-text attempt vs canonical answers → matched edge id or null. */
+export function makeJudge({ url }) {
+  return async ({ attempt, answers }) => {
+    const ctrl = new AbortController()
+    const timer = setTimeout(() => ctrl.abort(), 10000)
+    try {
+      const res = await fetch(`${url}/verdict`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        signal: ctrl.signal,
+        body: JSON.stringify({ attempt, answers }),
+      })
+      return (await res.json())?.match ?? null
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+}
