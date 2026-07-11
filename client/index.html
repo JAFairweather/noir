@@ -116,6 +116,9 @@
   .scope-stale { opacity: 0.45; cursor: default; text-decoration: line-through; }
   .scope-status { color: #d0442c; font-size: 11px; }
   #notebook .note { color: var(--accent-dim); font-size: 11px; margin-top: 14px; line-height: 1.5; }
+  .tc-meta { display: block; width: 100%; color: var(--accent-dim); font-size: 10px; letter-spacing: 0.04em; margin-top: 4px; word-break: break-all; }
+  #tc-panel { margin-top: 12px; padding: 8px; border: 1px dashed color-mix(in srgb, var(--accent) 30%, transparent);
+    color: var(--accent-dim); font-size: 10px; line-height: 1.6; letter-spacing: 0.04em; }
   label.toggle { display: flex; gap: 6px; align-items: center; margin-top: 14px; color: var(--accent-dim); cursor: pointer; }
 
   /* --------------------------------------------------- command line */
@@ -197,6 +200,8 @@
       <ul id="notebook-list"></ul>
       <label class="toggle"><input type="checkbox" id="flat-toggle"> flat mode (no motion)</label>
       <label class="toggle"><input type="checkbox" id="score-toggle"> score (original 19-TET)</label>
+      <label class="toggle"><input type="checkbox" id="tc-toggle"> tradecraft view (protocol)</label>
+      <div id="tc-panel" class="hidden"></div>
       <p class="note">Everything here was earned or handed to you, and it can be taken back.
       A burned contact stays legible exactly as far as you already read. Nothing in this
       city is yours forever.</p>

@@ -23,7 +23,7 @@ import { Wheel } from './wheel.mjs'
 import { Score } from './audio.mjs'
 import { applyEra } from './art.mjs'
 import { showBurnCard, showEndCard, showSaveCard } from './burn.mjs'
-import { getOrCreatePlayerKey, getFlatMode, setFlatMode, getEra } from './settings.mjs'
+import { getOrCreatePlayerKey, getFlatMode, setFlatMode, getEra, getTradecraft, setTradecraft } from './settings.mjs'
 
 const $ = (sel) => document.querySelector(sel)
 const SAVE_KEY = 'noir.save.v1'
@@ -37,6 +37,7 @@ let gm = new StubGM(relay, berlin)
 const wheel = new Wheel($('#drum'), $('#flat'))
 wheel.setFlatMode(getFlatMode())
 $('#flat-toggle').checked = getFlatMode()
+$('#tc-toggle').checked = getTradecraft()
 
 const seen = new Set()          // wrap ids already rendered
 const knownScopes = new Set()   // scopeIds already announced on the drum
@@ -91,6 +92,12 @@ async function refreshNotebook() {
     li.className = res.status === 'ok' ? 'scope-ok' : 'scope-stale'
     li.innerHTML = `<span class="scope-name"></span><span class="scope-status">${res.status === 'ok' ? '' : 'BURNED'}</span>`
     li.querySelector('.scope-name').textContent = g.scopeName ?? g.scopeId
+    if (getTradecraft()) {
+      const meta = document.createElement('span')
+      meta.className = 'tc-meta'
+      meta.textContent = `30440:${g.publisher.slice(0, 12)}…  d=${g.scopeId}  v=${g.generation}`
+      li.appendChild(meta)
+    }
     if (res.status === 'ok') {
       li.title = 'Read on the drum'
       li.addEventListener('click', () => {
@@ -105,6 +112,15 @@ async function refreshNotebook() {
   }
   $('#heat-value').textContent = gm.heat
   $('#heat-lamp').style.setProperty('--heat', gm.heat / 100)
+  const panel = $('#tc-panel')
+  panel.classList.toggle('hidden', !getTradecraft())
+  if (getTradecraft()) {
+    const kinds = {}
+    for (const e of relay.events) kinds[e.kind] = (kinds[e.kind] ?? 0) + 1
+    panel.textContent = 'RELAY VIEW (what an observer sees): ' +
+      Object.entries(kinds).map(([k, n]) => `kind-${k}×${n}`).join(' · ') +
+      ' — all ciphertext; grants are 1059 wraps under ephemeral keys; your notebook is the NIP-44-to-self kind-10440.'
+  }
   return grants
 }
 
@@ -213,6 +229,11 @@ window.addEventListener('keydown', (e) => {
 $('#flat-toggle').addEventListener('change', (e) => {
   setFlatMode(e.target.checked)
   wheel.setFlatMode(e.target.checked)
+})
+
+$('#tc-toggle').addEventListener('change', (e) => {
+  setTradecraft(e.target.checked)
+  refreshNotebook()
 })
 
 $('#score-toggle').addEventListener('change', (e) => {
