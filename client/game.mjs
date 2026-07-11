@@ -10,6 +10,7 @@
 // is additionally published as a real kind-10440 Grant Index — the same
 // record a live-relay client would recover from the nsec alone.
 
+import { nip19 } from 'nostr-tools'
 import { Relay } from '../lib/relay.mjs'
 import {
   receiveGrants, latestGrants, fetchScope, saveGrantIndex, toReceivedEntry,
@@ -269,6 +270,10 @@ async function resumeSave(save) {
 }
 
 $('#era-label').textContent = era.label
+$('#npub').textContent = nip19.npubEncode(playerPub).slice(0, 20) + '…' + nip19.npubEncode(playerPub).slice(-6)
+$('#npub').title = nip19.npubEncode(playerPub) +
+  '\n\nA per-browser field identity for the demo. Sign-in with a NIP-07 extension' +
+  ' (Alby/nos2x) or nsec import arrives with live relays — then your notebook follows your real npub.'
 const save = loadSave()
 if (save && !save.gameOver) {
   showSaveCard({ onLoad: () => resumeSave(save), onNew: freshStart })

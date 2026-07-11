@@ -82,3 +82,25 @@ duotone does for the eye. `client/audio.mjs` (the sax voice is ported from
 - **It's a reading game:** the score is furniture — far under the drum,
   never competing with text. Off by default; one notebook toggle
   ("score (original 19-TET)").
+
+## 7. Player identity — nostr-native sign-in (added post-spec)
+
+Gameplay is *meant* to be part of your nostr identity: the notebook IS a
+kind-10440 on your npub, achievements are grants you actually hold, and a
+finished case is provable against the GM's commitment. Plan:
+
+- **Demo mode (now):** a per-browser "field identity" (generated key,
+  npub shown in the notebook). Right for a demo: zero friction, and there
+  are no live relays yet for a real identity to matter on.
+- **With live relays (M2):** three ways in — **NIP-07 extension**
+  (Alby/nos2x; the signer interface in `lib/nipxx.mjs` and
+  `shared/wrap.mjs` maps onto `window.nostr` directly, key never touches
+  the page), **nsec/ncryptsec import** (NIP-49 at rest), or **field
+  identity** for the cautious. The wrap layer is already signer-ready.
+- **Practical caveat to test:** gift-wrap unwrapping calls the extension's
+  nip44 decrypt per wrap — fine with a blanket permission grant, unplayable
+  as one-prompt-per-event. If prompts are hostile in practice, default to a
+  session key granted *by* the main identity (a NIP-DA grant, naturally)
+  and let purists opt into raw NIP-07.
+- **Recommendation stands:** don't use an identity you care about for
+  throwaway runs; Noir is a game, not an opsec tool (SECURITY.md).

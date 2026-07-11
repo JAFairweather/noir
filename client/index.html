@@ -107,6 +107,9 @@
     background: color-mix(in srgb, var(--ink) 82%, black);
   }
   #notebook h2 { font-size: 12px; letter-spacing: 0.3em; color: var(--accent-dim); margin-bottom: 10px; }
+  #identity { margin-bottom: 12px; font-size: 10px; line-height: 1.6; }
+  #identity .id-label { display: block; color: var(--accent-dim); letter-spacing: 0.2em; }
+  #npub { color: var(--accent); word-break: break-all; }
   #notebook li {
     list-style: none; padding: 7px 6px; margin-bottom: 4px; cursor: pointer;
     border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
@@ -197,6 +200,10 @@
     <div id="flat" class="hidden" aria-label="Case transcript, flat mode"></div>
     <aside id="notebook">
       <h2>CASE NOTEBOOK</h2>
+      <div id="identity">
+        <span class="id-label">FIELD IDENTITY</span>
+        <span id="npub" title="Your nostr public key — the notebook belongs to it"></span>
+      </div>
       <ul id="notebook-list"></ul>
       <label class="toggle"><input type="checkbox" id="flat-toggle"> flat mode (no motion)</label>
       <label class="toggle"><input type="checkbox" id="score-toggle"> score (original 19-TET)</label>
