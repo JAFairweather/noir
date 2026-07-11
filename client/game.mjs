@@ -20,6 +20,7 @@ import {
 } from '../shared/wrap.mjs'
 import { StubGM } from '../gm/stubgm.mjs'
 import { CASES, CASE_LIST } from '../gm/cases/registry.mjs'
+import { generateCase } from '../gm/casegen.mjs'
 import { Wheel } from './wheel.mjs'
 import { Score } from './audio.mjs'
 import { applyEra } from './art.mjs'
@@ -33,8 +34,11 @@ const SAVE_KEY = 'noir.save.v1'
 
 const { sk: playerSk, pub: playerPub } = getOrCreatePlayerKey()
 
+// A case id is either a registered module or 'gen:<seed>' from casegen.
+const resolveCase = (id) => CASES[id] ?? (id?.startsWith('gen:') ? generateCase(id.slice(4)) : null)
+
 const relay = new Relay()
-let CASE = CASES[getCaseId()] ?? CASES[CASE_LIST[0].id]
+let CASE = resolveCase(getCaseId()) ?? CASES[CASE_LIST[0].id]
 let gm = new StubGM(relay, CASE)
 
 const wheel = new Wheel($('#drum'), $('#flat'))
@@ -76,7 +80,7 @@ function saveGame() {
 function loadSave() {
   try {
     const save = JSON.parse(localStorage.getItem(SAVE_KEY) ?? 'null')
-    return CASES[save?.caseId] && save.events?.length ? save : null
+    return resolveCase(save?.caseId) && save.events?.length ? save : null
   } catch { return null }
 }
 
@@ -278,7 +282,7 @@ function attachVoice() {
 
 async function freshStart(caseId) {
   clearSave()
-  applyCase(CASES[caseId] ?? CASE)
+  applyCase(resolveCase(caseId) ?? CASE)
   gm = new StubGM(relay, CASE)
   attachVoice()
   put('N O I R', 'title-line')
@@ -289,7 +293,7 @@ async function freshStart(caseId) {
 }
 
 async function resumeSave(save) {
-  applyCase(CASES[save.caseId])
+  applyCase(resolveCase(save.caseId))
   relay.events = save.events
   gm = StubGM.restore(relay, CASE, save.gm)
   attachVoice()
@@ -306,7 +310,15 @@ async function resumeSave(save) {
   input.focus()
 }
 
-const pickCase = () => showCaseSelect(CASE_LIST, (id) => freshStart(id))
+const pickCase = () => showCaseSelect([
+  ...CASE_LIST,
+  {
+    id: `gen:${Math.random().toString(36).slice(2, 8)}`,
+    label: 'BERLIN 1938 — FROM SEED',
+    title: 'A Courier Overdue',
+    blurb: 'A generated case: new names, new cipher, new culprit. Same seed, same case — committed before you play.',
+  },
+], (id) => freshStart(id))
 applyEra(CASE.ERA)
 director = await detectDirector()
 $('#npub').textContent = nip19.npubEncode(playerPub).slice(0, 20) + '…' + nip19.npubEncode(playerPub).slice(-6)

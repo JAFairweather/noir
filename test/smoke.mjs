@@ -13,6 +13,7 @@ import { sendFieldReport, receiveRumors, KIND_GM_DISPATCH, KIND_BURN_NOTICE } fr
 import { StubGM } from '../gm/stubgm.mjs'
 import * as berlin from '../gm/cases/berlin-minicase.mjs'
 import { CASES } from '../gm/cases/registry.mjs'
+import { generateCase } from '../gm/casegen.mjs'
 
 let passed = 0, failed = 0
 const check = (name, ok, detail = '') => {
@@ -231,6 +232,33 @@ console.log('\n13. Structured verdicts (judge seam)')
   await sendFieldReport(r7, p7, gmK.pub, 'random flailing about nothing', berlin.CASE_ID)
   await gmK.poll()
   check('null verdict falls through to the normal miss', gmK.heat === heatBefore + berlin.heat.wrongAnswer)
+}
+
+console.log('\n14. Casegen: deterministic, solvable, committed')
+{
+  const a1 = generateCase('alpha'), a2 = generateCase('alpha'), b1 = generateCase('bravo')
+  check('same seed → same case (culprit, cipher, commitment)',
+    a1.accusation.culprit === a2.accusation.culprit &&
+    a1.scopes.briefing.payload.body === a2.scopes.briefing.payload.body &&
+    a1.solutionCommitment.canonical() === a2.solutionCommitment.canonical())
+  check('different seed → different case',
+    JSON.stringify({ c: a1.accusation.culprit, b: a1.scopes.briefing.payload.body }) !==
+    JSON.stringify({ c: b1.accusation.culprit, b: b1.scopes.briefing.payload.body }))
+  for (const seed of ['alpha', 'bravo', 'charlie', 'delta']) {
+    const mod = generateCase(seed)
+    const rG = new Relay()
+    const pG = generateSecretKey()
+    const gmG = new StubGM(rG, mod)
+    await gmG.start(getPublicKey(pG))
+    for (const cmd of mod.walkthrough) {
+      await sendFieldReport(rG, pG, gmG.pub, cmd, mod.CASE_ID)
+      await gmG.poll()
+    }
+    const docs = []
+    for (const gr of latestGrants(await receiveGrants(rG, pG))) docs.push(await fetchScope(rG, gr))
+    check(`seed "${seed}": walkthrough reaches the epilogue at heat ${gmG.heat}`,
+      docs.some(d => d.status === 'ok' && d.data?.kind === 'epilogue') && gmG.heat === 0)
+  }
 }
 
 console.log(`\n${passed} passed, ${failed} failed`)
