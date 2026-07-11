@@ -199,6 +199,10 @@
     <span class="block-cursor" aria-hidden="true"></span>
     <span class="hint">ENTER send · SPACE next beat · ↑↓ rotate</span>
   </footer>
+  <script>
+    // network-first worker: a plain reload always gets the current build
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(() => {})
+  </script>
   <script type="module" src="./game.mjs"></script>
 </body>
 </html>
