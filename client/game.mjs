@@ -321,6 +321,23 @@ function attachVoice() {
   $('#director-status').classList.remove('hidden')
 }
 
+/** The preamble holds until the reader is ready: space, enter, or a tap. */
+function waitForBegin() {
+  return new Promise((resolve) => {
+    const done = () => {
+      window.removeEventListener('keydown', onKey, true)
+      window.removeEventListener('pointerdown', onTap, true)
+      resolve()
+    }
+    const onKey = (e) => {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); done() }
+    }
+    const onTap = () => done()
+    window.addEventListener('keydown', onKey, true)
+    window.addEventListener('pointerdown', onTap, true)
+  })
+}
+
 async function freshStart(caseId) {
   clearSave()
   applyCase(resolveCase(caseId) ?? CASE)
@@ -328,6 +345,10 @@ async function freshStart(caseId) {
   attachVoice()
   put('N O I R', 'title-line')
   put('Cases you unlock. Assets you burn.', 'gm dim')
+  wheel.append('', '')
+  wheel.append('— press space, and the file opens —', 'gm dim', { instant: true })
+  input.blur()
+  await waitForBegin()
   await gm.start(playerPub)
   await syncFromGM()
   input.focus()
