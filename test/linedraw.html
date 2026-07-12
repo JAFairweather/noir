@@ -1,0 +1,98 @@
+<!doctype html>
+<!-- linedraw.html — the line-draw engine spike (DECISIONS §2).
+     Serve the repo root and open /test/linedraw.html.
+     Phase 1: the street draws itself in while the briefing types.
+     Phase 2: hold. Phase 3: the street redraws itself into the café.
+     Phase 4: the café redraws itself into the station. -->
+<html>
+<head>
+<meta charset="utf-8">
+<title>noir — the pen (line-draw spike)</title>
+<style>
+  body { background: #0c0b09; color: #c9c2b4; font: 13px/1.6 monospace; margin: 0; overflow: hidden; }
+  #stage { position: fixed; inset: 0; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #type {
+    position: absolute; left: 6%; bottom: 8%; width: 44%;
+    color: #c39a56; text-shadow: 0 0 12px rgba(195,154,86,0.35);
+    letter-spacing: 0.06em; white-space: pre-wrap;
+  }
+  #phase { position: absolute; top: 12px; right: 16px; color: #c39a56; opacity: 0.6; letter-spacing: 0.3em; font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <div id="type"></div>
+  <div id="phase"></div>
+</div>
+<script type="module">
+  import { buildLineScene, renderDrawOn, renderMorph, planMorph } from '../client/linework.mjs'
+
+  const cv = document.getElementById('cv')
+  const W = 960, H = 540, DPR = 2
+  cv.width = W * DPR; cv.height = H * DPR
+  const ctx = cv.getContext('2d')
+
+  const INK = '#c39a56'                       // Berlin gold on ink black
+  const street = buildLineScene('street', 'spike')
+  const cafe = buildLineScene('cafe', 'spike')
+  const station = buildLineScene('station', 'spike')
+  const bridge1 = planMorph(street, cafe)
+  const bridge2 = planMorph(cafe, station)
+
+  const BRIEF = 'BERLIN. The canal gave the courier back\n' +
+    'at the Möckern bridge. Four men had the\n' +
+    'evening side. Three trails cut four down\n' +
+    'to one: the money, the paper, the eyes.'
+
+  // Timeline (ms):     draw-on      hold    bridge->cafe  hold   bridge->station  hold
+  const PHASES = [
+    { name: 'DRAW-ON', t0: 0,     t1: 6500 },
+    { name: 'HOLD',    t0: 6500,  t1: 8000 },
+    { name: 'BRIDGE',  t0: 8000,  t1: 11000 },
+    { name: 'HOLD',    t0: 11000, t1: 12500 },
+    { name: 'BRIDGE 2',t0: 12500, t1: 15500 },
+    { name: 'HOLD',    t0: 15500, t1: 17000 },
+  ]
+
+  function renderAt(ms) {
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
+    ctx.clearRect(0, 0, W, H)
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round'
+    ctx.strokeStyle = INK
+    // soft pen-light pass, then the crisp pen
+    const pass = (fn) => {
+      ctx.save()
+      ctx.shadowColor = 'rgba(195,154,86,0.5)'; ctx.shadowBlur = 6
+      fn(); ctx.restore()
+    }
+    if (ms < 8000) {
+      const t = Math.min(1, ms / 6500)
+      pass(() => renderDrawOn(ctx, street, t))
+      document.getElementById('type').textContent = BRIEF.slice(0, Math.floor(BRIEF.length * Math.min(1, ms / 6200))) + (ms < 6200 ? '▌' : '')
+    } else if (ms < 12500) {
+      const t = Math.min(1, (ms - 8000) / 3000)
+      pass(() => renderMorph(ctx, bridge1, t))
+      document.getElementById('type').textContent = 'The eyes drink at a place with two tall windows…'
+    } else {
+      const t = Math.min(1, (ms - 12500) / 3000)
+      pass(() => renderMorph(ctx, bridge2, t))
+      document.getElementById('type').textContent = 'And the courier used the shed at Anhalter…'
+    }
+    const ph = PHASES.find(p => ms >= p.t0 && ms < p.t1)
+    document.getElementById('phase').textContent = 'THE PEN — ' + (ph?.name ?? 'END')
+  }
+
+  // RAF loop with a test seam: __seek(ms) pauses and renders one instant.
+  let start = performance.now(), paused = false
+  window.__seek = (ms) => { paused = true; renderAt(ms) }
+  window.__resume = () => { paused = false; start = performance.now() }
+  ;(function loop(now) {
+    if (!paused) renderAt((now - start) % 17000)
+    requestAnimationFrame(loop)
+  })(performance.now())
+  window.__ready = true
+</script>
+</body>
+</html>
