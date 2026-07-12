@@ -477,8 +477,540 @@ const painters = {
 }
 
 /** Render a scene to a canvas (exported for the dev gallery + tests). */
+// ------------------------------------------------- era-specific painters
+//
+// The generic set above is the Berlin grammar — trainshed, Kaffeehaus,
+// bureau, Güterbahnhof. Each era overrides the kinds where its city
+// diverges: New Orleans is galleries and iron lace, the wharf and the
+// streetcar, a PI's door with the trade etched backwards on the glass.
+// Lookup: eraPainters[era][kind], falling back to the generic painter.
+
+/** Wrought-iron gallery railing: rails, balusters, scroll arcs. */
+function ironLace(ctx, x, y, w, h = 24, v = 0.14, a = 0.9) {
+  ctx.strokeStyle = ga(v, a); ctx.lineWidth = 2
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y); ctx.stroke()
+  ctx.beginPath(); ctx.moveTo(x, y + h); ctx.lineTo(x + w, y + h); ctx.stroke()
+  ctx.lineWidth = 1.2
+  for (let bx = x; bx <= x + w; bx += 9) {
+    ctx.beginPath(); ctx.moveTo(bx, y); ctx.lineTo(bx, y + h); ctx.stroke()
+  }
+  for (let bx = x; bx + 18 <= x + w; bx += 18) {                    // scrollwork
+    ctx.beginPath(); ctx.arc(bx + 9, y + h * 0.45, 5.5, 0, Math.PI, false); ctx.stroke()
+    ctx.beginPath(); ctx.arc(bx + 9, y + h * 0.6, 5.5, Math.PI, 2 * Math.PI, false); ctx.stroke()
+  }
+}
+
+/** Spanish moss: slow ragged strands off a branch point. */
+function moss(ctx, rand, x, y, n = 5, len = 40, v = 0.12) {
+  ctx.strokeStyle = ga(v, 0.8); ctx.lineWidth = 1.4
+  for (let i = 0; i < n; i++) {
+    const sx = x + (rand() - 0.5) * 26, sl = len * (0.5 + rand() * 0.8)
+    ctx.beginPath(); ctx.moveTo(sx, y)
+    ctx.quadraticCurveTo(sx + (rand() - 0.5) * 10, y + sl * 0.5, sx + (rand() - 0.5) * 8, y + sl)
+    ctx.stroke()
+  }
+}
+
+const eraPainters = {
+
+  'berlin-1938': {
+    // the Ku'damm: grand facades, tram wires, a Litfaßsäule with its posters
+    street(ctx, rand) {
+      sky(ctx, rand, 0.08, 0.2, 0.55)
+      const ground = H * 0.66
+      let x = -30
+      while (x < W) { const w = 80 + rand() * 110; building(ctx, rand, x, w, 100 + rand() * 130, ground - 26, 0.09, 0.08); x += w + 4 }
+      x = -20
+      while (x < W) {                                                // grand facades
+        const w = 150 + rand() * 130, hgt = 200 + rand() * 180
+        building(ctx, rand, x, w, hgt, ground, 0.04, 0.14)
+        ctx.strokeStyle = ga(0.12, 0.8); ctx.lineWidth = 1.5         // cornice lines
+        for (const fy of [0.3, 0.55, 0.8]) {
+          ctx.beginPath(); ctx.moveTo(x, ground - hgt * fy); ctx.lineTo(x + w, ground - hgt * fy); ctx.stroke()
+        }
+        ctx.fillStyle = ga(0.5, 0.35)                                 // lit shopfront band
+        ctx.fillRect(x + 8, ground - 34, w - 16, 26)
+        ctx.fillStyle = g(0.03)
+        for (let sx = x + 8; sx < x + w - 16; sx += 34) ctx.fillRect(sx + 26, ground - 34, 8, 26)
+        x += w + 12 + rand() * 20
+      }
+      // catenary wires + hanging lamps over the roadway
+      ctx.strokeStyle = ga(0.2, 0.7); ctx.lineWidth = 1
+      for (const t of [0.3, 0.55, 0.8]) {
+        ctx.beginPath(); ctx.moveTo(0, H * (0.34 + t * 0.06)); ctx.lineTo(W, H * (0.3 + t * 0.08)); ctx.stroke()
+        glow(ctx, W * t, H * (0.33 + t * 0.07), 10, 0.9, 0.5)
+      }
+      // tram rails, wet
+      wetSheen(ctx, ground)
+      ctx.strokeStyle = ga(0.5, 0.5); ctx.lineWidth = 2.5
+      for (const off of [0, 26, 90, 116]) {
+        ctx.beginPath(); ctx.moveTo(0, ground + 70 + off); ctx.lineTo(W, ground + 40 + off * 0.7); ctx.stroke()
+      }
+      // the Litfaßsäule: advertising column, dome cap, layered posters
+      const cx = W * 0.2, ch = 155, cw = 46
+      ctx.fillStyle = g(0.06); ctx.fillRect(cx - cw / 2, ground + 26 - ch, cw, ch)
+      ctx.beginPath(); ctx.ellipse(cx, ground + 26 - ch, cw / 2, 12, 0, Math.PI, 2 * Math.PI); ctx.fill()
+      for (let i = 0; i < 4; i++) {
+        ctx.fillStyle = ga(0.45 + rand() * 0.2, 0.5)
+        ctx.fillRect(cx - cw / 2 + 5 + rand() * 8, ground + 26 - ch + 18 + i * 32, 22 + rand() * 10, 22)
+      }
+      // a tram down the avenue, windows lit
+      const tx = W * 0.76, ty = ground - 16
+      ctx.fillStyle = g(0.05); ctx.fillRect(tx, ty - 44, 128, 46)
+      ctx.fillStyle = ga(0.7, 0.6)
+      for (let i = 0; i < 6; i++) ctx.fillRect(tx + 8 + i * 20, ty - 36, 13, 18)
+      ctx.strokeStyle = ga(0.2, 0.9); ctx.lineWidth = 1.5
+      ctx.beginPath(); ctx.moveTo(tx + 64, ty - 44); ctx.lineTo(tx + 80, ty - 70); ctx.stroke()
+      glow(ctx, tx - 4, ty - 20, 10, 0.95, 0.5)                       // headlamp
+      lampPost(ctx, W * 0.42, ground + 30, 150, 110)
+      reflection(ctx, W * 0.42 + 18, ground + 30, 90)
+      figure(ctx, W * 0.55, ground + 40, 150)
+      figure(ctx, W * 0.61, ground + 40, 140, 0.05)
+      rain(ctx, rand)
+    },
+
+    // dawn with the Funkturm on the skyline
+    epilogue(ctx, rand) {
+      painters.epilogue(ctx, rand)
+      const bx = W * 0.8, top = H * 0.14, base = H * 0.72
+      ctx.strokeStyle = ga(0.1, 0.95); ctx.lineWidth = 2.5
+      ctx.beginPath(); ctx.moveTo(bx - 34, base); ctx.lineTo(bx - 4, top + 20); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(bx + 34, base); ctx.lineTo(bx + 4, top + 20); ctx.stroke()
+      ctx.lineWidth = 1.3
+      for (let i = 0; i < 7; i++) {                                   // lattice
+        const t = i / 7, half = 34 * (1 - t * 0.85), y = base - t * (base - top - 20)
+        ctx.beginPath(); ctx.moveTo(bx - half, y); ctx.lineTo(bx + half * 0.6, y - 22); ctx.stroke()
+        ctx.beginPath(); ctx.moveTo(bx + half, y); ctx.lineTo(bx - half * 0.6, y - 22); ctx.stroke()
+      }
+      ctx.fillStyle = g(0.08)
+      ctx.fillRect(bx - 17, H * 0.42, 34, 10)                         // restaurant deck
+      ctx.fillRect(bx - 9, top + 12, 18, 9)                           // observation deck
+      ctx.strokeStyle = ga(0.1, 0.95); ctx.lineWidth = 2
+      ctx.beginPath(); ctx.moveTo(bx, top + 12); ctx.lineTo(bx, top - 14); ctx.stroke()
+    },
+  },
+
+  'neworleans-1968': {
+    // the Quarter: galleries on posts, iron lace, gas lamps, a neon spill
+    street(ctx, rand) {
+      sky(ctx, rand, 0.1, 0.22, 0.5)
+      const ground = H * 0.7
+      // far neon glow down the street
+      glow(ctx, W * 0.92, ground - 60, 130, 0.8, 0.2)
+      ctx.fillStyle = ga(0.85, 0.7); ctx.fillRect(W * 0.9, ground - 150, 10, 74) // the sign itself
+      glow(ctx, W * 0.905, ground - 112, 30, 0.95, 0.5)
+      // row of two-story Creole facades
+      let x = -20
+      while (x < W * 0.88) {
+        const w = 120 + rand() * 110, hgt = H * (0.36 + rand() * 0.08)
+        ctx.fillStyle = g(0.045 + rand() * 0.015); ctx.fillRect(x, ground - hgt, w, hgt)
+        // tall French windows upstairs, shutters beside; a few glow
+        for (let wx2 = x + 14; wx2 + 26 < x + w; wx2 += 44) {
+          const lit = rand() < 0.5
+          ctx.fillStyle = lit ? ga(0.72, 0.8) : g(0.03)
+          ctx.fillRect(wx2 + 7, ground - hgt + 22, 14, 40)
+          ctx.fillStyle = g(0.07)
+          ctx.fillRect(wx2, ground - hgt + 22, 6, 40)                 // shutters
+          ctx.fillRect(wx2 + 22, ground - hgt + 22, 6, 40)
+        }
+        x += w
+      }
+      // the gallery: balcony deck on posts, iron lace, hanging ferns
+      const balY = ground - H * 0.19
+      ctx.fillStyle = g(0.05); ctx.fillRect(0, balY, W * 0.88, 8)
+      ctx.strokeStyle = ga(0.3, 0.6); ctx.lineWidth = 1.5              // lamplit deck edge
+      ctx.beginPath(); ctx.moveTo(0, balY + 8); ctx.lineTo(W * 0.88, balY + 8); ctx.stroke()
+      ironLace(ctx, 0, balY - 24, W * 0.88, 24, 0.26)
+      ctx.strokeStyle = ga(0.08, 1); ctx.lineWidth = 4
+      for (let px = 24; px < W * 0.88; px += 78) {
+        ctx.beginPath(); ctx.moveTo(px, balY + 8); ctx.lineTo(px, ground + 18); ctx.stroke()
+      }
+      for (let fx = 60; fx < W * 0.86; fx += 150 + rand() * 60) {     // ferns off the rail
+        ctx.fillStyle = ga(0.09, 0.9)
+        ctx.beginPath(); ctx.ellipse(fx, balY - 20, 14, 9, 0, 0, Math.PI * 2); ctx.fill()
+        moss(ctx, rand, fx, balY - 14, 4, 22, 0.09)
+      }
+      // ground floor under the gallery: lit doorways
+      for (let dx2 = 40; dx2 < W * 0.84; dx2 += 160 + rand() * 60) {
+        ctx.fillStyle = ga(0.62, 0.75)
+        ctx.fillRect(dx2, ground - 62, 26, 62)
+        glow(ctx, dx2 + 13, ground - 30, 40, 0.7, 0.3)
+        glow(ctx, dx2 + 13, ground - 4, 44, 0.6, 0.2)
+      }
+      wetSheen(ctx, ground)
+      // gas lamps on brackets
+      for (const lx of [W * 0.3, W * 0.68]) {
+        ctx.strokeStyle = ga(0.1, 1); ctx.lineWidth = 2.5
+        ctx.beginPath(); ctx.moveTo(lx, balY + 26); ctx.lineTo(lx, balY + 44); ctx.stroke()
+        ctx.fillStyle = g(0.08); ctx.fillRect(lx - 5, balY + 44, 10, 14)
+        glow(ctx, lx, balY + 51, 22, 0.98, 0.85)
+        glow(ctx, lx, ground, 80, 0.65, 0.18)
+        reflection(ctx, lx, ground, 70, 0.7, 0.1)
+      }
+      // cobble hint
+      ctx.strokeStyle = ga(0.18, 0.4); ctx.lineWidth = 1
+      for (let i = 0; i < 26; i++) {
+        const cy2 = ground + 14 + rand() * (H - ground - 20), cx2 = rand() * W
+        ctx.beginPath(); ctx.arc(cx2, cy2, 5 + rand() * 4, Math.PI * 0.15, Math.PI * 0.85); ctx.stroke()
+      }
+      figure(ctx, W * 0.48, ground + 36, 145)
+      if (rand() < 0.6) figure(ctx, W * 0.55, ground + 36, 135, 0.05)
+      rain(ctx, rand, 50)
+    },
+
+    // the coffee stand under the awning — columns, round tables, steam
+    cafe(ctx, rand) {
+      ctx.fillStyle = g(0.03); ctx.fillRect(0, 0, W, H)
+      const ground = H * 0.8
+      // warm interior wash behind the colonnade
+      const wash = ctx.createLinearGradient(0, H * 0.3, 0, ground)
+      wash.addColorStop(0, ga(0.5, 0.85)); wash.addColorStop(1, ga(0.28, 0.8))
+      ctx.fillStyle = wash; ctx.fillRect(W * 0.04, H * 0.3, W * 0.92, ground - H * 0.3)
+      // globe lights down the arcade
+      for (let i = 0; i < 5; i++) {
+        const gx = W * (0.14 + i * 0.18)
+        ctx.strokeStyle = ga(0.1, 0.9); ctx.lineWidth = 1.5
+        ctx.beginPath(); ctx.moveTo(gx, H * 0.3); ctx.lineTo(gx, H * 0.37); ctx.stroke()
+        glow(ctx, gx, H * 0.395, 13, 0.98, 0.7)
+      }
+      // round marble tables, chairs, customers, cups, steam
+      for (const [tx, tw2] of [[W * 0.2, 54], [W * 0.44, 60], [W * 0.7, 54]]) {
+        const ty = ground - 58
+        if (rand() < 0.85) {                                          // someone seated
+          const px = tx - 16 - rand() * 8
+          ctx.fillStyle = g(0.05)
+          ctx.beginPath(); ctx.arc(px, ty - 40, 10, 0, Math.PI * 2); ctx.fill()
+          ctx.fillRect(px - 14, ty - 31, 28, 31)
+        }
+        if (rand() < 0.5) {
+          const px = tx + 18 + rand() * 8
+          ctx.fillStyle = g(0.05)
+          ctx.beginPath(); ctx.arc(px, ty - 38, 9, 0, Math.PI * 2); ctx.fill()
+          ctx.fillRect(px - 12, ty - 30, 24, 30)
+        }
+        ctx.fillStyle = ga(0.78, 0.9)                                 // marble top
+        ctx.beginPath(); ctx.ellipse(tx, ty, tw2 / 2, 8, 0, 0, Math.PI * 2); ctx.fill()
+        ctx.fillStyle = g(0.06); ctx.fillRect(tx - 3, ty + 6, 6, 52)  // pedestal
+        ctx.fillStyle = ga(0.9, 0.9)                                  // cups
+        ctx.fillRect(tx - 12, ty - 6, 8, 5); ctx.fillRect(tx + 6, ty - 6, 8, 5)
+        smoke(ctx, rand, tx, ty - 8, 3, 0.5)                          // coffee steam
+      }
+      // square columns holding the awning
+      for (let px = W * 0.08; px < W * 0.98; px += W * 0.18) {
+        ctx.fillStyle = g(0.1); ctx.fillRect(px - 9, H * 0.28, 18, ground - H * 0.28)
+        ctx.fillStyle = g(0.05); ctx.fillRect(px + 3, H * 0.28, 6, ground - H * 0.28)
+      }
+      // the striped awning, scalloped edge
+      for (let i = 0; i < 16; i++) {
+        ctx.fillStyle = i % 2 ? g(0.06) : g(0.22)
+        const ax = W * 0.03 + (i / 16) * W * 0.94
+        ctx.beginPath()
+        ctx.moveTo(ax, H * 0.1); ctx.lineTo(ax + W * 0.94 / 16, H * 0.1)
+        ctx.lineTo(ax + W * 0.94 / 16 - 5, H * 0.28); ctx.lineTo(ax - 5, H * 0.28)
+        ctx.closePath(); ctx.fill()
+      }
+      for (let i = 0; i < 16; i++) {                                  // scallops
+        ctx.fillStyle = i % 2 ? g(0.06) : g(0.22)
+        const ax = W * 0.03 + (i + 0.5) * W * 0.94 / 16 - 5
+        ctx.beginPath(); ctx.arc(ax, H * 0.28, W * 0.94 / 32, 0, Math.PI); ctx.fill()
+      }
+      wetSheen(ctx, ground, 0.25, 0.2)
+      glow(ctx, W * 0.5, ground + 10, W * 0.3, 0.5, 0.12)             // light spilling out
+      figure(ctx, W * 0.9, ground + 34, 140)                          // watcher at the edge
+      rain(ctx, rand, 40)
+    },
+
+    // the PI office: the trade etched backwards on the glass, fan turning
+    office(ctx, rand) {
+      ctx.fillStyle = g(0.045); ctx.fillRect(0, 0, W, H)
+      // floorboards
+      ctx.strokeStyle = ga(0.1, 0.6); ctx.lineWidth = 1
+      for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(0, H * 0.72 + i * 22); ctx.lineTo(W, H * 0.74 + i * 22); ctx.stroke() }
+      // water stain in the ceiling corner
+      for (let i = 0; i < 5; i++) glow(ctx, W * (0.4 + rand() * 0.1), H * 0.05 + rand() * 20, 24 + rand() * 22, 0.14, 0.16)
+      // ceiling fan, mid-turn — a wash of light behind it so it silhouettes
+      const fx = W * 0.46, fy = H * 0.13
+      glow(ctx, fx, fy, 120, 0.35, 0.3)
+      ctx.strokeStyle = ga(0.02, 1); ctx.lineWidth = 3
+      ctx.beginPath(); ctx.moveTo(fx, 0); ctx.lineTo(fx, fy); ctx.stroke()
+      ctx.fillStyle = g(0.02)
+      ctx.beginPath(); ctx.ellipse(fx, fy, 9, 6, 0, 0, Math.PI * 2); ctx.fill()
+      for (const ang of [0.1, 1.1, 2.2, 4.2, 5.3]) {
+        ctx.save(); ctx.translate(fx, fy); ctx.rotate(ang)
+        ctx.beginPath(); ctx.ellipse(52, 0, 46, 7, 0, 0, Math.PI * 2); ctx.fill()
+        ctx.strokeStyle = ga(0.3, 0.5); ctx.lineWidth = 1.2
+        ctx.beginPath(); ctx.ellipse(52, 0, 46, 7, 0, Math.PI, 2 * Math.PI); ctx.stroke()
+        ctx.restore()
+      }
+      // the door: frosted pane, PRIVATE INVESTIGATOR etched, read from inside
+      const dx = W * 0.05, dw = W * 0.17, dy = H * 0.12, dh = H * 0.6
+      ctx.fillStyle = g(0.075); ctx.fillRect(dx - 10, dy - 10, dw + 20, dh + 20)
+      const frost = ctx.createLinearGradient(dx, dy, dx, dy + dh * 0.66)
+      frost.addColorStop(0, ga(0.46, 0.85)); frost.addColorStop(1, ga(0.32, 0.8))
+      ctx.fillStyle = frost; ctx.fillRect(dx, dy, dw, dh * 0.66)
+      ctx.fillStyle = g(0.06); ctx.fillRect(dx, dy + dh * 0.66, dw, dh * 0.34)
+      ctx.save()                                                      // mirrored lettering
+      ctx.translate(dx + dw / 2, dy + dh * 0.24)
+      ctx.scale(-1, 1)
+      ctx.fillStyle = ga(0.07, 0.95)
+      ctx.font = `bold ${Math.round(dw * 0.155)}px Georgia, serif`
+      ctx.textAlign = 'center'
+      ctx.fillText('PRIVATE', 0, 0)
+      ctx.font = `bold ${Math.round(dw * 0.11)}px Georgia, serif`
+      ctx.fillText('INVESTIGATOR', 0, dh * 0.09)
+      ctx.restore()
+      ctx.strokeStyle = ga(0.07, 0.9); ctx.lineWidth = 1.5            // etched rule
+      ctx.beginPath(); ctx.moveTo(dx + dw * 0.2, dy + dh * 0.37); ctx.lineTo(dx + dw * 0.8, dy + dh * 0.37); ctx.stroke()
+      glow(ctx, dx + dw / 2, dy + dh * 0.3, dw * 0.7, 0.46, 0.11)
+      ctx.fillStyle = g(0.09)
+      ctx.beginPath(); ctx.arc(dx + dw - 9, dy + dh * 0.74, 4, 0, Math.PI * 2); ctx.fill()
+      // blinds window: neon blotch from the street below
+      const wx = W * 0.62, ww = W * 0.3, wy = H * 0.14, wh = H * 0.44
+      const nite = ctx.createLinearGradient(wx, wy, wx, wy + wh)
+      nite.addColorStop(0, g(0.12)); nite.addColorStop(1, g(0.26))
+      ctx.fillStyle = nite; ctx.fillRect(wx, wy, ww, wh)
+      glow(ctx, wx + ww * 0.3, wy + wh * 0.75, 46, 0.85, 0.4)          // neon below
+      ctx.fillStyle = g(0.06)                                          // balcony rail across
+      ironLace(ctx, wx, wy + wh * 0.58, ww, 18, 0.05, 0.9)
+      ctx.fillStyle = g(0.05)
+      for (let i = 0; i < 9; i++) ctx.fillRect(wx, wy + i * (wh / 9), ww, wh / 18)
+      ctx.fillStyle = g(0.075); ctx.fillRect(wx - 8, wy - 8, ww + 16, 8); ctx.fillRect(wx - 8, wy, 8, wh + 8); ctx.fillRect(wx + ww, wy, 8, wh + 8)
+      // slat light across the room
+      ctx.save(); ctx.translate(W * 0.24, 0); ctx.rotate(-0.06)
+      for (let i = 0; i < 9; i++) {
+        ctx.fillStyle = ga(0.5, 0.12 + rand() * 0.04)
+        ctx.fillRect(-W * 0.28, H * 0.16 + i * 34, W * 0.7, 10)
+      }
+      ctx.restore()
+      // desk: lamp pool, photographs fanned out, the bottle, the phone
+      ctx.fillStyle = g(0.075); ctx.fillRect(0, H * 0.7, W, H * 0.3)
+      ctx.fillStyle = g(0.11); ctx.fillRect(W * 0.24, H * 0.68, W * 0.46, 8)
+      const lx = W * 0.36, ly = H * 0.55
+      ctx.fillStyle = g(0.04)
+      ctx.beginPath(); ctx.moveTo(lx - 32, ly); ctx.lineTo(lx + 32, ly); ctx.lineTo(lx + 20, ly - 15); ctx.lineTo(lx - 20, ly - 15); ctx.closePath(); ctx.fill()
+      ctx.fillRect(lx - 3, ly, 6, H * 0.68 - ly)
+      glow(ctx, lx, ly + 8, 24, 0.95, 0.7)
+      ctx.fillStyle = ga(0.85, 0.13)
+      ctx.beginPath(); ctx.moveTo(lx, ly + 4); ctx.lineTo(lx - 120, H * 0.76); ctx.lineTo(lx + 120, H * 0.76); ctx.closePath(); ctx.fill()
+      glow(ctx, lx, H * 0.72, 120, 0.8, 0.2)
+      for (let i = 0; i < 4; i++) {                                    // the photographs
+        ctx.save(); ctx.translate(lx - 30 + i * 26, H * 0.705 + (i % 2) * 8); ctx.rotate(-0.24 + i * 0.13)
+        ctx.fillStyle = ga(0.78, 0.7); ctx.fillRect(0, 0, 34, 26)
+        ctx.fillStyle = ga(0.2, 0.7); ctx.fillRect(4, 4, 26, 14)
+        ctx.restore()
+      }
+      ctx.fillStyle = g(0.02)                                          // bottle + glass
+      ctx.fillRect(lx + 96, H * 0.6, 15, 46); ctx.fillRect(lx + 100, H * 0.575, 7, 26)
+      ctx.fillRect(lx + 120, H * 0.635, 13, 13)
+      ctx.strokeStyle = ga(0.5, 0.5); ctx.lineWidth = 1.5
+      ctx.beginPath(); ctx.moveTo(lx + 96, H * 0.6); ctx.lineTo(lx + 111, H * 0.6); ctx.stroke()
+      ctx.fillStyle = g(0.02)                                          // the telephone
+      ctx.fillRect(W * 0.6, H * 0.635, 44, 22)
+      ctx.beginPath(); ctx.ellipse(W * 0.6 + 22, H * 0.632, 24, 7, 0, Math.PI, 2 * Math.PI); ctx.fill()
+      smoke(ctx, rand, lx + 130, H * 0.58, 6, 0.4)
+    },
+
+    // the wharf: the river, a freighter, crates and bollards in the mist
+    yard(ctx, rand) {
+      sky(ctx, rand, 0.08, 0.18, 0.42)
+      const moonX = W * 0.72, moonY = H * 0.2
+      glow(ctx, moonX, moonY, 60, 0.95, 0.5)
+      ctx.fillStyle = ga(0.9, 0.9)
+      ctx.beginPath(); ctx.arc(moonX, moonY, 15, 0, Math.PI * 2); ctx.fill()
+      // far bank, low lights
+      ctx.fillStyle = g(0.06); ctx.fillRect(0, H * 0.42, W, 12)
+      for (let i = 0; i < 8; i++) { ctx.fillStyle = ga(0.7, 0.5); ctx.fillRect(rand() * W, H * 0.425 + rand() * 6, 2, 2) }
+      // the river
+      const river = ctx.createLinearGradient(0, H * 0.45, 0, H * 0.64)
+      river.addColorStop(0, g(0.13)); river.addColorStop(1, g(0.08))
+      ctx.fillStyle = river; ctx.fillRect(0, H * 0.45, W, H * 0.19)
+      ctx.strokeStyle = ga(0.6, 0.25); ctx.lineWidth = 1.5              // moon track
+      for (let i = 0; i < 14; i++) {
+        const my = H * 0.46 + (i / 14) * H * 0.17, mw2 = 6 + rand() * 26
+        ctx.beginPath(); ctx.moveTo(moonX - mw2 / 2 + (rand() - 0.5) * 30, my); ctx.lineTo(moonX + mw2 / 2, my); ctx.stroke()
+      }
+      // freighter, twin stacks, portholes
+      const sx = W * 0.16, sy = H * 0.52
+      ctx.fillStyle = g(0.04)
+      ctx.beginPath(); ctx.moveTo(sx - 20, sy); ctx.lineTo(sx + 190, sy); ctx.lineTo(sx + 176, sy - 26); ctx.lineTo(sx - 6, sy - 26); ctx.closePath(); ctx.fill()
+      ctx.fillRect(sx + 40, sy - 48, 80, 24)
+      ctx.fillRect(sx + 58, sy - 64, 12, 18); ctx.fillRect(sx + 86, sy - 64, 12, 18)
+      smoke(ctx, rand, sx + 64, sy - 66, 5, 0.35)
+      ctx.strokeStyle = ga(0.15, 0.9); ctx.lineWidth = 1                // masts + rigging
+      ctx.beginPath(); ctx.moveTo(sx + 8, sy - 26); ctx.lineTo(sx + 8, sy - 70); ctx.lineTo(sx + 60, sy - 48); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(sx + 160, sy - 26); ctx.lineTo(sx + 160, sy - 62); ctx.lineTo(sx + 118, sy - 48); ctx.stroke()
+      ctx.strokeStyle = ga(0.3, 0.6); ctx.lineWidth = 1.5               // deck line catches the moon
+      ctx.beginPath(); ctx.moveTo(sx - 6, sy - 26); ctx.lineTo(sx + 176, sy - 26); ctx.stroke()
+      ctx.fillStyle = ga(0.9, 0.85)
+      for (let i = 0; i < 7; i++) ctx.fillRect(sx + 8 + i * 24, sy - 18, 4, 4)
+      // wharf deck, planks converging
+      const deck = H * 0.64
+      ctx.fillStyle = g(0.115); ctx.fillRect(0, deck, W, H - deck)
+      ctx.strokeStyle = ga(0.03, 0.8); ctx.lineWidth = 2
+      for (let i = 0; i < 9; i++) {
+        const t = i / 9
+        ctx.beginPath(); ctx.moveTo(0, deck + 8 + t * (H - deck)); ctx.lineTo(W, deck + 2 + t * (H - deck) * 0.9); ctx.stroke()
+      }
+      // bollards + rope
+      for (const bx of [W * 0.14, W * 0.44, W * 0.74]) {
+        ctx.fillStyle = g(0.03)
+        ctx.fillRect(bx - 8, deck - 4, 16, 22)
+        ctx.beginPath(); ctx.ellipse(bx, deck - 5, 11, 5, 0, 0, Math.PI * 2); ctx.fill()
+      }
+      ctx.strokeStyle = ga(0.14, 0.9); ctx.lineWidth = 2
+      ctx.beginPath(); ctx.moveTo(W * 0.14, deck + 2)
+      ctx.quadraticCurveTo(W * 0.29, deck + 26, W * 0.44, deck + 2)
+      ctx.quadraticCurveTo(W * 0.59, deck + 26, W * 0.74, deck + 2)
+      ctx.stroke()
+      // crate stacks, stenciled; barrels
+      let cx2 = W * 0.78
+      for (let i = 0; i < 3; i++) {
+        const cw2 = 54 + rand() * 30, chh = 44 + rand() * 22, cy2 = deck + 30 - i * 2
+        ctx.fillStyle = g(0.075 + rand() * 0.025); ctx.fillRect(cx2, cy2 - chh, cw2, chh)
+        ctx.strokeStyle = ga(0.28, 0.9); ctx.lineWidth = 1.5
+        ctx.strokeRect(cx2 + 3, cy2 - chh + 3, cw2 - 6, chh - 6)
+        ctx.beginPath(); ctx.moveTo(cx2 + 3, cy2 - chh + 3); ctx.lineTo(cx2 + cw2 - 3, cy2 - 3); ctx.stroke()
+        ctx.fillStyle = ga(0.3, 0.5); ctx.fillRect(cx2 + 8, cy2 - chh / 2 - 3, cw2 * 0.5, 6)
+        cx2 += cw2 * 0.4; if (i === 1) cx2 -= cw2 * 0.9
+      }
+      for (const [bx2, br] of [[W * 0.66, 15], [W * 0.7, 13]]) {
+        ctx.fillStyle = g(0.05); ctx.fillRect(bx2 - br, deck + 26, br * 2, 34)
+        ctx.strokeStyle = ga(0.16, 0.9); ctx.lineWidth = 1.2
+        ctx.beginPath(); ctx.moveTo(bx2 - br, deck + 36); ctx.lineTo(bx2 + br, deck + 36); ctx.stroke()
+        ctx.beginPath(); ctx.moveTo(bx2 - br, deck + 50); ctx.lineTo(bx2 + br, deck + 50); ctx.stroke()
+      }
+      // dock crane over the water + lantern + figure + mist
+      ctx.strokeStyle = ga(0.1, 0.95); ctx.lineWidth = 3
+      ctx.beginPath(); ctx.moveTo(W * 0.55, deck); ctx.lineTo(W * 0.55, H * 0.28); ctx.lineTo(W * 0.38, H * 0.34); ctx.stroke()
+      ctx.lineWidth = 1
+      ctx.beginPath(); ctx.moveTo(W * 0.38, H * 0.34); ctx.lineTo(W * 0.38, H * 0.46); ctx.stroke()
+      ctx.strokeStyle = ga(0.1, 1); ctx.lineWidth = 2.5                 // lantern post
+      ctx.beginPath(); ctx.moveTo(W * 0.31, deck + 4); ctx.lineTo(W * 0.31, deck - 60); ctx.stroke()
+      glow(ctx, W * 0.31, deck - 66, 12, 0.95, 0.8)
+      glow(ctx, W * 0.31, deck + 6, 54, 0.6, 0.14)
+      figure(ctx, W * 0.5, deck + 44, 100, 0.02)
+      for (let i = 0; i < 3; i++) {
+        ctx.fillStyle = ga(0.3, 0.05 + rand() * 0.05)
+        ctx.fillRect(0, deck - 30 - i * 30, W, 18 + rand() * 10)
+      }
+    },
+
+    // the streetcar at its stop, oaks and moss overhead
+    station(ctx, rand) {
+      sky(ctx, rand, 0.09, 0.2, 0.5)
+      const ground = H * 0.72
+      // oak limbs in from the corners, moss hanging
+      ctx.strokeStyle = ga(0.03, 1); ctx.lineWidth = 9
+      ctx.beginPath(); ctx.moveTo(-10, H * 0.06); ctx.quadraticCurveTo(W * 0.2, H * 0.12, W * 0.4, H * 0.06); ctx.stroke()
+      ctx.lineWidth = 5
+      ctx.beginPath(); ctx.moveTo(W * 0.24, H * 0.095); ctx.quadraticCurveTo(W * 0.32, H * 0.16, W * 0.44, H * 0.16); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(W + 10, H * 0.1); ctx.quadraticCurveTo(W * 0.8, H * 0.18, W * 0.62, H * 0.13); ctx.stroke()
+      for (const mx of [W * 0.12, W * 0.3, W * 0.42, W * 0.7, W * 0.86]) moss(ctx, rand, mx, H * 0.1 + rand() * 30, 6, 55, 0.1)
+      // catenary wire + far houses
+      ctx.strokeStyle = ga(0.22, 0.7); ctx.lineWidth = 1
+      ctx.beginPath(); ctx.moveTo(0, H * 0.24); ctx.lineTo(W, H * 0.28); ctx.stroke()
+      let hx = -10
+      while (hx < W) { const w2 = 90 + rand() * 80; building(ctx, rand, hx, w2, 50 + rand() * 40, ground - 60, 0.07, 0.1); hx += w2 + 8 }
+      // the streetcar
+      const tx = W * 0.28, ty = ground - 10, tw2 = W * 0.44, th = H * 0.26
+      ctx.fillStyle = g(0.055)
+      ctx.beginPath()
+      ctx.moveTo(tx, ty); ctx.lineTo(tx, ty - th * 0.8)
+      ctx.quadraticCurveTo(tx, ty - th, tx + 30, ty - th)
+      ctx.lineTo(tx + tw2 - 30, ty - th)
+      ctx.quadraticCurveTo(tx + tw2, ty - th, tx + tw2, ty - th * 0.8)
+      ctx.lineTo(tx + tw2, ty); ctx.closePath(); ctx.fill()
+      ctx.fillStyle = ga(0.68, 0.75)                                    // lit windows
+      for (let i = 0; i < 8; i++) ctx.fillRect(tx + 26 + i * (tw2 - 60) / 8, ty - th * 0.82, (tw2 - 60) / 8 - 8, th * 0.34)
+      ctx.fillStyle = ga(0.9, 0.85); ctx.fillRect(tx + tw2 * 0.42, ty - th - 14, 40, 10)  // route board
+      ctx.strokeStyle = ga(0.14, 1); ctx.lineWidth = 2                  // trolley pole
+      ctx.beginPath(); ctx.moveTo(tx + tw2 * 0.62, ty - th); ctx.lineTo(tx + tw2 * 0.78, H * 0.26); ctx.stroke()
+      glow(ctx, tx + 8, ty - th * 0.45, 11, 0.95, 0.6)                  // headlamp
+      ctx.fillStyle = g(0.03)                                           // skirt + fenders
+      ctx.fillRect(tx + 4, ty - 8, tw2 - 8, 10)
+      wetSheen(ctx, ground)
+      ctx.strokeStyle = ga(0.5, 0.5); ctx.lineWidth = 2.5               // rails
+      ctx.beginPath(); ctx.moveTo(0, ground + 34); ctx.lineTo(W, ground + 24); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(0, ground + 58); ctx.lineTo(W, ground + 44); ctx.stroke()
+      reflection(ctx, tx + 8, ground + 10, 60, 0.7, 0.12)
+      // the stop: sign post + waiting figure
+      ctx.strokeStyle = ga(0.12, 1); ctx.lineWidth = 2.5
+      ctx.beginPath(); ctx.moveTo(W * 0.82, ground + 20); ctx.lineTo(W * 0.82, ground - 90); ctx.stroke()
+      ctx.fillStyle = ga(0.6, 0.8); ctx.fillRect(W * 0.8, ground - 104, 40, 14)
+      figure(ctx, W * 0.87, ground + 24, 120)
+      rain(ctx, rand, 40)
+    },
+
+    // dawn over the square: the cathedral's three spires
+    epilogue(ctx, rand) {
+      const grad = ctx.createLinearGradient(0, 0, 0, H)
+      grad.addColorStop(0, g(0.13)); grad.addColorStop(0.5, g(0.46)); grad.addColorStop(0.72, g(0.66)); grad.addColorStop(1, g(0.2))
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H)
+      glow(ctx, W * 0.5, H * 0.6, 210, 0.98, 0.5)
+      const ground = H * 0.74
+      // flanking rooflines (the Cabildo side)
+      ctx.fillStyle = g(0.05)
+      ctx.fillRect(0, ground - 70, W * 0.3, 70)
+      ctx.fillRect(W * 0.7, ground - 70, W * 0.3, 70)
+      ctx.beginPath(); ctx.moveTo(0, ground - 70); ctx.lineTo(W * 0.15, ground - 96); ctx.lineTo(W * 0.3, ground - 70); ctx.fill()
+      ctx.beginPath(); ctx.moveTo(W * 0.7, ground - 70); ctx.lineTo(W * 0.85, ground - 96); ctx.lineTo(W, ground - 70); ctx.fill()
+      // the cathedral: broad facade, three spires, the center one tall
+      const cx = W * 0.5
+      ctx.fillStyle = g(0.045)
+      ctx.fillRect(cx - 120, ground - 120, 240, 120)
+      for (const [ox, sh, bw] of [[-88, 60, 30], [88, 60, 30], [0, 120, 38]]) {
+        ctx.fillRect(cx + ox - bw / 2, ground - 130 - sh * 0.3, bw, 130 + sh * 0.3)
+        ctx.beginPath()
+        ctx.moveTo(cx + ox - bw / 2 - 6, ground - 130 - sh * 0.3)
+        ctx.lineTo(cx + ox, ground - 150 - sh)
+        ctx.lineTo(cx + ox + bw / 2 + 6, ground - 130 - sh * 0.3)
+        ctx.closePath(); ctx.fill()
+        ctx.strokeStyle = ga(0.05, 1); ctx.lineWidth = 2                // cross
+        ctx.beginPath(); ctx.moveTo(cx + ox, ground - 150 - sh); ctx.lineTo(cx + ox, ground - 162 - sh); ctx.stroke()
+        ctx.beginPath(); ctx.moveTo(cx + ox - 5, ground - 157 - sh); ctx.lineTo(cx + ox + 5, ground - 157 - sh); ctx.stroke()
+      }
+      ctx.fillStyle = ga(0.75, 0.7)                                     // clock face
+      ctx.beginPath(); ctx.arc(cx, ground - 96, 10, 0, Math.PI * 2); ctx.fill()
+      // the square: fence pickets, gate, lamps still lit at dawn
+      ctx.fillStyle = g(0.06); ctx.fillRect(0, ground, W, H - ground)
+      const spill = ctx.createLinearGradient(0, ground, 0, ground + 48) // dawn on the flagstones
+      spill.addColorStop(0, ga(0.45, 0.3)); spill.addColorStop(1, ga(0.45, 0))
+      ctx.fillStyle = spill; ctx.fillRect(0, ground, W, 48)
+      ctx.strokeStyle = ga(0.07, 1); ctx.lineWidth = 2
+      ctx.beginPath(); ctx.moveTo(0, ground + 30); ctx.lineTo(W, ground + 30); ctx.stroke()
+      ctx.lineWidth = 1.4
+      for (let px = 8; px < W; px += 13) {
+        if (px > W * 0.46 && px < W * 0.54) continue                    // the gate
+        ctx.beginPath(); ctx.moveTo(px, ground + 8); ctx.lineTo(px, ground + 30); ctx.stroke()
+      }
+      for (const lx of [W * 0.42, W * 0.58]) {
+        ctx.strokeStyle = ga(0.07, 1); ctx.lineWidth = 2.5
+        ctx.beginPath(); ctx.moveTo(lx, ground + 30); ctx.lineTo(lx, ground - 26); ctx.stroke()
+        glow(ctx, lx, ground - 32, 10, 0.9, 0.55)
+      }
+      // banana fronds in the corners
+      ctx.strokeStyle = ga(0.05, 1); ctx.lineWidth = 4
+      for (const [bx2, dir] of [[10, 1], [W - 10, -1]]) {
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath(); ctx.moveTo(bx2, H)
+          ctx.quadraticCurveTo(bx2 + dir * (30 + i * 26), H - 120 - i * 18, bx2 + dir * (80 + i * 42), H - 90 - i * 30)
+          ctx.stroke()
+        }
+      }
+      // birds, far
+      ctx.strokeStyle = ga(0.15, 0.9); ctx.lineWidth = 1.5
+      for (let i = 0; i < 4; i++) {
+        const bx3 = W * (0.3 + rand() * 0.4), by = H * (0.14 + rand() * 0.18)
+        ctx.beginPath(); ctx.moveTo(bx3 - 5, by); ctx.quadraticCurveTo(bx3, by - 4, bx3 + 0.5, by)
+        ctx.quadraticCurveTo(bx3 + 1, by - 4, bx3 + 6, by); ctx.stroke()
+      }
+      figure(ctx, W * 0.5, ground + 62, 120, 0.03)
+    },
+  },
+}
+
 export function renderSceneCanvas(kind, eraId, seed = '') {
-  const paint = painters[kind] ?? painters.street
+  const paint = eraPainters[eraId]?.[kind] ?? painters[kind] ?? painters.street
   const canvas = document.createElement('canvas')
   canvas.width = W * DPR; canvas.height = H * DPR
   const ctx = canvas.getContext('2d')
