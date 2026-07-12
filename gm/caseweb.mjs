@@ -722,6 +722,10 @@ function webBerlin(seed) {
       'procedure — the luck you bring yourself.',
     ].join('\n'),
     openingScene: 'street',
+    board: {
+      suspects: sortNames(S.suspects),      // alphabetical — the order tells nothing
+      columns: ['nights', 'keys', 'witness'],
+    },
     walkthrough,
     solutionCommitment: {
       salt: `caseweb-${seed}`,
@@ -1354,6 +1358,10 @@ function webNola(seed) {
       '"help" buys you procedure — the rest this town will teach you.',
     ].join('\n'),
     openingScene: 'street',
+    board: {
+      suspects: sortNames(S.suspects),      // alphabetical — the order tells nothing
+      columns: ['nights', 'cage', 'witness'],
+    },
     walkthrough,
     solutionCommitment: {
       salt: `caseweb-nola-${seed}`,

@@ -152,6 +152,7 @@ async function refreshNotebook() {
       .map(e => ({ id: 'lead:' + e.to, name: gm.case.scopes[e.to]?.name.split('—').pop().trim() ?? e.to, type: 'lead' }))
     cityMap.setSpots([...spots, ...known])
   } catch { /* the board is garnish; never let it stop the case */ }
+  renderDeduction()
   const panel = $('#tc-panel')
   panel.classList.toggle('hidden', !getTradecraft())
   if (getTradecraft()) {
@@ -162,6 +163,50 @@ async function refreshNotebook() {
       ' — all ciphertext; grants are 1059 wraps under ephemeral keys; your notebook is the NIP-44-to-self kind-10440.'
   }
   return grants
+}
+
+// The deduction board (DECISIONS §8): the player's own marks, suspects
+// against the three trails. The game never fills a cell — deduction is
+// the one job the desk refuses to do for you. Marks persist per case.
+function renderDeduction() {
+  const box = $('#deduce')
+  if (!CASE.board) { box.classList.add('hidden'); return }
+  box.classList.remove('hidden')
+  const KEY = 'noir.deduce.' + CASE.CASE_ID
+  let marks
+  try { marks = JSON.parse(localStorage.getItem(KEY) ?? '{}') } catch { marks = {} }
+  const grid = $('#deduce-grid')
+  grid.innerHTML = ''
+  const head = document.createElement('tr')
+  head.appendChild(document.createElement('th'))
+  for (const c of CASE.board.columns) {
+    const th = document.createElement('th')
+    th.textContent = c
+    head.appendChild(th)
+  }
+  grid.appendChild(head)
+  for (const name of CASE.board.suspects) {
+    const tr = document.createElement('tr')
+    const th = document.createElement('th')
+    th.textContent = name
+    tr.appendChild(th)
+    CASE.board.columns.forEach((_, i) => {
+      const td = document.createElement('td')
+      const k = name + '|' + i
+      td.textContent = marks[k] ?? ''
+      td.className = marks[k] === '\u2713' ? 'yes' : marks[k] === '\u2717' ? 'no' : ''
+      td.addEventListener('click', () => {
+        const cur = marks[k]
+        if (cur === '\u2713') marks[k] = '\u2717'
+        else if (cur === '\u2717') delete marks[k]
+        else marks[k] = '\u2713'
+        try { localStorage.setItem(KEY, JSON.stringify(marks)) } catch { /* board still works, just won't keep */ }
+        renderDeduction()
+      })
+      tr.appendChild(td)
+    })
+    grid.appendChild(tr)
+  }
 }
 
 // ------------------------------------------------------------ GM mail sync
@@ -401,6 +446,21 @@ const pickCase = () => showCaseSelect([
 ], (id) => freshStart(id))
 applyEra(CASE.ERA)
 director = await detectDirector()
+if (!director) {
+  // The entrance stays the same whether the page is local or hosted:
+  // localhost is a secure origin, so even the HTTPS site may call the
+  // local Director. Keep listening — starting `npm run gm` mid-case
+  // brings the pen to life without a reload.
+  const probe = setInterval(async () => {
+    const found = await detectDirector()
+    if (!found) return
+    clearInterval(probe)
+    director = found
+    attachVoice()
+    if (found.live) put('— a second typewriter starts up somewhere close. The Director is in. —', 'gm dim')
+    else if (found.images) put('— the darkroom light comes on. Scenes will develop. —', 'gm dim')
+  }, 15000)
+}
 $('#npub').textContent = nip19.npubEncode(playerPub).slice(0, 20) + '…' + nip19.npubEncode(playerPub).slice(-6)
 $('#npub').title = nip19.npubEncode(playerPub) +
   '\n\nA per-browser field identity for the demo. Sign-in with a NIP-07 extension' +
