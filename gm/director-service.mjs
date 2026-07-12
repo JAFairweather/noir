@@ -374,7 +374,7 @@ const server = createServer(async (req, res) => {
         { still: `${payload.era}|${payload.kind}|${payload.seed}` })
       res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ image }))
     } catch (err) {
-      note(`darkroom failed — ${String(err.message ?? err).slice(0, 120)}`)
+      note(`darkroom failed — ${String(err.message ?? err).slice(0, 300)}`)
       res.writeHead(200, { 'content-type': 'application/json' })
         .end(JSON.stringify({ image: null, error: String(err.message ?? err).slice(0, 200) }))
     }

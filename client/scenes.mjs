@@ -1028,8 +1028,10 @@ let directorScenes = null   // { url } once a FLUX-capable Director is detected
 /** Upgrade backdrops to Director FLUX stills when the local service has them. */
 export function enableDirectorScenes(url) { directorScenes = { url } }
 
-/** Ask the Director for a FLUX still; hand back a duotoned canvas. */
-function fetchStill(kind, eraId, seed, onReady) {
+/** Ask the Director for a FLUX still; hand back a duotoned canvas.
+ *  A failed development retries twice (billing hiccups, cold GPUs) —
+ *  the server caches successes, so retries are cheap and idempotent. */
+function fetchStill(kind, eraId, seed, onReady, attempt = 0) {
   if (!directorScenes) return
   const wanted = currentKind
   fetch(`${directorScenes.url}/scene`, {
@@ -1037,7 +1039,13 @@ function fetchStill(kind, eraId, seed, onReady) {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ era: eraId, kind, seed }),
   }).then(r => r.json()).then(({ image }) => {
-    if (!image || currentKind !== wanted) return
+    if (currentKind !== wanted) return
+    if (!image) {
+      if (attempt < 2) setTimeout(() => {
+        if (currentKind === wanted) fetchStill(kind, eraId, seed, onReady, attempt + 1)
+      }, 20000)
+      return
+    }
     const img = new Image()
     img.onload = () => {
       if (currentKind !== wanted) return
@@ -1049,7 +1057,10 @@ function fetchStill(kind, eraId, seed, onReady) {
 
 /** Crossfade the backdrop to a scene. Deterministic per (kind, seed). */
 export function setScene(kind, eraId, seed = '') {
-  if (currentKind === kind + seed) return
+  if (currentKind === kind + seed) {
+    if (penEnabled && !pen.plate) fetchStill(kind, eraId, seed, (p) => pen.setPlate(p))
+    return
+  }
   currentKind = kind + seed
 
   if (penEnabled) {
