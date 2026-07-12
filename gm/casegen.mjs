@@ -227,6 +227,8 @@ export function generateCase(seed) {
           '',
           `The tally says ${nightAbbr}. The ${informant.role} says the evening desk.`,
           'The register says who sat at it.',
+          '',
+          'When you are certain, file it: "accuse <name>". Once.',
         ].join('\n'),
       },
     },
@@ -251,27 +253,32 @@ export function generateCase(seed) {
   const edges = [
     {
       to: 'drop', requires: ['briefing'],
+      lead: 'The intercept waits on a key word: "decode <word>" and the desk runs the tables.',
       answerKey: `The decoded intercept reads ${drop.plain} — ${drop.place}.`,
       match: tokenMatch(drop.tokens),
       response: 'The fallback gives, on the second try, the way he taught it to.',
     },
     {
       to: 'herring', requires: ['briefing'],
+      lead: `Station flagged ${herring.name} — ${herring.trade}. Worth an hour, maybe.`,
       match: (t) => t.includes(herring.name),
       response: `${herring.name} receives you with the warmth of a man counting exits.`,
     },
     {
       to: 'informant', requires: ['drop'],
+      lead: `The courier's pencil line names an eye: ${informant.name}, ${informant.role} at ${informant.venue}.`,
       match: (t) => t.includes(informant.alias) || (t.includes(informant.venue.toUpperCase().replace('THE ', '').split(' ').pop() ?? '')),
       response: `${informant.venue}, the quiet hour. The ${informant.role}, and the eyes ${courier} trusted.`,
     },
     {
       to: 'watcher', requires: ['informant'],
+      lead: 'The informant says Station watched that room once. Nobody has pulled the watcher log.',
       match: (t) => t.includes('WATCHER') || t.includes('STREETWORK') || (t.includes('STATION') && t.includes('LOG')),
       response: 'Station is not pleased to be asked, which is how you know the log exists.',
     },
     {
       to: 'site', requires: ['watcher'],
+      lead: 'Three watcher cards wait to be put in order: "timeline A B C".',
       match: (t) => {
         const kws = ['TIMELINE', 'ORDER', 'SEQUENCE'].map(k => t.indexOf(k)).filter(i => i >= 0)
         if (!kws.length) return false
@@ -288,6 +295,7 @@ export function generateCase(seed) {
     },
     {
       to: 'registry', requires: ['informant'],
+      lead: `The seller came from ${office.name}'s evening desk. Nobody has checked the desk register.`,
       match: (t) => t.includes('REGISTER') || t.includes('DESK') || (t.includes(nightWord) && (t.includes('CHECK') || t.includes('WHO'))),
       response: 'A friend of a friend owes Station a favor. By morning: a photograph of the register.',
     },
@@ -366,6 +374,7 @@ export function generateCase(seed) {
       '  Found a cipher key word? "decode <word>" — the desk runs the tables.',
       '  Reconstructing an evening? "timeline A B C" in the order you believe.',
       '  Certain? "accuse <name>" — you file that once, and you live with it.',
+      '  Lost the thread? "review" — the desk reads the case back.',
       '',
       'Your notebook (right) holds every document you have been handed.',
       'A burned contact is gone for good. Mind the heat.',

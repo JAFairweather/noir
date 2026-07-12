@@ -285,5 +285,26 @@ console.log('\n15. The desk runs the tables (decode command)')
   check('generated cases honor the decode desk too', gmE.unlocked.has('drop'))
 }
 
+console.log('\n16. Review: the desk reads the case back')
+{
+  const rR = new Relay()
+  const pR = generateSecretKey()
+  const gmR = new StubGM(rR, berlin)
+  await gmR.start(getPublicKey(pR))
+  const sayR = async (text) => {
+    await sendFieldReport(rR, pR, gmR.pub, text, berlin.CASE_ID)
+    await gmR.poll()
+    const d = await receiveRumors(rR, pR, [KIND_GM_DISPATCH])
+    return JSON.parse(d[d.length - 1].content).text
+  }
+  const rev1 = await sayR('review')
+  check('review lists open threads at case start', rev1.includes('decode <word>') && rev1.includes('Kantstrasse'))
+  check('review always states the accusation instruction', rev1.includes('accuse <name>'))
+  check('review costs nothing', gmR.heat === 0)
+  await sayR('decode silber')
+  const rev2 = await sayR('status')
+  check('resolved threads drop off; new ones appear', !rev2.includes('decode <word>') && rev2.includes('ADLER'))
+}
+
 console.log(`\n${passed} passed, ${failed} failed`)
 process.exit(failed ? 1 : 0)

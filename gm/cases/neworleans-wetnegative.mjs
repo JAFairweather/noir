@@ -159,6 +159,8 @@ export const scopes = {
         '',
         'The paper man. Fontaine\'s floor-look has a name on it now.',
         'What the paper can\'t tell you is what happened at the river.',
+        '',
+        'When you are certain, file it: "accuse <name>". Once.',
       ].join('\n'),
     },
   },
@@ -226,6 +228,7 @@ export const edges = [
   {
     to: 'darkroom',
     requires: ['briefing'],
+    lead: 'The circled ad reads like he read: top to bottom, first things first. It spells a street.',
     answerKey: 'The classified ad is an acrostic spelling DAUPHINE — it points to Thibodeaux\'s darkroom on Dauphine Street.',
     match: (t) => t.includes('DAUPHINE') || t.includes('DARKROOM'),
     response: 'First letters, top to bottom, the way he read: DAUPHINE. The landlady is sweeping the step like she\'s been waiting.',
@@ -233,24 +236,28 @@ export const edges = [
   {
     to: 'remy',
     requires: ['darkroom'],
+    lead: 'The contact-sheet margin says it plain: Remy pours at the Blue Room, and Remy knows who drives 12.',
     match: (t) => t.includes('REMY') || (t.includes('BLUE') && t.includes('ROOM')),
     response: 'The Blue Room, off-hours. Ceiling fan stirring the smoke of people who left. Remy sees you and reaches for the clean glass.',
   },
   {
     to: 'fontaine',
     requires: ['remy'],
+    lead: 'Fontaine, upstairs at the Blue Room, was listening harder than a man should.',
     match: (t) => t.includes('FONTAINE'),
     response: 'Upstairs, where the carpet starts. Fontaine waves you into a chair a lawyer should be sitting in.',
   },
   {
     to: 'patrol',
     requires: ['remy'],
+    lead: 'Remy said it twice: check the dispatch log for Unit 12.',
     match: (t) => t.includes('DISPATCH') || t.includes('PATROL') || (t.includes('CAR') && /\b12\b/.test(t)) || t.includes('LOG'),
     response: 'The records clerk doesn\'t look up. Three photostats appear under the counter glass, crooked as the parish itself.',
   },
   {
     to: 'levee',
     requires: ['patrol'],
+    lead: 'Three photostats wait to be put in order: "timeline A B C".',
     match: (t) => timelineAttempt(t) === timelineAnswer,
     failMatch: (t) => {
       const a = timelineAttempt(t)
@@ -262,6 +269,7 @@ export const edges = [
   {
     to: 'dutybook',
     requires: ['patrol'],
+    lead: 'Route order 44-C moved that patrol. Nobody has checked who signed it.',
     match: (t) => t.includes('SIGNED') || t.includes('ROUTE ORDER') || t.includes('44') || (t.includes('WHO') && t.includes('ORDER')),
     response: 'Route order 44-C, pulled from a file that sticks. The signature line is very neat. Careful men are neat.',
   },

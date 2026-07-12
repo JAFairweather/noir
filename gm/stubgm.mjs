@@ -181,6 +181,25 @@ export class StubGM {
       return this.dispatch(this.case.helpText)
     }
 
+    // The desk reads the case back: what you hold, what dangles, how out.
+    if (['REVIEW', 'STATUS', 'RECAP', 'CASE REVIEW', 'WHERE AM I'].includes(t)) {
+      const lines = ['CASE REVIEW — the desk reads it back:', '']
+      lines.push(`You hold ${this.unlocked.size} documents.` +
+        (this.burned.size ? ` Burned and gone forward: ${[...this.burned].map(k => this.case.scopes[k].name).join(', ')}.` : ''))
+      const open = this.case.edges.filter(e =>
+        !this.unlocked.has(e.to) && e.requires.every(r => this.unlocked.has(r)) && e.lead)
+      if (open.length) {
+        lines.push('', 'Threads still hanging:')
+        for (const e of open) lines.push(`  - ${e.lead}`)
+      } else {
+        lines.push('', 'No threads left hanging. You hold everything this city will hand you.')
+      }
+      lines.push('', 'Standing instruction: when you are certain of your man,')
+      lines.push('file it — "accuse <name>". You file it once, and you live with it.')
+      if (this.heat >= this.case.heat.tail) lines.push('', `Heat stands at ${this.heat}. You are being watched.`)
+      return this.dispatch(lines.join('\n'))
+    }
+
     // Homage winks (§8) — one dry line each, never load-bearing.
     if (t === 'XYZZY') {
       return this.dispatch('Nothing happens. This is not that kind of cave, agent. It was worth trying exactly once.')

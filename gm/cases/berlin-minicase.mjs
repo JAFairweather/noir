@@ -182,6 +182,8 @@ export const scopes = {
         'Keller traded away every Tuesday this month. Brandt volunteered',
         'for a window nobody wants. The ledger says Tuesdays. Adler says',
         'the duty man. The roster says who the duty man was.',
+        '',
+        'When you are certain, file it: "accuse <name>". Once.',
       ].join('\n'),
     },
   },
@@ -225,6 +227,7 @@ export const edges = [
   {
     to: 'locker',
     requires: ['briefing'],
+    lead: 'The intercept waits on a key word: "decode <word>" and the desk runs the tables.',
     answerKey: 'The decoded intercept reads ZOO LOCKER NINE — locker 9 at Zoo Bahnhof (the Zoo railway station), Berlin.',
     match: (t) => t.includes('ZOO') && t.includes('LOCKER') && (t.includes('NINE') || /\b9\b/.test(t)),
     response: 'The attendant takes your pfennigs without looking. Locker nine opens on the second key.',
@@ -232,24 +235,28 @@ export const edges = [
   {
     to: 'kasse',
     requires: ['briefing'],
+    lead: 'Station flagged the travel office on Kantstrasse — VOSS sells more than tickets.',
     match: (t) => t.includes('VOSS') || t.includes('REISEBURO') || t.includes('KANTSTRASSE') || (t.includes('TRAVEL') && (t.includes('OFFICE') || t.includes('AGENT'))),
     response: 'Kantstrasse 112. Dust on the model liners in the window, none on the appointment book.',
   },
   {
     to: 'adler',
     requires: ['locker'],
+    lead: 'Weiss\'s pencil note names an eye at Café Josty: ADLER, the coat-check.',
     match: (t) => t.includes('ADLER') || (t.includes('JOSTY') && (t.includes('COAT') || t.includes('ASK') || t.includes('TICKET'))),
     response: 'Café Josty, four in the afternoon. The coat-check counter, and the woman Weiss trusted behind it.',
   },
   {
     to: 'watcher',
     requires: ['adler'],
+    lead: 'Adler says Station kept streetwork on Josty. Nobody has pulled the watcher log.',
     match: (t) => t.includes('WATCHER') || t.includes('STREETWORK') || (t.includes('STATION') && t.includes('LOG')),
     response: 'Station is not pleased to be asked, which is how you know the log exists. A box of index cards, dropped once.',
   },
   {
     to: 'freight',
     requires: ['watcher'],
+    lead: 'Three watcher cards wait to be put in order: "timeline A B C".',
     match: (t) => timelineAttempt(t) === timelineAnswer,
     failMatch: (t) => {
       const a = timelineAttempt(t)
@@ -261,6 +268,7 @@ export const edges = [
   {
     to: 'roster',
     requires: ['adler'],
+    lead: 'Adler\'s seller held the Tuesday evening window. Nobody has checked the duty roster.',
     match: (t) => t.includes('ROSTER') || (t.includes('TUESDAY') && (t.includes('DUTY') || t.includes('WINDOW') || t.includes('CHECK'))),
     response: 'A friend in the registry owes Station a favor. By morning you have a photograph of the roster.',
   },
@@ -362,6 +370,7 @@ export const helpText = [
   '  Found a cipher key word? "decode <word>" — the desk runs the tables.',
   '  Reconstructing an evening? "timeline A B C" in the order you believe.',
   '  Certain? "accuse <name>" — you file that once, and you live with it.',
+  '  Lost the thread? "review" — the desk reads the case back.',
   '',
   'Your notebook (right) holds every document you have been handed.',
   'Click an entry to reread it on the drum. A burned contact is gone for',
