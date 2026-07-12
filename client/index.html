@@ -195,18 +195,14 @@
   .case-era { font-size: 11px; letter-spacing: 0.3em; opacity: 0.75; }
   .case-title { font-size: 17px; letter-spacing: 0.12em; }
   .case-blurb { font-size: 11px; letter-spacing: 0.03em; opacity: 0.65; }
+  /* Ken Burns choreography lives in scenes.mjs (deterministic per scene);
+     CSS owns only the crossfade and the oversize that gives the camera room. */
   .backdrop-canvas {
-    position: absolute; inset: -6%; width: 112%; height: 112%;
+    position: absolute; inset: -7%; width: 114%; height: 114%;
     object-fit: cover; opacity: 0; transition: opacity 2.4s ease;
+    will-change: transform, opacity;
   }
   .backdrop-canvas.active { opacity: 0.55; }
-  @media (prefers-reduced-motion: no-preference) {
-    .backdrop-canvas.active { animation: kenburns 90s ease-in-out infinite alternate; }
-  }
-  @keyframes kenburns {
-    from { transform: scale(1) translate(0, 0); }
-    to { transform: scale(1.09) translate(-1.2%, 1%); }
-  }
 
   #nb-toggle {
     display: none; background: transparent; color: var(--accent);

@@ -1032,7 +1032,7 @@ export function setScene(kind, eraId, seed = '') {
   if (currentKind === kind + seed) return
   currentKind = kind + seed
 
-  swapIn(renderSceneCanvas(kind, eraId, seed))
+  swapIn(renderSceneCanvas(kind, eraId, seed), kind, seed)
 
   // FLUX upgrade (DECISIONS §2): procedural paints instantly; the model
   // still replaces it when it lands — duotoned by the same pass, so the
@@ -1048,18 +1048,66 @@ export function setScene(kind, eraId, seed = '') {
       const img = new Image()
       img.onload = () => {
         if (currentKind !== wanted) return
-        swapIn(duotone(img, eraId, { grain: 0.04, vignette: 0.45 }))
+        swapIn(duotone(img, eraId, { grain: 0.04, vignette: 0.45 }), kind, seed)
       }
       img.src = image
     }).catch(() => {})
   }
 }
 
-function swapIn(canvas) {
+function swapIn(canvas, kind = 'street', seed = '') {
   canvas.className = 'backdrop-canvas'
   const holder = document.getElementById('backdrop')
   const old = [...holder.querySelectorAll('.backdrop-canvas')]
   holder.appendChild(canvas)
-  requestAnimationFrame(() => requestAnimationFrame(() => canvas.classList.add('active')))
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    canvas.classList.add('active')
+    kenBurns(canvas, kind, seed)
+  }))
   setTimeout(() => old.forEach(el => el.remove()), 2800)
+}
+
+// ------------------------------------------------------- Ken Burns (M3)
+//
+// Deterministic camera work per scene, spec §6 / DECISIONS §2: the same
+// dossier always gets the same shot. A small vocabulary of moves —
+// interiors get a slow push toward the light, exteriors a lateral drift,
+// the epilogue a pull-back reveal — parameterized by the scene's own
+// hash, eased into rest (the settle), then a barely-perceptible breathing
+// loop so the room never quite dies. FLUX stills ride the same camera:
+// swapIn is the one seam. prefers-reduced-motion gets the still.
+
+const KB_MOVE = { office: 'push', cafe: 'push', epilogue: 'pull', street: 'drift', station: 'drift', yard: 'drift' }
+
+function kenBurns(canvas, kind, seed) {
+  if (!canvas.animate) return
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  const r = mulberry32(hash(kind + '|' + seed + '|camera'))
+  const dir = r() < 0.5 ? -1 : 1
+  const dx = (1.0 + r() * 1.6) * dir           // lateral travel, %
+  const dy = (r() - 0.5) * 1.4                 // vertical travel, %
+  const dur = 42000 + r() * 26000              // 42–68s to settle
+  const t = (s, x, y) => `scale(${s.toFixed(4)}) translate(${x.toFixed(2)}%, ${y.toFixed(2)}%)`
+
+  let from, to
+  const move = KB_MOVE[kind] ?? (r() < 0.5 ? 'push' : 'drift')
+  if (move === 'push') {                        // in, toward the lamp
+    from = [1.0, 0, 0]; to = [1.09 + r() * 0.05, dx * 0.6, dy]
+  } else if (move === 'pull') {                 // the reveal, ending at rest
+    from = [1.12 + r() * 0.05, dx * 0.8, dy]; to = [1.01, 0, 0]
+  } else {                                      // drift, a walk past
+    from = [1.05, dx, dy]; to = [1.08 + r() * 0.03, -dx, -dy]
+  }
+
+  const settle = canvas.animate(
+    [{ transform: t(...from) }, { transform: t(...to) }],
+    { duration: dur, easing: 'cubic-bezier(0.25, 0.1, 0.15, 1)', fill: 'forwards' },
+  )
+  settle.onfinish = () => {
+    if (!canvas.isConnected) return
+    canvas.animate(
+      [{ transform: t(...to) }, { transform: t(to[0] + 0.008, to[1] * 0.85, to[2] + 0.3) }],
+      { duration: 38000, direction: 'alternate', iterations: Infinity, easing: 'ease-in-out' },
+    )
+  }
 }
