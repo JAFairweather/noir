@@ -79,21 +79,34 @@ export class Wheel {
     requestAnimationFrame(this._tick)
   }
 
-  /** Characters that fit one drum line at the current viewport. */
+  /** Characters that fit one drum line at the current viewport.
+   *  Measures with getBoundingClientRect on an inline span — CSS pixels,
+   *  identical across engines. (scrollWidth is NOT: iOS WebKit reports it
+   *  rounded/scaled, which once shrank the column to one word per line.) */
   _maxChars() {
     const vw = window.innerWidth
     if (this._mc && this._mcW === vw) return this._mc
     const stage = this.drum.parentElement
-    const probe = document.createElement('div')
-    probe.className = 'drum-line'
-    probe.style.cssText += ';visibility:hidden;transform:none;white-space:pre'
-    probe.textContent = 'abcdefghijklm nopqrstuvwxyz '.repeat(3)
-    stage.appendChild(probe)
-    const rect = probe.getBoundingClientRect()
-    const charPx = probe.scrollWidth / probe.textContent.length
-    probe.remove()
+    const col = document.createElement('div')
+    col.className = 'drum-line'
+    col.style.visibility = 'hidden'
+    col.style.transform = 'none'
+    const span = document.createElement('span')
+    span.style.whiteSpace = 'pre'
+    span.textContent = 'abcdefghijklm nopqrstuvwxyz '.repeat(3)   // 84 chars
+    col.appendChild(span)
+    stage.appendChild(col)
+    const colW = col.getBoundingClientRect().width
+    const charPx = span.getBoundingClientRect().width / span.textContent.length
+    col.remove()
+    if (!(colW > 0) || !(charPx > 0)) return 60          // measurement failed: sane default, don't cache
     this._mcW = vw
-    this._mc = Math.max(24, Math.floor(rect.width / charPx) - 1)
+    this._mc = Math.max(24, Math.floor(colW / charPx) - 1)
+    // webfonts may land after first measurement; re-measure once they do
+    if (!this._fontsWatched && document.fonts?.ready) {
+      this._fontsWatched = true
+      document.fonts.ready.then(() => { this._mcW = null })
+    }
     return this._mc
   }
 
