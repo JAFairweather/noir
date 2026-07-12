@@ -261,5 +261,29 @@ console.log('\n14. Casegen: deterministic, solvable, committed')
   }
 }
 
+console.log('\n15. The desk runs the tables (decode command)')
+{
+  const rD = new Relay()
+  const pD = generateSecretKey()
+  const gmD = new StubGM(rD, berlin)
+  await gmD.start(getPublicKey(pD))
+  const sayD = async (text) => {
+    await sendFieldReport(rD, pD, gmD.pub, text, berlin.CASE_ID)
+    await gmD.poll()
+    const d = await receiveRumors(rD, pD, [KIND_GM_DISPATCH])
+    return JSON.parse(d[d.length - 1].content).text
+  }
+  const noise = await sayD('decode keller')
+  check('wrong key shows real gibberish, costs nothing', noise.includes('noise') && gmD.heat === 0 && !gmD.unlocked.has('locker'))
+  const open_ = await sayD('decode with silber')
+  check('right key opens the intercept and grants the drop', gmD.unlocked.has('locker') && open_.includes('ZOOLO CKERN INE'))
+  const genD = generateCase('echo')
+  const rE = new Relay(); const pE = generateSecretKey(); const gmE = new StubGM(rE, genD)
+  await gmE.start(getPublicKey(pE))
+  await sendFieldReport(rE, pE, gmE.pub, `decode ${genD.cipher.key.toLowerCase()}`, genD.CASE_ID)
+  await gmE.poll()
+  check('generated cases honor the decode desk too', gmE.unlocked.has('drop'))
+}
+
 console.log(`\n${passed} passed, ${failed} failed`)
 process.exit(failed ? 1 : 0)

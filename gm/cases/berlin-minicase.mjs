@@ -31,14 +31,15 @@ export const scopes = {
         'If the blanks are moving without us, someone is selling them.',
         '',
         'SIGNALS intercepted one fragment, keyed the old way. Weiss always',
-        'ciphered under his workname. Decode it and you have his fallback.',
+        'ciphered under his workname — find the word he keyed under, and',
+        'the desk will run the tables for you: report "decode <word>".',
         '',
         '    INTERCEPT 11/8:  RWZMS TCMCO MEW',
         '',
         'The trail may also touch the travel office on Kantstrasse — VOSS,',
         'the proprietor, sells more than tickets. Tread there if you must.',
         '',
-        'Report in plain language. Submit the decoded fallback when you have it.',
+        'Everything you need to break the intercept is on this page.',
         '',
         '— Station. (Courier registry: WEISS, workname SILBER, route 7.)',
       ].join('\n'),
@@ -350,12 +351,15 @@ export const burnTriggers = {
 // Heat deltas (§5.4, mini version).
 export const heat = { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, max: 100, tail: 60 }
 
+// The intercept: the desk runs any key the player names ("decode silber").
+export const cipher = { ciphertext: 'RWZMSTCMCOMEW', key: 'SILBER', to: 'locker' }
+
 export const helpText = [
   'FIELD PROCEDURE — what Station expects of a report:',
   '',
   '  Speak plainly. The desk reads intent, not syntax.',
   '  GO somewhere, ASK someone, CHECK a thing, OPEN what is closed.',
-  '  Decoded a cipher? Submit the plaintext.',
+  '  Found a cipher key word? "decode <word>" — the desk runs the tables.',
   '  Reconstructing an evening? "timeline A B C" in the order you believe.',
   '  Certain? "accuse <name>" — you file that once, and you live with it.',
   '',

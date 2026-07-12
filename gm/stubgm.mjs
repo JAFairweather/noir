@@ -17,6 +17,17 @@ import {
 
 const normalize = (text) => text.toUpperCase().replace(/[^A-Z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim()
 
+// Vigenère decode — the desk's cipher tables. Any key produces output;
+// only the right one produces language. Wrong keys teach the mechanic.
+const vigenereDecode = (ct, key) => {
+  const A = 65
+  let ki = 0
+  return [...ct.replace(/[^A-Z]/g, '')].map(ch =>
+    String.fromCharCode(A + ((ch.charCodeAt(0) - A) - (key[ki++ % key.length].charCodeAt(0) - A) + 26) % 26)).join('')
+}
+const groups5 = (s2) => s2.replace(/(.{5})/g, '$1 ').trim()
+const DECODE_NOISE = new Set(['DECODE', 'TRY', 'KEY', 'WITH', 'THE', 'USING', 'UNDER', 'WORKNAME', 'IT', 'AS'])
+
 async function sha256hex(str) {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
   return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('')
@@ -176,6 +187,28 @@ export class StubGM {
     }
     if (t === 'WEST' && this.unlocked.size === 1) {
       return this.dispatch('West of here the boulevard runs toward the Tiergarten, black branches over black water. Station did not send you here to admire it.')
+    }
+
+    // The desk runs the cipher tables (§5.1): "decode <key>". The puzzle is
+    // spotting the key in the documents, not doing polyalphabetic arithmetic.
+    const cipher = this.case.cipher
+    if (cipher && !this.unlocked.has(cipher.to) && /^(DECODE|TRY KEY|RUN)\b/.test(t)) {
+      const candidate = t.split(' ').reverse().find(w => w && !DECODE_NOISE.has(w) && /^[A-Z]{3,}$/.test(w))
+      if (!candidate) {
+        return this.dispatch('The desk needs a key word to run against the intercept: "decode <word>".')
+      }
+      if (candidate === cipher.key) {
+        const plain = groups5(vigenereDecode(cipher.ciphertext, candidate))
+        const edge = this.case.edges.find(e => e.to === cipher.to)
+        await this.grantScope(cipher.to)
+        return this.dispatch(
+          `The desk lays ${candidate} against the intercept and the groups fall open: ${plain}. ` +
+          (edge?.response ?? ''), { granted: cipher.to })
+      }
+      const garbage = groups5(vigenereDecode(cipher.ciphertext, candidate))
+      return this.dispatch(
+        `The desk runs ${candidate} against the intercept: ${garbage} — noise. Wrong key. ` +
+        'The right word turns it into language.')
     }
 
     // The accusation endgame (§5.8).

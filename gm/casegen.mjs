@@ -118,7 +118,8 @@ export function generateCase(seed) {
           `${office.name} is selling, and ${courier} found out which somebody.`,
           '',
           `SIGNALS holds one intercepted fragment, keyed under ${courier}'s`,
-          `workname. Decode it and you have his fallback drop.`,
+          `workname — find the word, and the desk runs the tables for you:`,
+          `report "decode <word>".`,
           '',
           `    INTERCEPT:  ${cipherText}`,
           '',
@@ -355,13 +356,14 @@ export function generateCase(seed) {
 
   return {
     CASE_ID, ERA, scopes, edges, accusation, burnTriggers, npcs, hints,
+    cipher: { ciphertext: drop.plain.replace(/[^A-Z]/g, ''), key: workname, to: 'drop' },
     heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, max: 100, tail: 60 },
     missResponse: undefined,
     helpText: [
       'FIELD PROCEDURE — what Station expects of a report:',
       '',
       '  Speak plainly. GO somewhere, ASK someone, CHECK a thing.',
-      '  Decoded a cipher? Submit the plaintext.',
+      '  Found a cipher key word? "decode <word>" — the desk runs the tables.',
       '  Reconstructing an evening? "timeline A B C" in the order you believe.',
       '  Certain? "accuse <name>" — you file that once, and you live with it.',
       '',
