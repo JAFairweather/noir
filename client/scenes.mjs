@@ -12,6 +12,7 @@
 // over the painting — same duotone, same era law.
 
 import { ERAS, duotone } from './art.mjs'
+import { buildLineScene, renderDrawOn, planMorph, renderMorph } from './linework.mjs'
 
 const W = 960, H = 540           // painter coordinate space
 const DPR = 2                    // render at 2x so fullscreen stays crisp
@@ -1032,6 +1033,8 @@ export function setScene(kind, eraId, seed = '') {
   if (currentKind === kind + seed) return
   currentKind = kind + seed
 
+  if (penEnabled) { pen.show(kind, eraId, seed); return }
+
   swapIn(renderSceneCanvas(kind, eraId, seed), kind, seed)
 
   // FLUX upgrade (DECISIONS §2): procedural paints instantly; the model
@@ -1053,6 +1056,117 @@ export function setScene(kind, eraId, seed = '') {
       img.src = image
     }).catch(() => {})
   }
+}
+
+// ------------------------------------------------------------ the pen
+//
+// Backdrop v2 (DECISIONS §2, proven by the linedraw spike): the scene is
+// drawn by a pen, in the era's accent, in step with the typewriter — the
+// wheel dispatches 'noir-type' as it strikes, and each strike advances
+// the ink. On a scene change the drawing BRIDGES: strokes walk from the
+// old scene into the new one. prefers-reduced-motion gets finished ink.
+// Default on; the notebook toggle falls back to the duotone paintings.
+
+let penEnabled = (localStorage.getItem('noir.pen') ?? '1') !== '0'
+export const getPenMode = () => penEnabled
+export function setPenMode(on) {
+  penEnabled = on
+  localStorage.setItem('noir.pen', on ? '1' : '0')
+  if (on) {
+    if (pen.last) pen.show(pen.last.kind, pen.last.era, pen.last.seed, true)
+  } else {
+    pen.hide()
+    if (pen.last) swapIn(renderSceneCanvas(pen.last.kind, pen.last.era, pen.last.seed), pen.last.kind, pen.last.seed)
+  }
+}
+
+const pen = {
+  canvas: null, ctx: null, strokes: null, next: null, plan: null,
+  phase: 'idle', t: 0, raf: 0, last: null, accent: '#c39a56',
+
+  ensure() {
+    if (this.canvas?.isConnected) return
+    const c = document.createElement('canvas')
+    c.className = 'backdrop-canvas pen'
+    c.width = W * DPR; c.height = H * DPR
+    document.getElementById('backdrop').appendChild(c)
+    requestAnimationFrame(() => c.classList.add('active'))
+    this.canvas = c
+    this.ctx = c.getContext('2d')
+  },
+
+  show(kind, era, seed, restart = false) {
+    this.ensure()
+    this.last = { kind, era, seed }
+    this.accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#c39a56'
+    const target = buildLineScene(kind, era, seed)
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+    this.canvas.getAnimations().forEach(a => a.cancel())
+    kenBurns(this.canvas, kind, seed)
+    if (reduce) {
+      this.strokes = target; this.phase = 'idle'; this.t = 1
+      this.paint(() => renderDrawOn(this.ctx, this.strokes, 1), true)
+      return
+    }
+    if (!this.strokes || restart) {
+      this.strokes = target; this.phase = 'draw'; this.t = 0
+    } else {
+      this.plan = planMorph(this.strokes, target)
+      this.next = target; this.phase = 'morph'; this.t = 0
+    }
+    this.loop()
+  },
+
+  hide() {
+    if (this.raf) cancelAnimationFrame(this.raf)
+    this.raf = 0; this.phase = 'idle'; this.strokes = null
+    this.canvas?.remove(); this.canvas = null
+  },
+
+  /** The typewriter feeds the pen: each strike is a little more ink. */
+  boost(chars = 1) {
+    if (this.phase === 'draw') { this.t = Math.min(1, this.t + chars / 1100); this.loop() }
+  },
+
+  paint(fn, glow = false) {
+    const ctx = this.ctx
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
+    ctx.clearRect(0, 0, W, H)
+    ctx.lineJoin = ctx.lineCap = 'round'
+    ctx.strokeStyle = this.accent
+    if (glow) { ctx.shadowColor = this.accent; ctx.shadowBlur = 5 }
+    fn()
+    ctx.shadowBlur = 0
+  },
+
+  loop() { if (!this.raf) this.raf = requestAnimationFrame(() => this.step()) },
+
+  step() {
+    this.raf = 0
+    if (!this.canvas) return
+    if (this.phase === 'draw') {
+      this.t = Math.min(1, this.t + 0.0016)               // ~10s alone; typing hurries it
+      this.paint(() => renderDrawOn(this.ctx, this.strokes, this.t))
+      if (this.t >= 1) {
+        this.phase = 'idle'
+        this.paint(() => renderDrawOn(this.ctx, this.strokes, 1), true)
+        return
+      }
+    } else if (this.phase === 'morph') {
+      this.t = Math.min(1, this.t + 1 / (60 * 2.8))       // ~2.8s bridge
+      this.paint(() => renderMorph(this.ctx, this.plan, this.t))
+      if (this.t >= 1) {
+        this.strokes = this.next; this.plan = null; this.phase = 'idle'
+        this.paint(() => renderDrawOn(this.ctx, this.strokes, 1), true)
+        return
+      }
+    } else return
+    this.loop()
+  },
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('noir-type', (e) => pen.boost(e.detail?.chars ?? 1))
 }
 
 function swapIn(canvas, kind = 'street', seed = '') {

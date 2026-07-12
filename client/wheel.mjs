@@ -182,7 +182,9 @@ export class Wheel {
     if (this._follow && !this.flatMode) this._target = line.idx * STEP_DEG
     const strike = () => {
       if (this._queue[0] !== line) return   // flushed out from under us
+      const before = line.shown
       line.shown = Math.min(line.full.length, line.shown + 1 + Math.floor(Math.random() * 3))
+      window.dispatchEvent(new CustomEvent('noir-type', { detail: { chars: line.shown - before } }))
       const done = line.shown >= line.full.length
       const text = line.full.slice(0, line.shown)
       line.el.textContent = done ? line.full : text + CURSOR

@@ -176,9 +176,254 @@ const builders = {
   },
 }
 
-/** Build a line scene: ordered strokes, deterministic per (kind, seed). */
-export function buildLineScene(kind, seed = '') {
-  const make = builders[kind] ?? builders.street
+builders.office = function (rand) {
+  const s = []
+  const deskY = H * 0.68
+  s.push(seg(0, deskY, W, deskY, 2, 0.8))                                            // the desk edge
+  s.push(box(W * 0.06, H * 0.12, W * 0.17, H * 0.58, 1.8, 0.8))                      // the door
+  s.push(box(W * 0.085, H * 0.16, W * 0.11, H * 0.28, 1.6, 0.9))                     // frosted pane
+  s.push(seg(W * 0.1, H * 0.3, W * 0.17, H * 0.3, 1.2, 0.6))                         // etched rule
+  const lx = W * 0.4, ly = H * 0.5
+  s.push(poly([[lx - 34, ly], [lx - 22, ly - 16], [lx + 22, ly - 16], [lx + 34, ly]], 1.8, 0.95))  // lamp shade
+  s.push(seg(lx, ly, lx, deskY, 1.8, 0.95))                                          // stem
+  s.push(seg(lx - 30, ly + 4, lx - 120, deskY + 4, 1, 0.3))                          // the cone
+  s.push(seg(lx + 30, ly + 4, lx + 120, deskY + 4, 1, 0.3))
+  s.push(ellipse(lx, deskY + 4, 110, 9, 1, 0.3))                                     // pool
+  s.push(box(lx - 90, deskY - 4, 66, 8, 1.4, 0.8))                                   // papers
+  s.push(box(lx - 78, deskY - 10, 66, 8, 1.4, 0.6))
+  for (let i = 0; i < 3; i++) s.push(seg(lx - 84, deskY - 1 + i * 0, lx - 30, deskY - 1, 0, 0))   // (kept minimal)
+  s.push(box(lx + 44, deskY - 26, 74, 24, 1.8, 0.9))                                 // the typewriter
+  s.push(box(lx + 54, deskY - 36, 54, 10, 1.6, 0.9))
+  for (let i = 0; i < 8; i++) s.push(seg(lx + 50 + i * 8, deskY - 6, lx + 52 + i * 8, deskY - 12, 1, 0.7))
+  for (let i = 0; i < 7; i++) {                                                       // blinds, far wall
+    s.push(seg(W * 0.62, H * 0.14 + i * 26, W * 0.92, H * 0.15 + i * 26, 1.2, 0.35))
+  }
+  s.push(box(W * 0.6, H * 0.12, W * 0.34, H * 0.44, 1.6, 0.6))                        // window frame
+  for (let i = 0; i < 4; i++) {                                                       // smoke from the ashtray
+    const sx = lx + 150 + (rand() - 0.5) * 8, sy = deskY - 12 - i * 24
+    s.push(curve([sx - 8, sy], [sx + (i % 2 ? 12 : -12), sy - 12], [sx + 6, sy - 24], 1, 0.25))
+  }
+  return s
+}
+
+builders.yard = function (rand) {
+  const s = []
+  const ground = H * 0.72
+  s.push(seg(0, ground, W, ground, 2, 0.8))
+  let x = W * 0.02
+  for (let i = 0; i < 3; i++) {                                                       // boxcars
+    const w = 190 + rand() * 60, y = ground - 88
+    s.push(box(x, y, w, 72, 1.8, 0.85))
+    s.push(box(x + w * 0.38, y + 6, w * 0.24, 60, 1.4, 0.7))                          // door
+    s.push(seg(x + 16, y + 6, x + 16, y + 66, 1.2, 0.6))                              // ladder
+    for (let ry = y + 14; ry < y + 62; ry += 12) s.push(seg(x + 12, ry, x + 20, ry, 1, 0.5))
+    s.push(ellipse(x + 34, ground - 7, 9, 9, 1.6, 0.9, 14))
+    s.push(ellipse(x + w - 34, ground - 7, 9, 9, 1.6, 0.9, 14))
+    x += w + 26
+  }
+  s.push(seg(0, H, W * 0.42, ground - 2, 1.8, 0.7))                                   // rails
+  s.push(seg(W * 0.3, H, W * 0.5, ground - 2, 1.8, 0.7))
+  for (let i = 0; i < 6; i++) {                                                       // ties
+    const t = i / 6, y = H - t * (H - ground)
+    s.push(seg(t * W * 0.42 - 20 * (1 - t), y, W * 0.3 + t * W * 0.2 + 20 * (1 - t), y, 1.2, 0.4))
+  }
+  s.push(seg(W * 0.62, ground, W * 0.62, H * 0.34, 2, 0.95))                          // signal pole
+  s.push(ellipse(W * 0.62, H * 0.36, 7, 7, 1.8, 1, 14))                               // the eye
+  s.push(seg(W * 0.86, ground - 8, W * 0.86, H * 0.22, 1.8, 0.7))                     // crane
+  s.push(seg(W * 0.86, H * 0.22, W * 0.7, H * 0.27, 1.8, 0.7))
+  s.push(seg(W * 0.7, H * 0.27, W * 0.7, H * 0.34, 1, 0.5))
+  s.push(...figureStrokes(W * 0.34, ground + 26, 92, 0.7))
+  for (let i = 0; i < 3; i++) s.push(ellipse(W * (0.2 + rand() * 0.5), ground - 24 - i * 26, 90, 8, 1, 0.15))
+  return s
+}
+
+builders.epilogue = function (rand) {
+  const s = []
+  const ground = H * 0.72
+  s.push(ellipse(W * 0.5, ground, 120, 60, 1.6, 0.5, 24, Math.PI, Math.PI * 2))       // first light
+  for (let i = 0; i < 3; i++) s.push(seg(W * 0.2 - i * 30, H * (0.52 + i * 0.05), W * 0.8 + i * 30, H * (0.52 + i * 0.05), 1, 0.25))
+  let x = -10
+  while (x < W) {                                                                     // rooftops
+    const w = 90 + rand() * 120, hgt = 60 + rand() * 110
+    s.push(poly([[x, ground], [x, ground - hgt], [x + w, ground - hgt], [x + w, ground]], 1.6, 0.7))
+    if (rand() < 0.5) s.push(box(x + 12 + rand() * (w - 30), ground - hgt - 14, 9, 14, 1.2, 0.6))
+    if (rand() < 0.35) {
+      const ax = x + 20 + rand() * (w - 40)
+      s.push(seg(ax, ground - hgt, ax, ground - hgt - 26, 1.2, 0.7))
+      s.push(seg(ax - 8, ground - hgt - 20, ax + 8, ground - hgt - 20, 1.2, 0.7))
+    }
+    x += w + 10
+  }
+  s.push(seg(0, ground, W, ground, 2, 0.8))
+  s.push(seg(W * 0.3, ground + 26, W * 0.7, ground + 26, 1.6, 0.8))                    // the railing
+  s.push(...figureStrokes(W * 0.5, ground + 26, 125))
+  for (let i = 0; i < 4; i++) {                                                        // birds
+    const bx = W * (0.3 + rand() * 0.4), by = H * (0.14 + rand() * 0.2)
+    s.push(curve([bx - 6, by], [bx - 2, by - 5], [bx, by], 1.2, 0.7, 6))
+    s.push(curve([bx, by], [bx + 2, by - 5], [bx + 6, by], 1.2, 0.7, 6))
+  }
+  return s
+}
+
+// New Orleans stroke vocabulary — the pen keeps the era distinction.
+const eraBuilders = {
+  'neworleans-1968': {
+    street(rand) {
+      const s = []
+      const ground = H * 0.7, balY = ground - H * 0.19
+      s.push(seg(0, ground, W, ground, 2, 0.8))
+      let x = -10
+      while (x < W * 0.9) {                                                            // Creole facades
+        const w = 150 + rand() * 120, hgt = H * 0.4
+        s.push(poly([[x, ground], [x, ground - hgt], [x + w, ground - hgt], [x + w, ground]], 1.6, 0.7))
+        for (let wx = x + 20; wx + 30 < x + w; wx += 52) {                             // shuttered French windows
+          s.push(box(wx + 8, ground - hgt + 22, 14, 40, 1.4, rand() < 0.4 ? 1 : 0.6))
+          s.push(box(wx, ground - hgt + 22, 6, 40, 1, 0.45))
+          s.push(box(wx + 24, ground - hgt + 22, 6, 40, 1, 0.45))
+        }
+        x += w
+      }
+      s.push(seg(0, balY, W * 0.88, balY, 1.8, 0.9))                                   // gallery deck
+      s.push(seg(0, balY - 24, W * 0.88, balY - 24, 1.4, 0.8))                         // top rail
+      for (let bx = 0; bx < W * 0.88; bx += 11) s.push(seg(bx, balY - 24, bx, balY, 0.9, 0.5))
+      for (let bx = 9; bx + 18 < W * 0.88; bx += 18) {                                 // the lace
+        s.push(ellipse(bx + 9, balY - 13, 5.5, 5.5, 0.9, 0.6, 10, 0, Math.PI))
+      }
+      for (let px = 26; px < W * 0.88; px += 80) s.push(seg(px, balY, px, ground + 16, 1.8, 0.85))
+      for (const lx of [W * 0.3, W * 0.68]) {                                          // gas lamps
+        s.push(seg(lx, balY + 26, lx, balY + 44, 1.6, 0.95))
+        s.push(box(lx - 5, balY + 44, 10, 14, 1.6, 1))
+        s.push(ellipse(lx, ground, 54, 7, 1, 0.3))
+      }
+      for (let fx = 70; fx < W * 0.86; fx += 170) {                                    // ferns off the rail
+        s.push(curve([fx, balY - 22], [fx - 12, balY - 4], [fx - 16, balY + 10], 1, 0.5))
+        s.push(curve([fx, balY - 22], [fx + 10, balY - 2], [fx + 13, balY + 12], 1, 0.5))
+      }
+      s.push(...figureStrokes(W * 0.48, ground + 32, 140))
+      for (let i = 0; i < 10; i++) {
+        const rx = rand() * W, ry = rand() * H * 0.6
+        s.push(seg(rx, ry, rx - 4, ry + 22, 0.8, 0.15))
+      }
+      return s
+    },
+    cafe(rand) {
+      const s = []
+      const ground = H * 0.8
+      s.push(seg(0, ground, W, ground, 2, 0.8))
+      s.push(seg(W * 0.03, H * 0.1, W * 0.97, H * 0.1, 1.8, 0.85))                     // awning top
+      for (let i = 0; i < 14; i++) {                                                   // stripes falling
+        const ax = W * 0.03 + (i / 14) * W * 0.94
+        s.push(seg(ax, H * 0.1, ax - 5, H * 0.28, 1.2, i % 2 ? 0.35 : 0.7))
+      }
+      for (let i = 0; i < 14; i++) {                                                   // scallops
+        const ax = W * 0.03 + (i + 0.5) * W * 0.94 / 14 - 5
+        s.push(ellipse(ax, H * 0.28, W * 0.94 / 28, 10, 1.4, 0.8, 10, 0, Math.PI))
+      }
+      for (let px = W * 0.08; px < W * 0.98; px += W * 0.18) {                          // columns
+        s.push(seg(px - 8, H * 0.28, px - 8, ground, 1.8, 0.85))
+        s.push(seg(px + 8, H * 0.28, px + 8, ground, 1.4, 0.5))
+      }
+      for (let i = 0; i < 5; i++) {                                                     // globe lights
+        const gx = W * (0.14 + i * 0.18)
+        s.push(seg(gx, H * 0.3, gx, H * 0.37, 1.2, 0.7))
+        s.push(ellipse(gx, H * 0.4, 6, 6, 1.4, 1, 12))
+      }
+      for (const tx of [W * 0.2, W * 0.44, W * 0.7]) {                                  // marble tables
+        const ty = ground - 56
+        s.push(ellipse(tx, ty, 30, 8, 1.6, 0.95))
+        s.push(seg(tx, ty + 8, tx, ground - 6, 1.4, 0.8))
+        s.push(ellipse(tx - 22, ty - 38, 9, 10, 1.4, 0.85))                             // company
+        s.push(curve([tx - 36, ty - 2], [tx - 22, ty - 22], [tx - 8, ty - 2], 1.4, 0.85))
+        s.push(box(tx - 12, ty - 7, 8, 5, 1.2, 0.9))                                    // the cups
+        s.push(box(tx + 5, ty - 7, 8, 5, 1.2, 0.9))
+        s.push(curve([tx, ty - 10], [tx + 6, ty - 22], [tx - 2, ty - 34], 0.9, 0.3))    // steam
+      }
+      s.push(...figureStrokes(W * 0.9, ground + 30, 135, 0.8))
+      return s
+    },
+    yard(rand) {
+      const s = []
+      const deck = H * 0.64
+      s.push(ellipse(W * 0.72, H * 0.2, 14, 14, 1.6, 0.95, 18))                          // the moon
+      s.push(seg(0, H * 0.45, W, H * 0.45, 1.4, 0.5))                                    // far bank
+      s.push(seg(0, deck, W, deck, 2, 0.85))                                             // wharf edge
+      for (let i = 0; i < 8; i++) {                                                      // moon track
+        const my = H * 0.47 + i * H * 0.02
+        s.push(seg(W * 0.72 - 8 - rand() * 16, my, W * 0.72 + 8 + rand() * 12, my, 1, 0.3))
+      }
+      const sx = W * 0.16, sy = H * 0.52                                                 // the freighter
+      s.push(poly([[sx - 18, sy], [sx + 188, sy], [sx + 174, sy - 26], [sx - 4, sy - 26], [sx - 18, sy]], 1.8, 0.85))
+      s.push(box(sx + 42, sy - 48, 78, 22, 1.6, 0.8))
+      s.push(box(sx + 58, sy - 62, 11, 15, 1.4, 0.8))
+      s.push(box(sx + 86, sy - 62, 11, 15, 1.4, 0.8))
+      s.push(seg(sx + 8, sy - 26, sx + 8, sy - 70, 1.2, 0.7))                            // masts + rigging
+      s.push(seg(sx + 8, sy - 70, sx + 58, sy - 48, 1, 0.5))
+      s.push(seg(sx + 158, sy - 26, sx + 158, sy - 60, 1.2, 0.7))
+      for (let i = 0; i < 6; i++) {                                                      // plank lines
+        s.push(seg(0, deck + 14 + i * 14, W, deck + 8 + i * 14, 1, 0.3))
+      }
+      for (const bx of [W * 0.14, W * 0.44, W * 0.74]) {                                 // bollards + rope
+        s.push(box(bx - 8, deck - 4, 16, 20, 1.6, 0.9))
+        s.push(ellipse(bx, deck - 5, 11, 5, 1.4, 0.9))
+      }
+      s.push(curve([W * 0.14, deck + 2], [W * 0.29, deck + 26], [W * 0.44, deck + 2], 1.4, 0.7))
+      s.push(curve([W * 0.44, deck + 2], [W * 0.59, deck + 26], [W * 0.74, deck + 2], 1.4, 0.7))
+      let cx = W * 0.78                                                                  // crates
+      for (let i = 0; i < 2; i++) {
+        const cw = 60 + rand() * 26, ch = 46 + rand() * 20
+        s.push(box(cx, deck + 30 - ch, cw, ch, 1.6, 0.85))
+        s.push(seg(cx + 4, deck + 34 - ch, cx + cw - 4, deck + 26, 1, 0.5))
+        cx += cw * 0.5
+      }
+      s.push(seg(W * 0.55, deck, W * 0.55, H * 0.28, 1.8, 0.8))                          // crane
+      s.push(seg(W * 0.55, H * 0.28, W * 0.38, H * 0.34, 1.8, 0.8))
+      s.push(seg(W * 0.38, H * 0.34, W * 0.38, H * 0.46, 1, 0.5))
+      s.push(seg(W * 0.31, deck + 2, W * 0.31, deck - 58, 1.8, 0.9))                     // lantern post
+      s.push(ellipse(W * 0.31, deck - 64, 6, 7, 1.6, 1, 12))
+      s.push(...figureStrokes(W * 0.5, deck + 42, 96, 0.75))
+      return s
+    },
+    epilogue(rand) {
+      const s = []
+      const ground = H * 0.74, cx = W * 0.5
+      s.push(ellipse(cx, ground - 60, 130, 60, 1.4, 0.4, 24, Math.PI, Math.PI * 2))      // dawn glow
+      s.push(seg(0, ground, W, ground, 2, 0.8))
+      s.push(box(cx - 120, ground - 120, 240, 120, 1.8, 0.8))                            // the cathedral
+      for (const [ox, sh, bw] of [[-88, 60, 30], [88, 60, 30], [0, 120, 38]]) {          // three spires
+        s.push(box(cx + ox - bw / 2, ground - 130 - sh * 0.3, bw, 130 + sh * 0.3, 1.6, 0.8))
+        s.push(poly([[cx + ox - bw / 2 - 6, ground - 130 - sh * 0.3], [cx + ox, ground - 150 - sh],
+                     [cx + ox + bw / 2 + 6, ground - 130 - sh * 0.3]], 1.6, 0.9))
+        s.push(seg(cx + ox, ground - 150 - sh, cx + ox, ground - 162 - sh, 1.4, 0.95))   // the cross
+        s.push(seg(cx + ox - 5, ground - 157 - sh, cx + ox + 5, ground - 157 - sh, 1.4, 0.95))
+      }
+      s.push(ellipse(cx, ground - 96, 10, 10, 1.6, 0.95, 14))                            // clock
+      s.push(poly([[0, ground - 70], [W * 0.15, ground - 96], [W * 0.3, ground - 70]], 1.4, 0.6))
+      s.push(poly([[W * 0.7, ground - 70], [W * 0.85, ground - 96], [W, ground - 70]], 1.4, 0.6))
+      s.push(seg(0, ground - 70, W * 0.3, ground - 70, 1.4, 0.6))
+      s.push(seg(W * 0.7, ground - 70, W, ground - 70, 1.4, 0.6))
+      s.push(seg(0, ground + 30, W, ground + 30, 1.6, 0.8))                              // the fence
+      for (let px = 8; px < W; px += 14) {
+        if (px > W * 0.46 && px < W * 0.54) continue
+        s.push(seg(px, ground + 10, px, ground + 30, 0.9, 0.5))
+      }
+      for (const lx of [W * 0.42, W * 0.58]) {                                           // gate lamps
+        s.push(seg(lx, ground + 30, lx, ground - 24, 1.6, 0.85))
+        s.push(ellipse(lx, ground - 30, 6, 7, 1.4, 1, 12))
+      }
+      for (const [bx, dir] of [[14, 1], [W - 14, -1]]) {                                 // banana fronds
+        for (let i = 0; i < 3; i++) {
+          s.push(curve([bx, H], [bx + dir * (40 + i * 30), H - 130 - i * 20], [bx + dir * (90 + i * 46), H - 90 - i * 34], 1.8, 0.6))
+        }
+      }
+      s.push(...figureStrokes(cx, ground + 62, 118, 0.85))
+      return s
+    },
+  },
+}
+
+/** Build a line scene: ordered strokes, deterministic per (kind, era, seed). */
+export function buildLineScene(kind, era = 'berlin-1938', seed = '') {
+  const make = eraBuilders[era]?.[kind] ?? builders[kind] ?? builders.street
   return make(mulberry32(hash(kind + '|' + seed + '|line')))
 }
 

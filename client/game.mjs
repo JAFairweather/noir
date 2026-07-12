@@ -25,7 +25,7 @@ import { generateWebCase } from '../gm/caseweb.mjs'
 import { Wheel } from './wheel.mjs'
 import { Score } from './audio.mjs'
 import { applyEra } from './art.mjs'
-import { setScene, enableDirectorScenes } from './scenes.mjs'
+import { setScene, enableDirectorScenes, getPenMode, setPenMode } from './scenes.mjs'
 import { drawMap } from './map.mjs'
 import { detectDirector, makeVoice, makeInterrogator, makeJudge } from './director.mjs'
 import { showBurnCard, showEndCard, showSaveCard, showCaseSelect } from './burn.mjs'
@@ -58,6 +58,8 @@ let gm = new StubGM(relay, CASE)
 const wheel = new Wheel($('#drum'), $('#flat'))
 wheel.setFlatMode(getFlatMode())
 $('#flat-toggle').checked = getFlatMode()
+$('#pen-toggle').checked = getPenMode()
+$('#pen-toggle').addEventListener('change', (e) => setPenMode(e.target.checked))
 $('#tc-toggle').checked = getTradecraft()
 
 const seen = new Set()          // wrap ids already rendered

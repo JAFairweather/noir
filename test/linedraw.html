@@ -35,9 +35,9 @@
   const ctx = cv.getContext('2d')
 
   const INK = '#c39a56'                       // Berlin gold on ink black
-  const street = buildLineScene('street', 'spike')
-  const cafe = buildLineScene('cafe', 'spike')
-  const station = buildLineScene('station', 'spike')
+  const street = buildLineScene('street', 'berlin-1938', 'spike')
+  const cafe = buildLineScene('cafe', 'berlin-1938', 'spike')
+  const station = buildLineScene('station', 'berlin-1938', 'spike')
   const bridge1 = planMorph(street, cafe)
   const bridge2 = planMorph(cafe, station)
 
