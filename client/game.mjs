@@ -235,6 +235,12 @@ window.addEventListener('keydown', (e) => {
   }
 })
 
+$('#nb-toggle').addEventListener('click', () => $('#notebook').classList.toggle('open'))
+// reading a dossier from the notebook should hand the phone back to the drum
+$('#notebook-list').addEventListener('click', () => {
+  if (window.innerWidth <= 720) $('#notebook').classList.remove('open')
+})
+
 $('#flat-toggle').addEventListener('change', (e) => {
   setFlatMode(e.target.checked)
   wheel.setFlatMode(e.target.checked)

@@ -27,6 +27,27 @@ const FRICTION = 0.955
 const DETENT_PULL = 0.12        // gentle snap toward paragraph boundaries
 const CURSOR = '▌'
 
+// Re-wrap a source line to the measured column. Case text is hand-wrapped
+// for ~70 columns; on narrow screens each long line must become several
+// drum lines (one slot each) or slots visually overlap. Explicit newlines
+// (tables, acrostics, timeline cards) are preserved — only overlong lines
+// split, with continuations lightly indented.
+function wrapText(raw, max) {
+  if (raw.length <= max) return [raw]
+  const lead = raw.match(/^\s*/)[0]
+  const words = raw.trim().split(/\s+/)
+  const out = []
+  let cur = lead
+  for (let w of words) {
+    while (w.length > max) { out.push((cur.trim() ? cur + ' ' : cur) + w.slice(0, max - cur.length - 1)); w = w.slice(max - cur.length - 1); cur = lead + '  ' }
+    if (cur.trim() === '' ) cur += w
+    else if ((cur + ' ' + w).length <= max) cur += ' ' + w
+    else { out.push(cur); cur = lead + '  ' + w }
+  }
+  if (cur.trim().length || !out.length) out.push(cur)
+  return out
+}
+
 export class Wheel {
   constructor(drumEl, flatEl) {
     this.drum = drumEl
@@ -45,6 +66,24 @@ export class Wheel {
     this._bindInput()
     this._tick = this._tick.bind(this)
     requestAnimationFrame(this._tick)
+  }
+
+  /** Characters that fit one drum line at the current viewport. */
+  _maxChars() {
+    const vw = window.innerWidth
+    if (this._mc && this._mcW === vw) return this._mc
+    const stage = this.drum.parentElement
+    const probe = document.createElement('div')
+    probe.className = 'drum-line'
+    probe.style.cssText += ';visibility:hidden;transform:none;white-space:pre'
+    probe.textContent = 'abcdefghijklm nopqrstuvwxyz '.repeat(3)
+    stage.appendChild(probe)
+    const rect = probe.getBoundingClientRect()
+    const charPx = probe.scrollWidth / probe.textContent.length
+    probe.remove()
+    this._mcW = vw
+    this._mc = Math.max(24, Math.floor(rect.width / charPx) - 1)
+    return this._mc
   }
 
   get tail() { return Math.max(0, this.lines.length - 1) * STEP_DEG }
@@ -66,7 +105,8 @@ export class Wheel {
     if (/player/.test(cls)) this.flush()    // new command: finish pending type
     const wasAtTail = this.atTail() || this.lines.length === 0
     this.paraStarts.push(this.lines.length)
-    for (const raw of String(text).split('\n')) {
+    const max = this._maxChars()
+    for (const raw of String(text).split('\n').flatMap(l => wrapText(l, max))) {
       const line = {
         full: raw || ' ', cls, para: this.paraStarts.length - 1,
         idx: this.lines.length, shown: instant ? (raw || ' ').length : 0,
