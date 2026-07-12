@@ -75,6 +75,13 @@ export function vigenere(plain, key) {
   return out.replace(/(.{5})/g, '$1 ').trim()
 }
 
+/** Match a report against ANY solid word of a venue name — "go to the
+ *  Acme" must open the Acme lunch counter, not just its last word. */
+export const venueMatch = (venue) => {
+  const words = venue.toUpperCase().split(/[^A-Z]+/).filter(w => w.length >= 4 && w !== 'THE')
+  return (t) => words.some(w => t.includes(w))
+}
+
 export const tokenMatch = (tokens) => (t) =>
   tokens.every(tok => Array.isArray(tok) ? tok.some(v => t.includes(v)) : t.includes(tok))
 
@@ -292,7 +299,7 @@ function buildBerlin(seed) {
     {
       to: 'informant', requires: ['drop'],
       lead: `The courier's pencil line names an eye: ${informant.name}, ${informant.role} at ${informant.venue}.`,
-      match: (t) => t.includes(informant.alias) || (t.includes(informant.venue.toUpperCase().replace('THE ', '').split(' ').pop() ?? '')),
+      match: (t) => t.includes(informant.alias) || venueMatch(informant.venue)(t),
       response: `${informant.venue}, the quiet hour. The ${informant.role}, and the eyes ${courier} trusted.`,
     },
     {
@@ -410,8 +417,10 @@ function buildBerlin(seed) {
       `A courier is overdue and the city pretends not to notice. The case`,
       'reaches you as a single dossier; everything else is somebody\'s secret.',
       '',
+    ].join('\n'),
+    preamble: [
       'Your notebook holds what you have earned. Nothing else is yours.',
-      'Read the briefing. Type plainly. Type "help" for field procedure.',
+      'Speak plainly. "help" buys you field procedure.',
     ].join('\n'),
     openingScene: 'street',
     walkthrough,
@@ -654,7 +663,7 @@ function buildNola(seed) {
     {
       to: 'informant', requires: ['drop'],
       lead: `The pencil line names an eye: ${informant.name}, ${informant.role} at ${informant.venue}.`,
-      match: (t) => t.includes(informant.alias) || t.includes(informant.venue.toUpperCase().replace('THE ', '').split(' ').pop() ?? ''),
+      match: (t) => t.includes(informant.alias) || venueMatch(informant.venue)(t),
       response: `${informant.venue}, the quiet hour. The ${informant.role}, and the eyes ${stringer} trusted.`,
     },
     {
@@ -771,8 +780,10 @@ function buildNola(seed) {
       'River humidity you could wring out of the air, and a sister with',
       'damp tens who wants to know why a careful man stopped coming home.',
       '',
+    ].join('\n'),
+    preamble: [
       'Your notebook holds what you have earned. Nothing else is yours.',
-      'Read the file. Type plainly. Type "help" for the house rules.',
+      'Speak plainly. "help" buys you the house rules.',
     ].join('\n'),
     openingScene: 'street',
     walkthrough,

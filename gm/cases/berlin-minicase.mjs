@@ -405,6 +405,9 @@ export const opening = [
   'quiet. Everything else in this city is somebody\'s secret, held close,',
   'and the city sells its secrets for the price of the coal.',
   '',
+].join('\n')
+
+export const preamble = [
   'Your notebook holds what you have earned. Nothing else is yours.',
-  'Read the briefing. Type plainly. Type "help" for field procedure.',
+  'Speak plainly. "help" buys you field procedure.',
 ].join('\n')

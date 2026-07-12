@@ -15,6 +15,7 @@
 // when it's absent or slow — the game must always play without AI.
 
 import { createServer } from 'node:http'
+import { execFile } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -221,6 +222,86 @@ async function voice({ era, caseTitle, beat, tail }) {
   return text
 }
 
+// ---------------------------------------------------- the Director's desk
+// A small local control panel at http://localhost:8787/ — status, an
+// UPDATE button (git pull; exit 75 asks the supervisor to relaunch), and
+// running commentary: what the Director is doing for the game, as it
+// does it. Meta only — the desk never prints case secrets.
+
+const STARTED = Date.now()
+const ACTIVITY = []
+function note(line) {
+  ACTIVITY.push({ t: Date.now(), line })
+  if (ACTIVITY.length > 80) ACTIVITY.shift()
+}
+let VERSION = 'unknown'
+execFile('git', ['rev-parse', '--short', 'HEAD'], { cwd: ROOT_ }, (e, out) => { if (!e) VERSION = out.trim() })
+note(KEY ? `the pen is live — ${MODEL}` : 'dry mode — scripted prose only (no ANTHROPIC_API_KEY)')
+if (REPLICATE) note('darkroom open — FLUX scenes enabled')
+
+const isLoopback = (req) =>
+  ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress)
+
+const PANEL = `<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NOIR — Director's Desk</title>
+<style>
+  body { background:#0a0806; color:#c39a56; font:14px/1.6 "Courier New",monospace; margin:0; padding:28px; }
+  h1 { font-size:15px; letter-spacing:.5em; color:#f4efe4; font-weight:normal; }
+  h1 small { letter-spacing:.2em; color:#6b5530; font-size:11px; display:block; margin-top:4px; }
+  .row { display:flex; gap:10px; align-items:center; margin:18px 0; flex-wrap:wrap; }
+  .lamp { width:9px; height:9px; border-radius:50%; background:#3a2; box-shadow:0 0 8px #3a2; }
+  .lamp.dry { background:#6b5530; box-shadow:none; }
+  button { background:transparent; color:#c39a56; border:1px solid #6b5530; padding:8px 16px;
+           font:inherit; letter-spacing:.15em; cursor:pointer; }
+  button:hover { color:#f4efe4; border-color:#c39a56; }
+  #out { white-space:pre-wrap; color:#6b5530; font-size:12px; margin:8px 0; }
+  #feed { list-style:none; padding:0; margin:14px 0; border-top:1px solid #2a2118; }
+  #feed li { padding:7px 2px; border-bottom:1px solid #1c1610; }
+  #feed time { color:#6b5530; margin-right:10px; font-size:11px; }
+  .hint { color:#6b5530; font-size:11px; margin-top:22px; line-height:1.7; }
+</style>
+<h1>N O I R<small>THE DIRECTOR'S DESK</small></h1>
+<div class="row"><span class="lamp" id="lamp"></span><span id="status">…</span></div>
+<div class="row">
+  <button id="update">UPDATE</button>
+  <button id="restart" style="display:none">RESTART WITH UPDATE</button>
+  <span id="ver"></span>
+</div>
+<div id="out"></div>
+<ul id="feed"></ul>
+<p class="hint">Running commentary only — the desk never prints case secrets.<br>
+Make this a desktop app: Chrome ⋮ → Cast, save &amp; share → Install page as app.</p>
+<script>
+const fmt = (t) => new Date(t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})
+async function tick() {
+  try {
+    const a = await (await fetch('/activity')).json()
+    document.getElementById('lamp').className = 'lamp' + (a.model ? '' : ' dry')
+    document.getElementById('status').textContent = a.model
+      ? 'live — ' + a.model + (a.images ? ' + FLUX' : '') : 'dry mode — scripted prose (no API key)'
+    document.getElementById('ver').textContent = 'build ' + a.version + ' · up ' + Math.floor(a.uptime/60000) + 'm'
+    document.getElementById('feed').innerHTML = a.log.slice().reverse()
+      .map(e => '<li><time>' + fmt(e.t) + '</time>' + e.line.replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])) + '</li>').join('')
+  } catch { document.getElementById('status').textContent = 'desk unreachable — restarting?' }
+}
+tick(); setInterval(tick, 2000)
+document.getElementById('update').onclick = async () => {
+  document.getElementById('out').textContent = 'pulling…'
+  const r = await (await fetch('/update', { method: 'POST' })).json()
+  document.getElementById('out').textContent = r.output
+  if (r.updated) document.getElementById('restart').style.display = ''
+}
+document.getElementById('restart').onclick = async () => {
+  await fetch('/restart', { method: 'POST' }).catch(() => {})
+  document.getElementById('out').textContent = 'restarting… (the supervisor relaunches the desk)'
+  const wait = setInterval(async () => {
+    try { if ((await (await fetch('/health')).json()).ok) { clearInterval(wait); location.reload() } } catch {}
+  }, 1500)
+}
+</script>`
+
 const server = createServer(async (req, res) => {
   res.setHeader('access-control-allow-origin', '*')
   res.setHeader('access-control-allow-headers', 'content-type')
@@ -231,6 +312,35 @@ const server = createServer(async (req, res) => {
       .end(JSON.stringify({ ok: true, director: !!KEY, model: KEY ? MODEL : null, images: !!REPLICATE }))
   }
 
+  if (req.method === 'GET' && (req.url === '/' || req.url === '/desk')) {
+    return res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(PANEL)
+  }
+
+  if (req.method === 'GET' && req.url === '/activity') {
+    return res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({
+      ok: true, version: VERSION, model: KEY ? MODEL : null, images: !!REPLICATE,
+      uptime: Date.now() - STARTED, log: ACTIVITY,
+    }))
+  }
+
+  // Control endpoints answer the local machine only.
+  if (req.method === 'POST' && req.url === '/update') {
+    if (!isLoopback(req)) return res.writeHead(403).end()
+    return execFile('git', ['pull', '--ff-only'], { cwd: ROOT_, timeout: 60000 }, (err, stdout, stderr) => {
+      const output = err ? `update failed:\n${stderr || err.message}` : String(stdout).trim()
+      const updated = !err && !/Already up to date/i.test(stdout)
+      note(err ? 'update failed — see desk' : updated ? 'update pulled — restart to serve it' : 'checked for updates — already current')
+      res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ output, updated }))
+    })
+  }
+
+  if (req.method === 'POST' && req.url === '/restart') {
+    if (!isLoopback(req)) return res.writeHead(403).end()
+    note('restarting to pick up the update')
+    res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ ok: true }))
+    return setTimeout(() => process.exit(75), 150)   // 75 asks the supervisor to relaunch
+  }
+
   if (req.method === 'POST' && req.url === '/scene') {
     let raw = ''
     for await (const chunk of req) raw += chunk
@@ -238,6 +348,7 @@ const server = createServer(async (req, res) => {
       const payload = JSON.parse(raw)
       if (!REPLICATE) throw new Error('no REPLICATE_API_TOKEN — procedural scenes only')
       const image = await scene(payload)
+      note(`developed a scene — ${payload.era ?? '?'} / ${payload.kind ?? '?'}`)
       res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ image }))
     } catch (err) {
       res.writeHead(200, { 'content-type': 'application/json' })
@@ -253,6 +364,7 @@ const server = createServer(async (req, res) => {
       const payload = JSON.parse(raw)
       if (!KEY) throw new Error('no ANTHROPIC_API_KEY — dry mode')
       const out = await interrogate(payload)
+      note('answered for an asset in the room — disposition holds')
       res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify(out))
     } catch (err) {
       res.writeHead(200, { 'content-type': 'application/json' })
@@ -267,7 +379,9 @@ const server = createServer(async (req, res) => {
     try {
       const payload = JSON.parse(raw)
       if (!KEY) throw new Error('no ANTHROPIC_API_KEY — dry mode')
-      res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify(await verdict(payload)))
+      const v = await verdict(payload)
+      note('weighed an ambiguous report against the answer key')
+      res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify(v))
     } catch (err) {
       res.writeHead(200, { 'content-type': 'application/json' })
         .end(JSON.stringify({ match: null, error: String(err.message ?? err).slice(0, 200) }))
@@ -282,6 +396,7 @@ const server = createServer(async (req, res) => {
       const payload = JSON.parse(raw)
       if (!KEY) throw new Error('no ANTHROPIC_API_KEY — dry mode')
       const text = await voice(payload)
+      note(`spoke a beat in era prose${payload.heat != null ? ` (heat ${payload.heat})` : ''}`)
       res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ text }))
     } catch (err) {
       // The client treats any failure as "use the scripted line" — never block play.
@@ -295,7 +410,7 @@ const server = createServer(async (req, res) => {
 })
 
 server.listen(PORT, () => {
-  console.log(`noir-gm director on http://localhost:${PORT}`)
+  console.log(`noir-gm director on http://localhost:${PORT}  (control panel: open that URL)`)
   console.log(KEY
     ? `  voice: ${MODEL}`
     : '  DRY MODE — no ANTHROPIC_API_KEY set; /voice returns fallbacks (scripted prose)')

@@ -390,6 +390,10 @@ async function freshStart(caseId) {
   attachVoice()
   put('N O I R', 'title-line')
   put('Cases you unlock. Assets you burn.', 'gm dim')
+  if (CASE.preamble) {
+    put('', '')
+    put(CASE.preamble, 'gm')
+  }
   wheel.append('', '')
   wheel.append('— press space, and the file opens —', 'gm dim', { instant: true })
   input.blur()

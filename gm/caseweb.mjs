@@ -18,7 +18,7 @@
 // before play, and a walkthrough array that CI replays through the real
 // engine to prove the web solvable at heat zero.
 
-import { hash, mulberry32, pick, pickN, vigenere, tokenMatch, POOL, NOLA } from './casegen.mjs'
+import { hash, mulberry32, pick, pickN, vigenere, tokenMatch, venueMatch, POOL, NOLA } from './casegen.mjs'
 
 const sortNames = (names) => [...names].sort()   // alphabetical — never culprit-first
 
@@ -584,7 +584,7 @@ function webBerlin(seed) {
     {
       to: 'informant', requires: ['herring'],
       lead: `${herring.name} pointed at ${informant.venue}: the ${informant.role} counts everyone twice.`,
-      match: (t) => t.includes(informant.alias) || t.includes(informant.venue.toUpperCase().replace('THE ', '').split(' ').pop() ?? ''),
+      match: (t) => t.includes(informant.alias) || venueMatch(informant.venue)(t),
       response: `${informant.venue}, the quiet hour. The ${informant.role}, and the eyes ${victim} trusted.`,
     },
     {
@@ -716,10 +716,11 @@ function webBerlin(seed) {
       'Four names. Three trails — the money, the paper, a pair of eyes.',
       'Work them the way you were taught: quickly, politely, and',
       'without ever once looking like a man in a hurry.',
-      '',
+    ].join('\n'),
+    preamble: [
       'Your notebook keeps what you earn; nothing else in this town is',
-      'yours. Read the briefing. Speak plainly. "help" buys you field',
-      'procedure — the luck you bring yourself.',
+      'yours. Speak plainly. "help" buys you field procedure — the luck',
+      'you bring yourself.',
     ].join('\n'),
     openingScene: 'street',
     board: {
@@ -1223,7 +1224,7 @@ function webNola(seed) {
     {
       to: 'informant', requires: ['herring'],
       lead: `${herring.name} pointed at ${informant.venue}: the ${informant.role} forgets nothing.`,
-      match: (t) => t.includes(informant.alias) || t.includes(informant.venue.toUpperCase().replace('THE ', '').split(' ').pop() ?? ''),
+      match: (t) => t.includes(informant.alias) || venueMatch(informant.venue)(t),
       response: `${informant.venue}, the slow hour. The ${informant.role}, and the eyes ${victim} trusted.`,
     },
     {
@@ -1352,10 +1353,11 @@ function webNola(seed) {
       'ran the night side; three trails will cut them down to one —',
       'the money, the paper, and a pair of eyes that never once went',
       'on the payroll.',
-      '',
+    ].join('\n'),
+    preamble: [
       'Your notebook keeps what you earn; nothing else here is yours,',
-      'and most of it never was. Read the case file. Speak plainly.',
-      '"help" buys you procedure — the rest this town will teach you.',
+      'and most of it never was. Speak plainly. "help" buys you',
+      'procedure — the rest this town will teach you.',
     ].join('\n'),
     openingScene: 'street',
     board: {

@@ -358,6 +358,17 @@ console.log('\n17. Deep cases: the deduction web (caseweb)')
     check(`${era} web seed "${seed}": the whole web opens on the happy path`,
       gmW.unlocked.size === Object.keys(mod.scopes).length)
   }
+  // "Go to the Acme" must work — every solid word of an informant's venue
+  // opens the door, not just the last one (field report, 2026-07-12).
+  for (const era of ['berlin-1938', 'neworleans-1968']) {
+    const w = generateWebCase('omega', era)
+    const edge = w.edges.find(e => e.to === 'informant')
+    const venue = w.scopes.informant.payload.title.split(',').pop().trim()
+    const words = venue.split(/[^A-Za-z]+/).filter(x => x.length >= 4 && x.toUpperCase() !== 'THE')
+    check(`${era} web: any venue word reaches the informant (${words.join('/')})`,
+      words.every(word => edge.match(`GO TO THE ${word.toUpperCase()}`)))
+  }
+
   // Two lists are a coin flip: accusing a suspect who survives two of the
   // three lists must fail — the file closes unresolved, no epilogue.
   const w2 = generateWebCase('omega', 'berlin-1938')

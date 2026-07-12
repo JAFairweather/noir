@@ -402,8 +402,11 @@ export const opening = [
   'on a zinc counter, and a sister with damp tens who wants to know why',
   'a careful man stopped coming home.',
   '',
+].join('\n')
+
+export const preamble = [
   'Your notebook holds what you have earned. Nothing else is yours.',
-  'Read the file. Type plainly. Type "help" for the house rules.',
+  'Speak plainly. "help" buys you the house rules.',
 ].join('\n')
 
 export const openingScene = 'street'

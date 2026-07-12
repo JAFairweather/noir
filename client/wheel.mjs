@@ -282,7 +282,7 @@ export class Wheel {
           el.style.opacity = 1
         } else {
           const t = (ad - FLAT_DEG) / (VISIBLE_DEG - FLAT_DEG)
-          el.style.opacity = Math.max(0, (1 - t ** 1.4)) ** 1.1
+          el.style.opacity = Math.max(0, (1 - t ** 2)) ** 0.75
         }
         el.style.filter = ''
         el.classList.toggle('focal', ad < STEP_DEG * 0.55)
@@ -302,7 +302,7 @@ export class Wheel {
         const t = ex / (VISIBLE_DEG - FLAT_DEG)        // 0 at band edge → 1 at cull
         el.style.transform =
           `translateZ(${RADIUS - zoff}px) translateY(${y}px) rotateX(${-sgn * ex}deg) scale(${1 - t * 0.02})`
-        el.style.opacity = Math.max(0, (1 - t ** 1.4)) ** 1.1
+        el.style.opacity = Math.max(0, (1 - t ** 2)) ** 0.75
         el.style.filter = t > 0.55 ? `blur(${(t - 0.55) * 2.4}px)` : ''
       }
       el.classList.toggle('focal', ad < STEP_DEG * 0.55)
