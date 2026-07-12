@@ -227,6 +227,10 @@ const painters = {
 // ------------------------------------------------------------ the backdrop
 
 let currentKind = null
+let directorScenes = null   // { url } once a FLUX-capable Director is detected
+
+/** Upgrade backdrops to Director FLUX stills when the local service has them. */
+export function enableDirectorScenes(url) { directorScenes = { url } }
 
 /** Crossfade the backdrop to a scene. Deterministic per (kind, seed). */
 export function setScene(kind, eraId, seed = '') {

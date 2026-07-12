@@ -15,7 +15,7 @@ export async function detectDirector(url = localStorage.getItem('noir.gm.url') ?
     const res = await fetch(`${url}/health`, { signal: ctrl.signal })
     clearTimeout(timer)
     const info = await res.json()
-    return info.ok ? { url, live: !!info.director, model: info.model } : null
+    return info.ok ? { url, live: !!info.director, model: info.model, images: !!info.images } : null
   } catch { return null }
 }
 

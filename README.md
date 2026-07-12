@@ -43,12 +43,20 @@ npm run smoke        # full protocol loop in-memory: world → grants → burn �
 npm run serve        # then open /client/ — two playable cases
 ```
 
-### With the Director (Claude voices the case)
+### With the Director (Claude voices the case, FLUX paints it)
 
 ```bash
-ANTHROPIC_API_KEY=sk-ant-… npm run gm    # local Director service on :8787
-npm run serve                            # client detects it automatically
+cp .env.example .env    # put your keys in .env (gitignored, never committed)
+npm run gm              # local Director service on :8787
+npm run serve           # client detects it automatically
 ```
+
+`.env` holds `ANTHROPIC_API_KEY` (narrative, NPCs, verdicts) and optionally
+`REPLICATE_API_TOKEN` (FLUX scene stills — procedural scenes are instant
+placeholders and the still replaces them when it lands, duotoned by the
+same deterministic pass). Keys stay on your machine: the service reads
+them server-side; nothing key-shaped ever reaches the browser or the repo.
+Real environment variables override the file.
 
 The engine keeps deciding everything mechanical — grants, burns, heat,
 verdicts, all deterministic and fair-play-committed. The Director rewrites

@@ -24,7 +24,7 @@ import { generateCase } from '../gm/casegen.mjs'
 import { Wheel } from './wheel.mjs'
 import { Score } from './audio.mjs'
 import { applyEra } from './art.mjs'
-import { setScene } from './scenes.mjs'
+import { setScene, enableDirectorScenes } from './scenes.mjs'
 import { detectDirector, makeVoice, makeInterrogator, makeJudge } from './director.mjs'
 import { showBurnCard, showEndCard, showSaveCard, showCaseSelect } from './burn.mjs'
 import { getOrCreatePlayerKey, getFlatMode, setFlatMode, getCaseId, setCaseId, getTradecraft, setTradecraft } from './settings.mjs'
@@ -272,6 +272,7 @@ function applyCase(mod) {
 // The Director voices beats when its local service is running (M3);
 // otherwise the scripted prose plays. Attached to whatever GM is current.
 function attachVoice() {
+  if (director?.images) enableDirectorScenes(director.url)
   if (!director?.live) return
   const getTail = () => transcript.slice(-6).map(l => l.text).filter(t => t.length > 2)
   gm.voice = makeVoice({

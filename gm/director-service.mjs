@@ -16,13 +16,29 @@
 
 import { createServer } from 'node:http'
 import { readFile } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+const ROOT_ = join(dirname(fileURLToPath(import.meta.url)), '..')
+
+// Load repo-root .env (gitignored) so keys live in one local file:
+//   ANTHROPIC_API_KEY=…  REPLICATE_API_TOKEN=…
+// Real environment variables win over the file. Never commit .env.
+try {
+  for (const line of readFileSync(join(ROOT_, '.env'), 'utf8').split('\n')) {
+    const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*?)\s*$/)
+    if (m && !m[1].startsWith('#') && !(m[1] in process.env))
+      process.env[m[1]] = m[2].replace(/^["']|["']$/g, '')
+  }
+} catch { /* no .env — plain environment variables work as before */ }
 
 const PORT = Number(process.env.NOIR_GM_PORT ?? 8787)
 const MODEL = process.env.NOIR_MODEL ?? 'claude-sonnet-5'
 const KEY = process.env.ANTHROPIC_API_KEY
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
+const REPLICATE = process.env.REPLICATE_API_TOKEN
+const IMAGE_MODEL = process.env.NOIR_IMAGE_MODEL ?? 'black-forest-labs/flux-schnell'
+const ROOT = ROOT_
 
 const bibles = new Map()
 async function bible(era) {
@@ -117,6 +133,59 @@ async function verdict({ attempt, answers }) {
   return { match: typeof json.match === 'string' ? json.match : null }
 }
 
+// Scene stills via FLUX (DECISIONS §2): the model proposes a grayscale
+// still; the client's deterministic duotone pass owns the final look.
+// Briefs are scene-state (place, hour, weather, focus), never one-shot
+// randomness — keyframes must be coherent evolutions for the line-draw
+// engine later. Deterministic per (kind, seed) via the model seed.
+const SCENE_BRIEFS = {
+  street: 'a rain-wet city street at night, tall dark buildings, two cones of lamplight, one figure in a long coat mid-distance, wet cobblestones reflecting light',
+  station: 'the interior of a grand railway station at night, huge arched iron-and-glass roof, platform lamps receding into haze, one figure waiting with a case',
+  cafe: 'a café seen from the dark street at night, two tall warm-lit windows, silhouettes of two people inside, scalloped awning, light spilling on the pavement',
+  office: 'a small office at night lit by one desk lamp, venetian-blind shadows striping the wall, papers in the pool of light, a telephone in shadow',
+  yard: 'a freight rail yard at night in thin mist, long low boxcars, telegraph poles, a single distant lamp, one small figure walking away',
+  epilogue: 'a city skyline at first light, pale dawn sky, rooftops in silhouette, one figure seen from behind watching the morning come',
+}
+const ERA_DRESS = {
+  'berlin-1938': '1930s Berlin, period cars and signage shapes',
+  'paris-1954': '1950s Paris, Saint-Germain, period detail',
+  'neworleans-1968': '1960s New Orleans French Quarter, iron balconies, humid haze',
+  'meridian-1849': '1840s American southwest borderlands, adobe and wagons, harsh bone-white light',
+}
+const sceneCache = new Map()
+
+async function scene({ era, kind, seed }) {
+  const cacheKey = `${era}|${kind}|${seed}`
+  if (sceneCache.has(cacheKey)) return sceneCache.get(cacheKey)
+  const prompt =
+    `Black and white photograph, film noir still, high contrast, deep shadows, grain. ` +
+    `${SCENE_BRIEFS[kind] ?? SCENE_BRIEFS.street}. ${ERA_DRESS[era] ?? ''}. ` +
+    `Monochrome only. No text, no lettering, no captions, no watermarks.`
+  let h = 2166136261
+  for (const c of cacheKey) { h = Math.imul(h ^ c.charCodeAt(0), 16777619) }
+  const res = await fetch(`https://api.replicate.com/v1/models/${IMAGE_MODEL}/predictions`, {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${REPLICATE}`,
+      'content-type': 'application/json',
+      prefer: 'wait',
+    },
+    body: JSON.stringify({
+      input: { prompt, aspect_ratio: '16:9', seed: h >>> 0, output_format: 'jpg', output_quality: 85 },
+    }),
+  })
+  if (!res.ok) throw new Error(`replicate ${res.status}: ${(await res.text()).slice(0, 200)}`)
+  const pred = await res.json()
+  const url = Array.isArray(pred.output) ? pred.output[0] : pred.output
+  if (!url) throw new Error(`no output (status ${pred.status})`)
+  const img = await fetch(url)
+  if (!img.ok) throw new Error(`image fetch ${img.status}`)
+  const b64 = Buffer.from(await img.arrayBuffer()).toString('base64')
+  const dataUri = `data:image/jpeg;base64,${b64}`
+  sceneCache.set(cacheKey, dataUri)
+  return dataUri
+}
+
 async function voice({ era, caseTitle, beat, tail }) {
   const body = {
     model: MODEL,
@@ -159,7 +228,22 @@ const server = createServer(async (req, res) => {
 
   if (req.method === 'GET' && req.url === '/health') {
     return res.writeHead(200, { 'content-type': 'application/json' })
-      .end(JSON.stringify({ ok: true, director: !!KEY, model: KEY ? MODEL : null }))
+      .end(JSON.stringify({ ok: true, director: !!KEY, model: KEY ? MODEL : null, images: !!REPLICATE }))
+  }
+
+  if (req.method === 'POST' && req.url === '/scene') {
+    let raw = ''
+    for await (const chunk of req) raw += chunk
+    try {
+      const payload = JSON.parse(raw)
+      if (!REPLICATE) throw new Error('no REPLICATE_API_TOKEN — procedural scenes only')
+      const image = await scene(payload)
+      res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ image }))
+    } catch (err) {
+      res.writeHead(200, { 'content-type': 'application/json' })
+        .end(JSON.stringify({ image: null, error: String(err.message ?? err).slice(0, 200) }))
+    }
+    return
   }
 
   if (req.method === 'POST' && req.url === '/interrogate') {
@@ -215,5 +299,8 @@ server.listen(PORT, () => {
   console.log(KEY
     ? `  voice: ${MODEL}`
     : '  DRY MODE — no ANTHROPIC_API_KEY set; /voice returns fallbacks (scripted prose)')
+  console.log(REPLICATE
+    ? `  scenes: ${IMAGE_MODEL} (FLUX stills, duotoned client-side)`
+    : '  scenes: procedural (set REPLICATE_API_TOKEN for FLUX stills)')
   console.log('  open the client (npm run serve) — it will detect the Director automatically')
 })
