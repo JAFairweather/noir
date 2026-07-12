@@ -21,6 +21,7 @@ import {
 import { StubGM } from '../gm/stubgm.mjs'
 import { CASES, CASE_LIST } from '../gm/cases/registry.mjs'
 import { generateCase } from '../gm/casegen.mjs'
+import { generateWebCase } from '../gm/caseweb.mjs'
 import { Wheel } from './wheel.mjs'
 import { Score } from './audio.mjs'
 import { applyEra } from './art.mjs'
@@ -35,10 +36,15 @@ const SAVE_KEY = 'noir.save.v1'
 
 const { sk: playerSk, pub: playerPub } = getOrCreatePlayerKey()
 
-// A case id is a registered module, 'gen:<seed>' (Berlin), or
-// 'gen:<era>:<seed>' from casegen.
+// A case id is a registered module, 'gen:<seed>' (Berlin), 'gen:<era>:<seed>'
+// from casegen, or 'web:<era>:<seed>' — a deep deduction-web case.
 const resolveCase = (id) => {
   if (CASES[id]) return CASES[id]
+  if (id?.startsWith('web:')) {
+    const rest = id.slice(4)
+    const sep = rest.indexOf(':')
+    return sep > 0 ? generateWebCase(rest.slice(sep + 1), rest.slice(0, sep)) : generateWebCase(rest)
+  }
   if (!id?.startsWith('gen:')) return null
   const rest = id.slice(4)
   const sep = rest.indexOf(':')
@@ -281,7 +287,7 @@ function applyCase(mod) {
   setCaseId(mod.CASE_ID)
   const era = applyEra(mod.ERA)
   score.setEra(mod.ERA)
-  $('#era-label').textContent = era.label
+  $('#era-label').textContent = era.label + (mod.TITLE ? ` — ${mod.TITLE}` : '')
   setScene(mod.openingScene ?? 'street', mod.ERA, mod.CASE_ID)
 }
 
@@ -346,6 +352,18 @@ const pickCase = () => showCaseSelect([
     label: 'NEW ORLEANS 1968 — FROM SEED',
     title: 'A Stringer Gone Quiet',
     blurb: 'Generated: a fresh acrostic, a moved patrol, a new name on the order.',
+  },
+  {
+    id: `web:berlin-1938:${Math.random().toString(36).slice(2, 8)}`,
+    label: 'BERLIN 1938 — THE LONG CASE',
+    title: 'The Canal Keeps Nothing',
+    blurb: 'A deduction web: four suspects, three trails, three lists. Only one name stands on all three.',
+  },
+  {
+    id: `web:neworleans-1968:${Math.random().toString(36).slice(2, 8)}`,
+    label: 'NEW ORLEANS 1968 — THE LONG CASE',
+    title: 'What the River Returned',
+    blurb: 'A deduction web: four suspects, three trails, three lists. Accuse on two and you have a coin flip.',
   },
 ], (id) => freshStart(id))
 applyEra(CASE.ERA)

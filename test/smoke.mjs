@@ -14,6 +14,7 @@ import { StubGM } from '../gm/stubgm.mjs'
 import * as berlin from '../gm/cases/berlin-minicase.mjs'
 import { CASES } from '../gm/cases/registry.mjs'
 import { generateCase } from '../gm/casegen.mjs'
+import { generateWebCase } from '../gm/caseweb.mjs'
 
 let passed = 0, failed = 0
 const check = (name, ok, detail = '') => {
@@ -315,6 +316,57 @@ console.log('\n16. Review: the desk reads the case back')
   await sayR('decode silber')
   const rev2 = await sayR('status')
   check('resolved threads drop off; new ones appear', !rev2.includes('decode <word>') && rev2.includes('ADLER'))
+}
+
+console.log('\n17. Deep cases: the deduction web (caseweb)')
+{
+  // Structure: 15 scopes, three list scopes, fair intersection.
+  for (const era of ['berlin-1938', 'neworleans-1968']) {
+    const w = generateWebCase('omega', era)
+    check(`${era} web: 15+ scopes (spec §4.2)`, Object.keys(w.scopes).length >= 15)
+    check(`${era} web: deterministic per seed`,
+      generateWebCase('omega', era).solutionCommitment.canonical() === w.solutionCommitment.canonical())
+    const culprit = w.accusation.culprit
+    const lists = ['rota', 'keybook', 'personnel'].map(k => w.scopes[k].payload.body)
+    check(`${era} web: the culprit stands on all three lists`,
+      lists.every(b => b.includes(culprit)))
+    const others = w.accusation.wrong.slice(0, 3)   // the three cleared suspects
+    check(`${era} web: each other suspect is cleared by exactly one list`,
+      others.every(name =>
+        lists.filter(b => b.split('\n').some(l => l.trim().startsWith(name) && (l.includes('—') || l.includes(':')) && !l.includes('yes'))).length >= 1))
+    check(`${era} web: no scope names the culprit as the man`,
+      !Object.values(w.scopes).some(s => s !== w.scopes.resolution &&
+        new RegExp(`${culprit}[^\\n]*(IS THE|IS OUR MAN|SELLER IS|KILLER)`, 'i').test(s.payload.body)))
+  }
+  // Solvability: replay the walkthrough through the real engine, both eras,
+  // several seeds — epilogue reached, heat zero, everything granted honestly.
+  for (const [seed, era] of [['omega', 'berlin-1938'], ['sigma', 'berlin-1938'], ['kappa', 'berlin-1938'],
+                             ['omega', 'neworleans-1968'], ['sigma', 'neworleans-1968'], ['kappa', 'neworleans-1968']]) {
+    const mod = generateWebCase(seed, era)
+    const rW = new Relay()
+    const pW = generateSecretKey()
+    const gmW = new StubGM(rW, mod)
+    await gmW.start(getPublicKey(pW))
+    for (const cmd of mod.walkthrough) {
+      await sendFieldReport(rW, pW, gmW.pub, cmd, mod.CASE_ID)
+      await gmW.poll()
+    }
+    const docs = []
+    for (const gr of latestGrants(await receiveGrants(rW, pW))) docs.push(await fetchScope(rW, gr))
+    check(`${era} web seed "${seed}": walkthrough reaches the epilogue at heat ${gmW.heat}`,
+      docs.some(d => d.status === 'ok' && d.data?.kind === 'epilogue') && gmW.heat === 0)
+    check(`${era} web seed "${seed}": the whole web opens on the happy path`,
+      gmW.unlocked.size === Object.keys(mod.scopes).length)
+  }
+  // Two lists are a coin flip: accusing a suspect who survives two of the
+  // three lists must fail — the file closes unresolved, no epilogue.
+  const w2 = generateWebCase('omega', 'berlin-1938')
+  const r2w = new Relay(); const p2w = generateSecretKey(); const gm2w = new StubGM(r2w, w2)
+  await gm2w.start(getPublicKey(p2w))
+  await sendFieldReport(r2w, p2w, gm2w.pub, `accuse ${w2.accusation.wrong[0].toLowerCase()}`, w2.CASE_ID)
+  await gm2w.poll()
+  check('web: accusing a two-list suspect fails and ends the case',
+    gm2w.over && !gm2w.unlocked.has('resolution'))
 }
 
 console.log(`\n${passed} passed, ${failed} failed`)

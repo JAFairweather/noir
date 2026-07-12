@@ -7,6 +7,7 @@
 // Skeleton fixed; prose becomes the Director's job in M3.
 
 export const CASE_ID = 'neworleans-wet-negative'
+export const TITLE = 'The Wet Negative'
 export const ERA = 'neworleans-1968'
 
 // The classified ad is an acrostic: first letters, top to bottom, DAUPHINE.

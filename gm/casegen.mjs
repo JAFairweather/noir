@@ -12,12 +12,12 @@
 // resolution) with the CONTENT randomized per seed. Topology variety and
 // other eras come after the Director has field-tested this shape.
 
-function hash(str) {
+export function hash(str) {
   let h = 2166136261
   for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) }
   return h >>> 0
 }
-function mulberry32(seed) {
+export function mulberry32(seed) {
   let a = seed >>> 0
   return () => {
     a |= 0; a = (a + 0x6D2B79F5) | 0
@@ -30,7 +30,7 @@ function mulberry32(seed) {
 // ------------------------------------------------------------- era pools
 // Berlin 1938, per the era bible: bureaucratic menace, stamps and queues.
 
-const POOL = {
+export const POOL = {
   surnames: ['HARTMANN', 'VOGEL', 'RICHTER', 'LANGE', 'SCHILLING', 'KRAMER', 'NEUMANN', 'BECKER'],
   worknames: ['AMSEL', 'FALKE', 'MARDER', 'DROSSEL', 'LERCHE', 'KIEBITZ'],   // courier bird-names
   couriers: ['GRAF', 'SEIDEL', 'WINTER', 'BRAND'],
@@ -56,15 +56,15 @@ const POOL = {
   ],
 }
 
-const pick = (rand, arr) => arr[Math.floor(rand() * arr.length)]
-const pickN = (rand, arr, n) => {
+export const pick = (rand, arr) => arr[Math.floor(rand() * arr.length)]
+export const pickN = (rand, arr, n) => {
   const copy = [...arr], out = []
   while (out.length < n && copy.length) out.push(copy.splice(Math.floor(rand() * copy.length), 1)[0])
   return out
 }
 
 // Vigenère, computed — the intercept in the briefing is a REAL cipher.
-function vigenere(plain, key) {
+export function vigenere(plain, key) {
   const A = 65
   let ki = 0
   const out = [...plain].map(ch => {
@@ -75,7 +75,7 @@ function vigenere(plain, key) {
   return out.replace(/(.{5})/g, '$1 ').trim()
 }
 
-const tokenMatch = (tokens) => (t) =>
+export const tokenMatch = (tokens) => (t) =>
   tokens.every(tok => Array.isArray(tok) ? tok.some(v => t.includes(v)) : t.includes(tok))
 
 // ---------------------------------------------------------------- casegen
@@ -388,7 +388,7 @@ function buildBerlin(seed) {
   ]
 
   return {
-    CASE_ID, ERA, scopes, edges, accusation, burnTriggers, npcs, hints,
+    CASE_ID, ERA, TITLE: 'A Courier Overdue', scopes, edges, accusation, burnTriggers, npcs, hints,
     cipher: { ciphertext: drop.plain.replace(/[^A-Z]/g, ''), key: workname, to: 'drop' },
     heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, max: 100, tail: 60 },
     missResponse: undefined,
@@ -426,7 +426,7 @@ function buildBerlin(seed) {
 // Per eras/neworleans-1968.md: corruption as climate, the river keeping
 // what it's given. The era's cipher is the classified-ad ACROSTIC.
 
-const NOLA = {
+export const NOLA = {
   surnames: ['LANDRY', 'MOREAU', 'DUPRE', 'GAUTIER', 'FONTENOT', 'BERGERON', 'THIBAULT', 'CHERAMIE'],
   stringers: ['CALLOU', 'PREJEAN', 'MARTELLO', 'DUFOUR'],
   streets: ['ROYAL', 'CONTI', 'DUMAINE'],   // no repeated letters — clean acrostics
@@ -750,7 +750,7 @@ function buildNola(seed) {
   ]
 
   return {
-    CASE_ID, ERA, scopes, edges, accusation, burnTriggers, npcs, hints,
+    CASE_ID, ERA, TITLE: 'A Stringer Gone Quiet', scopes, edges, accusation, burnTriggers, npcs, hints,
     heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, max: 100, tail: 60 },
     missResponse: 'Nothing moves. A screen door claps somewhere, and a man on a gallery marks you without looking up. (Heat rises.)',
     helpText: [

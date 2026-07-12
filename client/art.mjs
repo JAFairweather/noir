@@ -9,28 +9,28 @@
 
 export const ERAS = {
   'berlin-1938': {
-    label: 'Berlin 1938 — The Last Visa',
+    label: 'Berlin 1938',
     accent: '#c39a56',            // sepia
     accentDim: '#6b5530',
     ink: '#0a0806',
     font: "'Special Elite', 'Courier New', monospace",
   },
   'paris-1954': {
-    label: 'Paris 1954 — The Blue Cellar',
+    label: 'Paris 1954',
     accent: '#7da7c7',            // smoky blue
     accentDim: '#3d5a70',
     ink: '#06080a',
     font: "'Archivo', 'Helvetica Neue', sans-serif",
   },
   'neworleans-1968': {
-    label: 'New Orleans 1968 — Vieux Carré',
+    label: 'New Orleans 1968',
     accent: '#7fa06f',            // swamp green
     accentDim: '#42553a',
     ink: '#070a06',
     font: "'Zilla Slab', 'Georgia', serif",
   },
   'meridian-1849': {
-    label: 'West Texas 1849 — The Meridian',
+    label: 'West Texas 1849',
     accent: '#e6e1d3',            // bone-white
     accentDim: '#8a867c',
     ink: '#080807',

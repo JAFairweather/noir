@@ -10,6 +10,7 @@
 // never appear in a d tag — the GM maps them to random ids per session.
 
 export const CASE_ID = 'berlin-last-visa'
+export const TITLE = 'The Last Visa'
 export const ERA = 'berlin-1938'
 
 // Vigenère, key SILBER (Weiss's workname, stated in the briefing footer):

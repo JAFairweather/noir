@@ -130,3 +130,14 @@ deductions, not a chain. Direction for casegen v3 and the Director era:
 
 Sequencing: motif-based casegen first (testable offline, same walkthrough
 proofs), then the deduction notebook UI, then Director re-fleshing.
+
+**Progress:** `gm/caseweb.mjs` ships the first deduction-web topology
+(both eras, `web:<era>:<seed>`, "THE LONG CASE" in the picker): four
+suspects, three independent trails — the money, the paper, the witness —
+each ending in a LIST (duty rota / key book / personnel particulars).
+Each list clears exactly one different suspect; only the culprit stands
+on all three; no scope names him. CI proves: 15+ scopes, walkthrough to
+epilogue at heat 0, whole web opens, wrong two-list accusations fail,
+determinism, and that the fairness invariants hold. Next: motif VARIETY
+(swap which trail carries which predicate, alternate lock types per
+seed), then the map-as-board, then the deduction notebook.
