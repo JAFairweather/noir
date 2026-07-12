@@ -28,7 +28,7 @@ const ROOT_ = join(dirname(fileURLToPath(import.meta.url)), '..')
 // Real environment variables win over the file. Never commit .env.
 try {
   for (const line of readFileSync(join(ROOT_, '.env'), 'utf8').split('\n')) {
-    const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*?)\s*$/)
+    const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*["']?(.*?)["']?\s*$/)
     if (m && !m[1].startsWith('#') && !(m[1] in process.env))
       process.env[m[1]] = m[2].replace(/^["']|["']$/g, '')
   }
@@ -176,7 +176,16 @@ async function scene({ era, kind, seed }) {
     }),
   })
   if (!res.ok) throw new Error(`replicate ${res.status}: ${(await res.text()).slice(0, 200)}`)
-  const pred = await res.json()
+  let pred = await res.json()
+  // Prefer:wait usually returns the finished prediction; if the darkroom
+  // is slow, poll the prediction URL for up to ~25s before giving up.
+  for (let i = 0; i < 12 && pred.status && !['succeeded', 'failed', 'canceled'].includes(pred.status); i++) {
+    await new Promise(r => setTimeout(r, 2000))
+    const poll = await fetch(pred.urls?.get ?? '', { headers: { authorization: `Bearer ${REPLICATE}` } })
+    if (!poll.ok) break
+    pred = await poll.json()
+  }
+  if (pred.status === 'failed') throw new Error(`prediction failed: ${String(pred.error).slice(0, 160)}`)
   const url = Array.isArray(pred.output) ? pred.output[0] : pred.output
   if (!url) throw new Error(`no output (status ${pred.status})`)
   const img = await fetch(url)
@@ -351,6 +360,7 @@ const server = createServer(async (req, res) => {
       note(`developed a scene — ${payload.era ?? '?'} / ${payload.kind ?? '?'}`)
       res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ image }))
     } catch (err) {
+      note(`darkroom failed — ${String(err.message ?? err).slice(0, 120)}`)
       res.writeHead(200, { 'content-type': 'application/json' })
         .end(JSON.stringify({ image: null, error: String(err.message ?? err).slice(0, 200) }))
     }
