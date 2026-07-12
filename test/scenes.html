@@ -1,0 +1,44 @@
+<!doctype html>
+<!-- scenes.html — dev gallery for the procedural painters.
+     Serve the repo root (npx serve .) and open /test/scenes.html.
+     Every scene kind × era, straight out of renderSceneCanvas. -->
+<html>
+<head>
+<meta charset="utf-8">
+<title>noir — scene gallery</title>
+<style>
+  body { background: #0c0b09; color: #c9c2b4; font: 12px monospace; margin: 20px; }
+  h2 { font-weight: normal; letter-spacing: 0.2em; margin: 24px 0 8px; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; }
+  figure { margin: 0; }
+  canvas { width: 384px; height: 216px; display: block; border: 1px solid #2a2620; }
+  figcaption { padding: 4px 2px; opacity: 0.7; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module">
+  import { renderSceneCanvas } from '../client/scenes.mjs'
+  const KINDS = ['street', 'station', 'cafe', 'office', 'yard', 'epilogue']
+  const ERAS = ['berlin-1938', 'neworleans-1968', 'paris-1954', 'meridian-1849']
+  const root = document.getElementById('root')
+  for (const era of ERAS) {
+    const h = document.createElement('h2')
+    h.textContent = era
+    root.appendChild(h)
+    const row = document.createElement('div')
+    row.className = 'row'
+    for (const kind of KINDS) {
+      const fig = document.createElement('figure')
+      fig.appendChild(renderSceneCanvas(kind, era, era + '|' + kind))
+      const cap = document.createElement('figcaption')
+      cap.textContent = kind
+      fig.appendChild(cap)
+      row.appendChild(fig)
+    }
+    root.appendChild(row)
+  }
+  window.__galleryDone = true
+</script>
+</body>
+</html>
