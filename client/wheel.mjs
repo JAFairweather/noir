@@ -51,7 +51,18 @@ function wrapText(raw, max) {
 export class Wheel {
   constructor(drumEl, flatEl) {
     this.drum = drumEl
-    this.drum.style.transform = `translateZ(${-RADIUS}px)`   // focal line at z≈0
+    // Phones get a pure-2D drum: translateY + opacity only. iOS WebKit
+    // (Safari AND Chrome on iOS) is unreliable with large translateZ under
+    // preserve-3d + masked ancestors — text projects at the wrong scale.
+    // On a phone the flat band fills the screen, so nothing is lost.
+    this._mq = window.matchMedia('(max-width: 720px), (pointer: coarse) and (max-width: 1024px)')
+    this._mode2d = this._mq.matches
+    this._applyDrumTransform()
+    this._mq.addEventListener?.('change', () => {
+      this._mode2d = this._mq.matches
+      this._applyDrumTransform()
+      this._renderAll()
+    })
     this.flat = flatEl
     this.lines = []               // { full, cls, el, flatEl, para, idx, shown }
     this.rotation = 0             // degrees; line i sits at i * STEP_DEG
@@ -84,6 +95,10 @@ export class Wheel {
     this._mcW = vw
     this._mc = Math.max(24, Math.floor(rect.width / charPx) - 1)
     return this._mc
+  }
+
+  _applyDrumTransform() {
+    this.drum.style.transform = this._mode2d ? 'none' : `translateZ(${-RADIUS}px)`
   }
 
   get tail() { return Math.max(0, this.lines.length - 1) * STEP_DEG }
@@ -245,6 +260,19 @@ export class Wheel {
         continue
       }
       el.style.display = ''
+      if (this._mode2d) {
+        // 2D mode: no z, no rotation, no blur — nothing WebKit can flatten
+        el.style.transform = `translateY(${delta * PX_PER_DEG}px)`
+        if (ad <= FLAT_DEG) {
+          el.style.opacity = 1
+        } else {
+          const t = (ad - FLAT_DEG) / (VISIBLE_DEG - FLAT_DEG)
+          el.style.opacity = Math.max(0, (1 - t ** 1.4)) ** 1.1
+        }
+        el.style.filter = ''
+        el.classList.toggle('focal', ad < STEP_DEG * 0.55)
+        continue
+      }
       if (ad <= FLAT_DEG) {
         // flat band: pure vertical placement, zero rotation, zero depth
         el.style.transform = `translateZ(${RADIUS}px) translateY(${delta * PX_PER_DEG}px)`
