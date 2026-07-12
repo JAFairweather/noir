@@ -268,6 +268,79 @@ builders.epilogue = function (rand) {
 // New Orleans stroke vocabulary — the pen keeps the era distinction.
 const eraBuilders = {
   'neworleans-1968': {
+    office(rand) {
+      const s = []
+      const deskY = H * 0.7
+      const fx = W * 0.46, fy = H * 0.13
+      s.push(seg(fx, 0, fx, fy - 6, 1.6, 0.8))                                       // the fan
+      s.push(ellipse(fx, fy, 9, 6, 1.6, 0.9))
+      for (const ang of [0.15, 1.2, 2.3, 4.1, 5.2]) {
+        const bx = fx + Math.cos(ang) * 52, by = fy + Math.sin(ang) * 18
+        s.push(ellipse(bx, by, 42, 7, 1.4, 0.7, 14))
+      }
+      s.push(box(W * 0.05, H * 0.12, W * 0.17, H * 0.6, 1.8, 0.85))                  // the door
+      s.push(box(W * 0.07, H * 0.16, W * 0.13, H * 0.26, 1.6, 0.95))                 // frosted pane
+      s.push(seg(W * 0.085, H * 0.24, W * 0.185, H * 0.24, 1.2, 0.7))                // PRIVATE
+      s.push(seg(W * 0.095, H * 0.28, W * 0.175, H * 0.28, 1, 0.6))                  // INVESTIGATOR
+      s.push(seg(W * 0.1, H * 0.31, W * 0.17, H * 0.31, 1, 0.4))                     // the etched rule
+      s.push(ellipse(W * 0.205, H * 0.56, 4, 4, 1.4, 0.9, 10))                       // knob
+      s.push(box(W * 0.62, H * 0.14, W * 0.3, H * 0.44, 1.6, 0.7))                   // the window
+      for (let i = 0; i < 8; i++) s.push(seg(W * 0.62, H * 0.16 + i * 27, W * 0.92, H * 0.17 + i * 27, 1, 0.35))
+      for (let bx = W * 0.62; bx + 18 < W * 0.92; bx += 18) {                        // balcony lace beyond
+        s.push(ellipse(bx + 9, H * 0.4, 5, 5, 0.9, 0.4, 8, 0, Math.PI))
+      }
+      s.push(seg(0, deskY, W, deskY, 2, 0.8))                                        // the desk
+      const lx = W * 0.38, ly = H * 0.55
+      s.push(poly([[lx - 30, ly], [lx - 19, ly - 14], [lx + 19, ly - 14], [lx + 30, ly]], 1.8, 0.95))
+      s.push(seg(lx, ly, lx, deskY, 1.6, 0.9))
+      s.push(seg(lx - 26, ly + 4, lx - 110, deskY + 4, 1, 0.3))                      // cone
+      s.push(seg(lx + 26, ly + 4, lx + 110, deskY + 4, 1, 0.3))
+      s.push(ellipse(lx, deskY + 4, 100, 9, 1, 0.3))
+      for (let i = 0; i < 4; i++) {                                                  // the photographs, fanned
+        const px = lx - 34 + i * 27, py = deskY - 8 + (i % 2) * 5
+        s.push(poly([[px, py], [px + 32, py - 6], [px + 36, py + 16], [px + 4, py + 22], [px, py]], 1.3, 0.85))
+      }
+      s.push(box(lx + 94, deskY - 44, 15, 44, 1.6, 0.9))                             // the bottle
+      s.push(box(lx + 98, deskY - 66, 7, 22, 1.4, 0.9))
+      s.push(box(lx + 118, deskY - 13, 13, 13, 1.4, 0.8))                            // the glass
+      s.push(box(W * 0.6, deskY - 22, 44, 22, 1.6, 0.85))                            // the telephone
+      s.push(ellipse(W * 0.6 + 22, deskY - 24, 24, 7, 1.4, 0.85, 16, Math.PI, Math.PI * 2))
+      for (let i = 0; i < 4; i++) s.push(seg(0, deskY + 18 + i * 26, W, deskY + 22 + i * 26, 1, 0.25))
+      for (let i = 0; i < 4; i++) {                                                  // smoke
+        const sx = lx + 140, sy = deskY - 20 - i * 24
+        s.push(curve([sx - 8, sy], [sx + (i % 2 ? 12 : -12), sy - 12], [sx + 6, sy - 24], 1, 0.25))
+      }
+      return s
+    },
+    station(rand) {
+      const s = []
+      const ground = H * 0.72
+      s.push(curve([-10, H * 0.06], [W * 0.2, H * 0.13], [W * 0.42, H * 0.07], 3, 0.7))   // oak limbs
+      s.push(curve([W + 10, H * 0.1], [W * 0.78, H * 0.19], [W * 0.6, H * 0.13], 2.4, 0.6))
+      for (const mx of [W * 0.14, W * 0.3, W * 0.44, W * 0.72, W * 0.87]) {               // the moss
+        for (let i = 0; i < 3; i++) {
+          const sx = mx + (rand() - 0.5) * 22, sy = H * 0.1 + rand() * 24, len = 30 + rand() * 34
+          s.push(curve([sx, sy], [sx + (rand() - 0.5) * 10, sy + len * 0.6], [sx + (rand() - 0.5) * 8, sy + len], 0.9, 0.5))
+        }
+      }
+      s.push(seg(0, H * 0.24, W, H * 0.28, 1, 0.4))                                       // the wire
+      s.push(seg(0, ground, W, ground, 2, 0.8))
+      const tx = W * 0.28, ty = ground - 10, tw = W * 0.44, th = H * 0.26                  // the streetcar
+      s.push(poly([[tx, ty], [tx, ty - th * 0.8], [tx + 26, ty - th], [tx + tw - 26, ty - th], [tx + tw, ty - th * 0.8], [tx + tw, ty], [tx, ty]], 1.8, 0.9))
+      for (let i = 0; i < 8; i++) {                                                        // lit windows
+        s.push(box(tx + 26 + i * (tw - 60) / 8, ty - th * 0.82, (tw - 60) / 8 - 8, th * 0.34, 1.3, 0.85))
+      }
+      s.push(box(tx + tw * 0.42, ty - th - 14, 40, 10, 1.4, 0.95))                         // route board
+      s.push(seg(tx + tw * 0.62, ty - th, tx + tw * 0.78, H * 0.26, 1.4, 0.8))             // trolley pole
+      s.push(ellipse(tx + 6, ty - th * 0.45, 6, 6, 1.4, 1, 10))                            // headlamp
+      s.push(seg(tx + 4, ty - 6, tx + tw - 4, ty - 6, 1.4, 0.7))                           // skirt
+      s.push(seg(0, ground + 30, W, ground + 22, 1.6, 0.6))                                // rails
+      s.push(seg(0, ground + 52, W, ground + 40, 1.6, 0.6))
+      s.push(seg(W * 0.82, ground + 18, W * 0.82, ground - 88, 1.8, 0.9))                  // the stop
+      s.push(box(W * 0.8, ground - 102, 42, 14, 1.6, 0.95))
+      s.push(...figureStrokes(W * 0.88, ground + 22, 118))
+      return s
+    },
     street(rand) {
       const s = []
       const ground = H * 0.7, balY = ground - H * 0.19
