@@ -26,7 +26,7 @@ import { Wheel } from './wheel.mjs'
 import { Score } from './audio.mjs'
 import { applyEra } from './art.mjs'
 import { setScene, enableDirectorScenes, getPenMode, setPenMode } from './scenes.mjs'
-import { drawMap } from './map.mjs'
+import { CityMap } from './map.mjs'
 import { detectDirector, makeVoice, makeInterrogator, makeJudge } from './director.mjs'
 import { showBurnCard, showEndCard, showSaveCard, showCaseSelect } from './burn.mjs'
 import { getOrCreatePlayerKey, getFlatMode, setFlatMode, getCaseId, setCaseId, getTradecraft, setTradecraft } from './settings.mjs'
@@ -56,6 +56,7 @@ let CASE = resolveCase(getCaseId()) ?? CASES[CASE_LIST[0].id]
 let gm = new StubGM(relay, CASE)
 
 const wheel = new Wheel($('#drum'), $('#flat'))
+const cityMap = new CityMap(document.querySelector('#citymap'))
 wheel.setFlatMode(getFlatMode())
 $('#flat-toggle').checked = getFlatMode()
 $('#pen-toggle').checked = getPenMode()
@@ -123,7 +124,7 @@ async function refreshNotebook() {
     if (res.status === 'ok') {
       li.title = 'Read on the drum'
       li.addEventListener('click', () => {
-        if (res.data.scene) setScene(res.data.scene, CASE.ERA, g.scopeId)
+        if (res.data.scene) { setScene(res.data.scene, CASE.ERA, g.scopeId); cityMap.travelTo(g.scopeId) }
         put(`— ${res.data.title ?? g.scopeName} —`, 'doc-title')
         put(res.data.body ?? '', 'doc')
         saveGame()
@@ -135,14 +136,22 @@ async function refreshNotebook() {
   }
   $('#heat-value').textContent = gm.heat
   $('#heat-lamp').style.setProperty('--heat', gm.heat / 100)
-  // the city map: solid where you've been, hollow where you've only heard
+  // the board: white venues, accent people, hollow leads (map-as-board v2)
   try {
-    const visited = grants.map(g => ({ id: g.scopeId, name: (g.scopeName ?? '').split('—').pop().trim() || g.scopeId, visited: true }))
+    const spots = []
+    for (const g of grants) {
+      const res = await fetchScope(relay, g)
+      spots.push({
+        id: g.scopeId,
+        name: (g.scopeName ?? '').split('—').pop().trim() || g.scopeId,
+        type: res.data?.kind === 'npc' ? 'person' : 'venue',
+      })
+    }
     const known = gm.case.edges
       .filter(e => !gm.unlocked.has(e.to) && e.requires.every(r => gm.unlocked.has(r)) && e.lead)
-      .map(e => ({ id: 'lead:' + e.to, name: gm.case.scopes[e.to]?.name.split('—').pop().trim() ?? e.to, visited: false }))
-    drawMap($('#citymap'), CASE.ERA, CASE.CASE_ID, [...visited, ...known])
-  } catch { /* the map is garnish; never let it stop the case */ }
+      .map(e => ({ id: 'lead:' + e.to, name: gm.case.scopes[e.to]?.name.split('—').pop().trim() ?? e.to, type: 'lead' }))
+    cityMap.setSpots([...spots, ...known])
+  } catch { /* the board is garnish; never let it stop the case */ }
   const panel = $('#tc-panel')
   panel.classList.toggle('hidden', !getTradecraft())
   if (getTradecraft()) {
@@ -182,7 +191,7 @@ async function syncFromGM() {
           for (const g of grants) {
             const res = await fetchScope(relay, g)
             if (res.status === 'ok' && res.data.kind === 'epilogue') {
-              if (res.data.scene) setScene(res.data.scene, CASE.ERA, g.scopeId)
+              if (res.data.scene) { setScene(res.data.scene, CASE.ERA, g.scopeId); cityMap.travelTo(g.scopeId) }
               put(`— ${res.data.title} —`, 'doc-title')
               put(res.data.body, 'doc')
             }
@@ -200,7 +209,7 @@ async function syncFromGM() {
     knownScopes.add(g.scopeId)
     const res = await fetchScope(relay, g)
     if (res.status !== 'ok') continue
-    if (res.data.scene) setScene(res.data.scene, CASE.ERA, g.scopeId)
+    if (res.data.scene) { setScene(res.data.scene, CASE.ERA, g.scopeId); cityMap.travelTo(g.scopeId) }
     put(`▸ NEW INTEL — ${g.scopeName}`, 'grant-line')
     put(`— ${res.data.title ?? g.scopeName} —`, 'doc-title')
     put(res.data.body ?? '', 'doc')
@@ -290,6 +299,7 @@ function applyCase(mod) {
   const era = applyEra(mod.ERA)
   score.setEra(mod.ERA)
   $('#era-label').textContent = era.label + (mod.TITLE ? ` — ${mod.TITLE}` : '')
+  cityMap.setCase(mod.ERA, mod.CASE_ID)
   setScene(mod.openingScene ?? 'street', mod.ERA, mod.CASE_ID)
 }
 
