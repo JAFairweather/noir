@@ -1028,34 +1028,46 @@ let directorScenes = null   // { url } once a FLUX-capable Director is detected
 /** Upgrade backdrops to Director FLUX stills when the local service has them. */
 export function enableDirectorScenes(url) { directorScenes = { url } }
 
+/** Ask the Director for a FLUX still; hand back a duotoned canvas. */
+function fetchStill(kind, eraId, seed, onReady) {
+  if (!directorScenes) return
+  const wanted = currentKind
+  fetch(`${directorScenes.url}/scene`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ era: eraId, kind, seed }),
+  }).then(r => r.json()).then(({ image }) => {
+    if (!image || currentKind !== wanted) return
+    const img = new Image()
+    img.onload = () => {
+      if (currentKind !== wanted) return
+      onReady(duotone(img, eraId, { grain: 0.04, vignette: 0.45 }))
+    }
+    img.src = image
+  }).catch(() => {})
+}
+
 /** Crossfade the backdrop to a scene. Deterministic per (kind, seed). */
 export function setScene(kind, eraId, seed = '') {
   if (currentKind === kind + seed) return
   currentKind = kind + seed
 
-  if (penEnabled) { pen.show(kind, eraId, seed); return }
+  if (penEnabled) {
+    pen.show(kind, eraId, seed)
+    // The stills-as-keyframes stepping stone (DECISIONS §2): the
+    // Director's still slides in UNDER the ink as a dim duotoned plate —
+    // the drawing stays the voice; the photograph becomes the memory
+    // it is drawn from. The real stroke-extraction spike comes later.
+    fetchStill(kind, eraId, seed, (plate) => pen.setPlate(plate))
+    return
+  }
 
   swapIn(renderSceneCanvas(kind, eraId, seed), kind, seed)
 
-  // FLUX upgrade (DECISIONS §2): procedural paints instantly; the model
-  // still replaces it when it lands — duotoned by the same pass, so the
-  // era look is identical either way. Never blocks, never errors the game.
-  if (directorScenes) {
-    const wanted = currentKind
-    fetch(`${directorScenes.url}/scene`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ era: eraId, kind, seed }),
-    }).then(r => r.json()).then(({ image }) => {
-      if (!image || currentKind !== wanted) return
-      const img = new Image()
-      img.onload = () => {
-        if (currentKind !== wanted) return
-        swapIn(duotone(img, eraId, { grain: 0.04, vignette: 0.45 }), kind, seed)
-      }
-      img.src = image
-    }).catch(() => {})
-  }
+  // FLUX upgrade: procedural paints instantly; the model still replaces
+  // it when it lands — duotoned by the same pass, so the era look is
+  // identical either way. Never blocks, never errors the game.
+  fetchStill(kind, eraId, seed, (canvas) => swapIn(canvas, kind, seed))
 }
 
 // ------------------------------------------------------------ the pen
@@ -1082,7 +1094,19 @@ export function setPenMode(on) {
 
 const pen = {
   canvas: null, ctx: null, strokes: null, next: null, plan: null,
-  phase: 'idle', t: 0, raf: 0, last: null, accent: '#c39a56',
+  phase: 'idle', t: 0, raf: 0, last: null, accent: '#c39a56', plate: null,
+
+  /** The Director's still, laid under the ink like the memory it is drawn from. */
+  setPlate(canvas) {
+    this.plate?.remove()
+    canvas.className = 'backdrop-canvas plate'
+    const holder = document.getElementById('backdrop')
+    holder.insertBefore(canvas, this.canvas?.isConnected ? this.canvas : null)
+    requestAnimationFrame(() => canvas.classList.add('active'))
+    this.plate = canvas
+  },
+
+  clearPlate() { this.plate?.remove(); this.plate = null },
 
   ensure() {
     if (this.canvas?.isConnected) return
@@ -1097,6 +1121,7 @@ const pen = {
 
   show(kind, era, seed, restart = false) {
     this.ensure()
+    this.clearPlate()
     this.last = { kind, era, seed }
     this.accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#c39a56'
     const target = buildLineScene(kind, era, seed)
@@ -1121,6 +1146,7 @@ const pen = {
     if (this.raf) cancelAnimationFrame(this.raf)
     this.raf = 0; this.phase = 'idle'; this.strokes = null
     this.canvas?.remove(); this.canvas = null
+    this.clearPlate()
   },
 
   /** The typewriter feeds the pen: each strike is a little more ink. */
