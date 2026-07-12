@@ -104,3 +104,29 @@ finished case is provable against the GM's commitment. Plan:
   and let purists opt into raw NIP-07.
 - **Recommendation stands:** don't use an identity you care about for
   throwaway runs; Noir is a game, not an opsec tool (SECURITY.md).
+
+## 8. Case depth — toward the 200-page mystery (added post-playthrough)
+
+The v1 cases are novellas; the target is a novel: a WEB of clues and
+deductions, not a chain. Direction for casegen v3 and the Director era:
+
+- **Deduction web, not corridor:** 15+ scopes per spec §4.2, with facts
+  that cross-corroborate — no single scope names the culprit; the player
+  assembles person × time × place × means from 3-4 independent document
+  trails (the accusation endgame is already built for evidence chains).
+- **Layered graph generation:** casegen grows from one template topology
+  to composable motifs (a money trail, an alibi to break, a witness
+  ladder, a document forgery) sampled per seed and cross-linked so each
+  motif's answer feeds another's lock.
+- **The map becomes a board:** locations gain adjacency and travel beats;
+  leads pin to districts before they resolve to addresses. (Wireframe map
+  shipped; markers already track visited/known.)
+- **Deduction notebook:** let the player pin facts and draw connections;
+  the accusation form asks for the chain (culprit + motive + supporting
+  scope ids per spec §5.8) instead of one name.
+- **The Director carries flesh at scale:** with 15+ scopes, hand-authored
+  prose stops scaling — generated skeleton docs get Director re-fleshing
+  at case start (spec §4.1's full intent), cached per case.
+
+Sequencing: motif-based casegen first (testable offline, same walkthrough
+proofs), then the deduction notebook UI, then Director re-fleshing.

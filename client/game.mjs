@@ -25,6 +25,7 @@ import { Wheel } from './wheel.mjs'
 import { Score } from './audio.mjs'
 import { applyEra } from './art.mjs'
 import { setScene, enableDirectorScenes } from './scenes.mjs'
+import { drawMap } from './map.mjs'
 import { detectDirector, makeVoice, makeInterrogator, makeJudge } from './director.mjs'
 import { showBurnCard, showEndCard, showSaveCard, showCaseSelect } from './burn.mjs'
 import { getOrCreatePlayerKey, getFlatMode, setFlatMode, getCaseId, setCaseId, getTradecraft, setTradecraft } from './settings.mjs'
@@ -34,8 +35,15 @@ const SAVE_KEY = 'noir.save.v1'
 
 const { sk: playerSk, pub: playerPub } = getOrCreatePlayerKey()
 
-// A case id is either a registered module or 'gen:<seed>' from casegen.
-const resolveCase = (id) => CASES[id] ?? (id?.startsWith('gen:') ? generateCase(id.slice(4)) : null)
+// A case id is a registered module, 'gen:<seed>' (Berlin), or
+// 'gen:<era>:<seed>' from casegen.
+const resolveCase = (id) => {
+  if (CASES[id]) return CASES[id]
+  if (!id?.startsWith('gen:')) return null
+  const rest = id.slice(4)
+  const sep = rest.indexOf(':')
+  return sep > 0 ? generateCase(rest.slice(sep + 1), rest.slice(0, sep)) : generateCase(rest)
+}
 
 const relay = new Relay()
 let CASE = resolveCase(getCaseId()) ?? CASES[CASE_LIST[0].id]
@@ -119,6 +127,14 @@ async function refreshNotebook() {
   }
   $('#heat-value').textContent = gm.heat
   $('#heat-lamp').style.setProperty('--heat', gm.heat / 100)
+  // the city map: solid where you've been, hollow where you've only heard
+  try {
+    const visited = grants.map(g => ({ id: g.scopeId, name: (g.scopeName ?? '').split('—').pop().trim() || g.scopeId, visited: true }))
+    const known = gm.case.edges
+      .filter(e => !gm.unlocked.has(e.to) && e.requires.every(r => gm.unlocked.has(r)) && e.lead)
+      .map(e => ({ id: 'lead:' + e.to, name: gm.case.scopes[e.to]?.name.split('—').pop().trim() ?? e.to, visited: false }))
+    drawMap($('#citymap'), CASE.ERA, CASE.CASE_ID, [...visited, ...known])
+  } catch { /* the map is garnish; never let it stop the case */ }
   const panel = $('#tc-panel')
   panel.classList.toggle('hidden', !getTradecraft())
   if (getTradecraft()) {
@@ -323,7 +339,13 @@ const pickCase = () => showCaseSelect([
     id: `gen:${Math.random().toString(36).slice(2, 8)}`,
     label: 'BERLIN 1938 — FROM SEED',
     title: 'A Courier Overdue',
-    blurb: 'A generated case: new names, new cipher, new culprit. Same seed, same case — committed before you play.',
+    blurb: 'Generated: new names, new cipher, new culprit. Committed before you play.',
+  },
+  {
+    id: `gen:neworleans-1968:${Math.random().toString(36).slice(2, 8)}`,
+    label: 'NEW ORLEANS 1968 — FROM SEED',
+    title: 'A Stringer Gone Quiet',
+    blurb: 'Generated: a fresh acrostic, a moved patrol, a new name on the order.',
   },
 ], (id) => freshStart(id))
 applyEra(CASE.ERA)

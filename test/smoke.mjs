@@ -244,8 +244,19 @@ console.log('\n14. Casegen: deterministic, solvable, committed')
   check('different seed → different case',
     JSON.stringify({ c: a1.accusation.culprit, b: a1.scopes.briefing.payload.body }) !==
     JSON.stringify({ c: b1.accusation.culprit, b: b1.scopes.briefing.payload.body }))
-  for (const seed of ['alpha', 'bravo', 'charlie', 'delta']) {
-    const mod = generateCase(seed)
+  const n1 = generateCase('gamma', 'neworleans-1968')
+  check('NOLA generation is deterministic and era-tagged',
+    n1.CASE_ID === 'gen:neworleans-1968:gamma' && n1.ERA === 'neworleans-1968' &&
+    generateCase('gamma', 'neworleans-1968').accusation.culprit === n1.accusation.culprit)
+  check('NOLA acrostic first letters spell the street', (() => {
+    const street = n1.edges[0].answerKey.match(/spell ([A-Z]+)/)[1]
+    const ads = n1.scopes.briefing.payload.body.split('\n')
+      .map(l => l.match(/^  ([A-Z])/)).filter(Boolean).map(m => m[1]).join('')
+    return ads === street
+  })())
+  for (const [seed, era] of [['alpha', undefined], ['bravo', undefined], ['charlie', undefined], ['delta', undefined],
+                             ['gamma', 'neworleans-1968'], ['zeta', 'neworleans-1968']]) {
+    const mod = generateCase(seed, era)
     const rG = new Relay()
     const pG = generateSecretKey()
     const gmG = new StubGM(rG, mod)
@@ -256,7 +267,7 @@ console.log('\n14. Casegen: deterministic, solvable, committed')
     }
     const docs = []
     for (const gr of latestGrants(await receiveGrants(rG, pG))) docs.push(await fetchScope(rG, gr))
-    check(`seed "${seed}": walkthrough reaches the epilogue at heat ${gmG.heat}`,
+    check(`${era ?? 'berlin'} seed "${seed}": walkthrough reaches the epilogue at heat ${gmG.heat}`,
       docs.some(d => d.status === 'ok' && d.data?.kind === 'epilogue') && gmG.heat === 0)
   }
 }
