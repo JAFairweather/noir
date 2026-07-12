@@ -239,8 +239,8 @@ async function voice({ era, caseTitle, beat, tail }) {
 
 const STARTED = Date.now()
 const ACTIVITY = []
-function note(line) {
-  ACTIVITY.push({ t: Date.now(), line })
+function note(line, extra = {}) {
+  ACTIVITY.push({ t: Date.now(), line, ...extra })
   if (ACTIVITY.length > 80) ACTIVITY.shift()
 }
 let VERSION = 'unknown'
@@ -270,6 +270,7 @@ const PANEL = `<!doctype html>
   #feed li { padding:7px 2px; border-bottom:1px solid #1c1610; }
   #feed time { color:#6b5530; margin-right:10px; font-size:11px; }
   .hint { color:#6b5530; font-size:11px; margin-top:22px; line-height:1.7; }
+  .still { display:block; width:240px; margin-top:8px; border:1px solid #2a2118; }
 </style>
 <h1>N O I R<small>THE DIRECTOR'S DESK</small></h1>
 <div class="row"><span class="lamp" id="lamp"></span><span id="status">…</span></div>
@@ -292,7 +293,9 @@ async function tick() {
       ? 'live — ' + a.model + (a.images ? ' + FLUX' : '') : 'dry mode — scripted prose (no API key)'
     document.getElementById('ver').textContent = 'build ' + a.version + ' · up ' + Math.floor(a.uptime/60000) + 'm'
     document.getElementById('feed').innerHTML = a.log.slice().reverse()
-      .map(e => '<li><time>' + fmt(e.t) + '</time>' + e.line.replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])) + '</li>').join('')
+      .map(e => '<li><time>' + fmt(e.t) + '</time>' + e.line.replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))
+        + (e.still ? '<img class="still" loading="lazy" src="/still?k=' + encodeURIComponent(e.still) + '" onerror="this.remove()">' : '')
+        + '</li>').join('')
   } catch { document.getElementById('status').textContent = 'desk unreachable — restarting?' }
 }
 tick(); setInterval(tick, 2000)
@@ -323,6 +326,16 @@ const server = createServer(async (req, res) => {
 
   if (req.method === 'GET' && (req.url === '/' || req.url === '/desk')) {
     return res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(PANEL)
+  }
+
+  if (req.method === 'GET' && req.url?.startsWith('/still?k=')) {
+    if (!isLoopback(req)) return res.writeHead(403).end()
+    const key = decodeURIComponent(req.url.slice(9))
+    const uri = sceneCache.get(key)
+    if (!uri) return res.writeHead(404).end()
+    const b64 = uri.split(',')[1]
+    return res.writeHead(200, { 'content-type': 'image/jpeg', 'cache-control': 'max-age=86400' })
+      .end(Buffer.from(b64, 'base64'))
   }
 
   if (req.method === 'GET' && req.url === '/activity') {
@@ -357,7 +370,8 @@ const server = createServer(async (req, res) => {
       const payload = JSON.parse(raw)
       if (!REPLICATE) throw new Error('no REPLICATE_API_TOKEN — procedural scenes only')
       const image = await scene(payload)
-      note(`developed a scene — ${payload.era ?? '?'} / ${payload.kind ?? '?'}`)
+      note(`developed a scene — ${payload.era ?? '?'} / ${payload.kind ?? '?'}`,
+        { still: `${payload.era}|${payload.kind}|${payload.seed}` })
       res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ image }))
     } catch (err) {
       note(`darkroom failed — ${String(err.message ?? err).slice(0, 120)}`)
