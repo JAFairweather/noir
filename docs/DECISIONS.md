@@ -183,3 +183,34 @@ The Director reaches players three ways, all behind one transport shape
    NOIR_RATE_LIMIT (per-IP per 5 min), NOIR_DAILY_CAP (calls per UTC
    day — the table 'closes for tonight' gracefully). Control endpoints
    (update/restart/stills) remain loopback-only always.
+
+## 11. Lightning for the hosted Director — the retainer (added 2026-07-13, direction)
+
+Someday-maybe made concrete enough to build when the time comes. The
+sponsored table starts free (capped by NOIR_DAILY_CAP); when costs
+justify, payment enters IN FICTION — the desk takes a retainer, per
+case, flat. Never per-call: nickel-and-diming breaks the novel.
+
+Three candidate rails, in rising order of thematic rightness:
+
+1. **L402**: the table answers 402 Payment Required with a Lightning
+   invoice; paying yields a token that authorizes the case. Standard,
+   boring, works today with any wallet.
+2. **NWC (Nostr Wallet Connect)**: the player connects a wallet once;
+   starting a case zaps the table its retainer. Fits the nostr-native
+   identity story (DECISIONS §7) — the same npub that holds your
+   notebook pays your retainer.
+3. **The retainer IS a NIP-DA grant** (the elegant one): payment buys a
+   kind-440 grant from the table's npub — scope: one case at this
+   table. The Director honors requests only from npubs holding a live
+   retainer grant; welching burns it with a kind-441. The game's
+   access-control protocol becomes its OWN paywall — cases-as-a-service
+   (DECISIONS §1) implemented in the very primitive the game exists to
+   demonstrate.
+
+Pricing instinct: a LONG CASE costs the sponsor roughly a coffee in
+model tokens; the retainer should feel like tipping a bartender, not
+buying software — a few thousand sats, stated once, in period voice
+('The desk takes its retainer in advance. The desk has been burned
+before.'). Free tier stays forever: scripted prose is never paywalled,
+and a player's own key (door 1) never touches the table.
