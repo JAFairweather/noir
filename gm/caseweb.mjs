@@ -747,6 +747,10 @@ function webBerlin(seed) {
       match: (t) => t.includes('LIST') || t.includes('INTERSECT') || t.includes('CROSS'),
       response: 'Three lists: the rota, the key book, the particulars. Four names. The seller is the one name standing on all three.',
     },
+    {
+      match: (t) => t.includes(victim),
+      response: `${victim} is the case, and the desk answers for its dead: a courier, a careful one, which is why the canal is the loudest thing he ever did. What is known of him you hold in the briefing. Who put him there is four names on a board.`,
+    },
   ]
 
   const walkthrough = [
@@ -809,9 +813,9 @@ function webBerlin(seed) {
       'badly and he is gone for good, along with everything he still',
       'had to say.',
       '',
-      'A name set in CAPITALS is a person still in play: you can ask',
-      'about them, or go to them. Lowercase names are scenery, or',
-      'history.',
+      'A name set in CAPITALS belongs to the case, the dead man',
+      'included — the desk answers for them all. Ask about them, or',
+      'go to them. Lowercase names are scenery, or history.',
       '',
       'Write your reports in plain language. Type "help" at any time',
       'for field procedure. Berlin supplies the rest.',
@@ -1393,6 +1397,10 @@ function webNola(seed) {
       match: (t) => t.includes('LIST') || t.includes('INTERSECT') || t.includes('CROSS'),
       response: 'Three lists: the roster, the cage log, the jackets. Four names. The seller is the one name standing on all three.',
     },
+    {
+      match: (t) => t.includes(victim),
+      response: `${victim} shot the Quarter for anyone who paid and a few who never did, and the river kept his camera to prove a point. What the desk holds on him is in your briefing. Who put him in the water is four names, and three trails will thin them.`,
+    },
   ]
 
   const walkthrough = [
@@ -1454,8 +1462,8 @@ function webNola(seed) {
       'to you are not so durable: mishandle a source and they are gone',
       'for good, with everything they still had to say.',
       '',
-      'A name in CAPITALS is somebody still breathing and still in',
-      'play: ask about them, or go find them. The rest is history.',
+      'A name in CAPITALS belongs to the case, the dead included:',
+      'ask about them, or go find them. The rest is history.',
       '',
       'Write your reports in plain language. Type "help" at any time',
       'for the house rules. The Quarter teaches the rest of it, and',
@@ -2017,6 +2025,10 @@ function webParis(seed) {
       match: (t) => t.includes('LIST') || t.includes('INTERSECT') || t.includes('CROSS'),
       response: 'Three lists: the roster, the register, the particulars. Four names. Your man is the one name that remains on all three.',
     },
+    {
+      match: (t) => t.includes(victim),
+      response: `${victim} was an exact man, and the Seine returned him exactly. What is known of him, you hold already. What is owed him is a name — four kept the evening side, and the board has them.`,
+    },
   ]
 
   const walkthrough = [
@@ -2079,8 +2091,9 @@ function webParis(seed) {
       'talk to you are more fragile than paper: mishandle a source and',
       'she is lost, along with everything she still had to say.',
       '',
-      'A name in CAPITALS is a person still in play — one you can ask',
-      'about, or call on. The rest belong to the past.',
+      'A name in CAPITALS belongs to the case, the dead man not',
+      'least — ask about them, or call on them. The rest belong to',
+      'the past.',
       '',
       'Write your reports in plain language. Type "help" at any time',
       'for procedure. The city supplies everything else, at its rates.',
@@ -2629,6 +2642,10 @@ function webMeridian(seed) {
       match: (t) => t.includes('LIST') || t.includes('INTERSECT') || t.includes('CROSS'),
       response: 'Three lists: the work rolls, the strongbox ledger, the company book. Four names. Your man is the one name standing on all three.',
     },
+    {
+      match: (t) => t.includes(victim),
+      response: `${victim} assayed for the company and signed what he weighed, and the wash took him for it. The desk answers for its dead: what it knows of him you hold in the briefing. Who gained by him gone is four names, and three trails will thin them to one.`,
+    },
   ]
 
   const walkthrough = [
@@ -2691,9 +2708,10 @@ function webMeridian(seed) {
       'mishandle one and he is gone for good, with everything he still',
       'had to say.',
       '',
-      'A name printed in CAPITALS is a living soul, and the desk will',
-      'answer for him: ask about him, or ride out to him. The rest of',
-      'the names in this country belong to the dead and the gone.',
+      'A name printed in CAPITALS belongs to the case, and the desk',
+      'will answer for it — the dead man first among them. Ask about',
+      'a name, or ride out to it. The rest of the names in this',
+      'country are history.',
       '',
       'Write your reports in plain language. Type "help" at any time',
       'and the rules of this country will be read back to you.',

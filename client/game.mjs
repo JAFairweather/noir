@@ -354,6 +354,7 @@ async function syncFromGM() {
     const res = await fetchScope(relay, g)
     if (res.status !== 'ok') continue
     if (res.data.scene) { setScene(res.data.scene, CASE.ERA, g.scopeId); cityMap.travelTo(g.scopeId) }
+    put('', 'dim')   // let the finished text breathe before the intel lands
     put(`▸ NEW INTEL — ${g.scopeName}`, 'grant-line')
     put(`— ${res.data.title ?? g.scopeName} —`, 'doc-title')
     put(res.data.body ?? '', 'doc')
