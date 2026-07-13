@@ -337,6 +337,8 @@ console.log('\n17. Deep cases: the deduction web (caseweb)')
     check(`${era} web: no scope names the culprit as the man`,
       !Object.values(w.scopes).some(s => s !== w.scopes.resolution &&
         new RegExp(`${culprit}[^\\n]*(IS THE|IS OUR MAN|SELLER IS|KILLER)`, 'i').test(s.payload.body)))
+    check(`${era} web: the desk can count the lists (review inventory)`,
+      w.lists && ['rota', 'keybook', 'personnel'].every(k => typeof w.lists[k] === 'string'))
   }
   // Solvability: replay the walkthrough through the real engine, both eras,
   // several seeds — epilogue reached, heat zero, everything granted honestly.

@@ -76,10 +76,27 @@ const score = new Score()
 
 // write to the drum AND the save file
 let lastAnchor = 'the opening'
+// Prose arrives hard-wrapped: authored bodies at ~68 columns, the
+// Director's voice wherever the model happened to break it. The measure
+// belongs to the window now, so inside a paragraph a single newline is
+// soft — join it and let the wheel wrap to the real width. Indented
+// lines are shape (ledgers, rosters, acrostics) and pass through
+// untouched, paragraph and all.
+function reflow(text) {
+  const s = String(text)
+  if (!s.includes('\n')) return s
+  return s.split('\n\n').map(p =>
+    p.split('\n').some(l => /^[ \t]/.test(l))
+      ? p
+      : p.split('\n').map(l => l.trimEnd()).join(' ').trim()
+  ).join('\n\n')
+}
+
 function put(text, cls = '') {
-  transcript.push({ text, cls })
-  if (cls === 'doc-title') lastAnchor = text.replace(/^—\s*|\s*—$/g, '').trim()
-  wheel.append(text, cls)
+  const flowed = reflow(text)
+  transcript.push({ text: flowed, cls })
+  if (cls === 'doc-title') lastAnchor = flowed.replace(/^—\s*|\s*—$/g, '').trim()
+  wheel.append(flowed, cls)
 }
 
 // ------------------------------------------------------------- persistence

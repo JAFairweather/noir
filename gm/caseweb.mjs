@@ -437,7 +437,7 @@ function webBerlin(seed) {
       name: `Inquiry — ${herring.name}`,
       burnable: false,
       payload: {
-        kind: 'dossier', scene: 'street',
+        kind: 'dossier',
         title: `INQUIRY — ${herring.name}`,
         body: [
           `${herring.name} receives you in the back of a shop that sells`,
@@ -459,7 +459,7 @@ function webBerlin(seed) {
       name: `Inquiry — ${herring2.name}`,
       burnable: false,
       payload: {
-        kind: 'dossier', scene: 'street',
+        kind: 'dossier',
         title: `INQUIRY — ${herring2.name}`,
         body: [
           `${herring2.name}: ${herring2.trade}. He keeps both hands where`,
@@ -539,7 +539,7 @@ function webBerlin(seed) {
           ...S.detailSet.map(n => `    ${n} — yes, per file`),
           `    ${S.detailCleared} — no: ${detail.counter}.`,
           '',
-          'THE THIRD LIST. Lay it on the desk beside the rota and the key',
+          'ONE OF THE THREE LISTS. Lay it on the desk beside the rota and',
           'book. Straighten the pages. Pour whatever is left in the bottle.',
           '',
           'Three lists. Four names. One name standing on all three — and',
@@ -825,6 +825,7 @@ function webBerlin(seed) {
       suspects: sortNames(S.suspects),      // alphabetical — the order tells nothing
       columns: ['nights', 'keys', 'witness'],
     },
+    lists: { rota: 'the duty rota', keybook: 'the key book', personnel: 'the personnel particulars' },
     walkthrough,
     solutionCommitment: {
       salt: `caseweb-${seed}`,
@@ -1086,7 +1087,7 @@ function webNola(seed) {
       name: `Inquiry — ${herring.name}`,
       burnable: false,
       payload: {
-        kind: 'dossier', scene: 'street',
+        kind: 'dossier',
         title: `INQUIRY — ${herring.name}`,
         body: [
           `${herring.name} holds court in the back of a laundry that has`,
@@ -1111,7 +1112,7 @@ function webNola(seed) {
       name: `Inquiry — ${herring2.name}`,
       burnable: false,
       payload: {
-        kind: 'dossier', scene: 'street',
+        kind: 'dossier',
         title: `INQUIRY — ${herring2.name}`,
         body: [
           `${herring2.name}: ${herring2.trade}. He keeps both hands flat`,
@@ -1192,7 +1193,7 @@ function webNola(seed) {
           ...S.detailSet.map(n => `    ${n} — yes, per jacket`),
           `    ${S.detailCleared} — no: ${detail.counter}.`,
           '',
-          'THE THIRD LIST. Lay it out under the fan beside the roster',
+          'ONE OF THE THREE LISTS. Lay it out under the fan beside the',
           'and the cage log. Weight the corners with the bottle and the',
           'glass. Let the fan turn a few times.',
           '',
@@ -1474,6 +1475,7 @@ function webNola(seed) {
       suspects: sortNames(S.suspects),      // alphabetical — the order tells nothing
       columns: ['nights', 'cage', 'witness'],
     },
+    lists: { rota: 'the duty roster', keybook: 'the cage log', personnel: 'the personnel jackets' },
     walkthrough,
     solutionCommitment: {
       salt: `caseweb-nola-${seed}`,
@@ -1721,7 +1723,7 @@ function webParis(seed) {
       name: `Inquiry — ${herring.name}`,
       burnable: false,
       payload: {
-        kind: 'dossier', scene: 'street',
+        kind: 'dossier',
         title: `INQUIRY — ${herring.name}`,
         body: [
           `${herring.name} receives you above a shuttered shop, among`,
@@ -1744,7 +1746,7 @@ function webParis(seed) {
       name: `Inquiry — ${herring2.name}`,
       burnable: false,
       payload: {
-        kind: 'dossier', scene: 'street',
+        kind: 'dossier',
         title: `INQUIRY — ${herring2.name}`,
         body: [
           `${herring2.name}: ${herring2.trade}. He answers every question`,
@@ -1821,7 +1823,7 @@ function webParis(seed) {
           ...S.detailSet.map(n => `    ${n} — yes, per file`),
           `    ${S.detailCleared} — no: ${detail.counter}.`,
           '',
-          'THE THIRD LIST. Lay it beside the roster and the register.',
+          'ONE OF THE THREE LISTS. Lay it beside the roster and the register.',
           'Three lists, four names, one name on all three — and it was',
           'on all three before you ever came to this city. All you have',
           'done is refuse to look away, which is more than most manage.',
@@ -2103,6 +2105,7 @@ function webParis(seed) {
       suspects: sortNames(S.suspects),
       columns: ['nights', 'keys', 'witness'],
     },
+    lists: { rota: 'the duty roster', keybook: 'the key register', personnel: 'the personnel particulars' },
     walkthrough,
     solutionCommitment: {
       salt: `caseweb-paris-${seed}`,
@@ -2344,7 +2347,7 @@ function webMeridian(seed) {
       name: `Inquiry — ${herring.name}`,
       burnable: false,
       payload: {
-        kind: 'dossier', scene: 'street',
+        kind: 'dossier',
         title: `INQUIRY — ${herring.name}`,
         body: [
           `${herring.name} does his trade off the tail of a freight`,
@@ -2366,7 +2369,7 @@ function webMeridian(seed) {
       name: `Inquiry — ${herring2.name}`,
       burnable: false,
       payload: {
-        kind: 'dossier', scene: 'street',
+        kind: 'dossier',
         title: `INQUIRY — ${herring2.name}`,
         body: [
           `${herring2.name}: ${herring2.trade}. He keeps his hands in`,
@@ -2443,7 +2446,7 @@ function webMeridian(seed) {
           ...S.detailSet.map(n => `    ${n} — yes, per the book`),
           `    ${S.detailCleared} — no: ${detail.counter}.`,
           '',
-          'THE THIRD LIST. Lay it by the rolls and the strongbox ledger',
+          'ONE OF THE THREE LISTS. Lay it by the rolls and the strongbox',
           'and weight the pages with stones. Three lists. Four names.',
           'One name on all three, and it was on all three before the',
           'buzzards rose. The country knew. The country is a slow',
@@ -2580,7 +2583,7 @@ function webMeridian(seed) {
     {
       to: 'personnel', requires: ['statement'],
       lead: 'A witness mark wants checking: open the company book to the particulars.',
-      match: (t) => t.includes('PARTICULARS') || t.includes('PERSONNEL') || (t.includes('COMPANY') && t.includes('BOOK')),
+      match: (t) => t.includes('PARTICULARS') || t.includes('PERSONNEL') || (t.includes('BOOK') && !t.includes('KEY')),
       response: 'The book opens where books like it always open: at what the trail left of the men.',
     },
     {
@@ -2721,6 +2724,7 @@ function webMeridian(seed) {
       suspects: sortNames(S.suspects),
       columns: ['nights', 'strongbox', 'witness'],
     },
+    lists: { rota: 'the company work rolls', keybook: 'the strongbox ledger', personnel: 'the company book' },
     walkthrough,
     solutionCommitment: {
       salt: `caseweb-meridian-${seed}`,

@@ -186,6 +186,17 @@ export class StubGM {
       const lines = ['CASE REVIEW — the desk reads it back:', '']
       lines.push(`You hold ${this.unlocked.size} documents.` +
         (this.burned.size ? ` Burned and gone forward: ${[...this.burned].map(k => this.case.scopes[k].name).join(', ')}.` : ''))
+      // The three lists are the spine of a web case: the desk keeps
+      // count so the player never wonders which they already own.
+      if (this.case.lists) {
+        const held = Object.entries(this.case.lists).filter(([k]) => this.unlocked.has(k)).map(([, n]) => n)
+        const out = Object.entries(this.case.lists).filter(([k]) => !this.unlocked.has(k)).map(([, n]) => n)
+        lines.push(out.length === 0
+          ? 'All three lists are in your hands. One name stands on all of them.'
+          : held.length === 0
+            ? `Of the three lists you hold none yet. Out there still: ${out.join(', ')}.`
+            : `Of the three lists you hold ${held.join(' and ')}. Still out there: ${out.join(', ')}.`)
+      }
       const open = this.case.edges.filter(e =>
         !this.unlocked.has(e.to) && e.requires.every(r => this.unlocked.has(r)) && e.lead)
       if (open.length) {
