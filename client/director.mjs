@@ -42,10 +42,10 @@ export async function detectDirector(url = localStorage.getItem('noir.gm.url') ?
 }
 
 /** Build a voice function for the GM: beat in, era prose out (or null → canned). */
-export function makeVoice({ post, era, caseTitle, getTail }) {
+export function makeVoice({ post, era, caseTitle, getTail, getStyleNotes }) {
   return async (beat) => {
     try {
-      const { text } = await post('/voice', { era, caseTitle, beat, tail: getTail() })
+      const { text } = await post('/voice', { era, caseTitle, beat, tail: getTail(), styleNotes: getStyleNotes?.() ?? [] })
       return text || null
     } catch { return null }
   }
@@ -62,10 +62,10 @@ export function makeInterrogator({ post, era, getTail }) {
 }
 
 /** Free-report conversation: the desk answers from the earned file. */
-export function makeConverse({ post, getTail }) {
+export function makeConverse({ post, getTail, getStyleNotes }) {
   return async ({ report, context }) => {
     try {
-      const data = await post('/converse', { ...context, report, tail: getTail() })
+      const data = await post('/converse', { ...context, report, tail: getTail(), styleNotes: getStyleNotes?.() ?? [] })
       return data.text ?? null
     } catch { return null }
   }

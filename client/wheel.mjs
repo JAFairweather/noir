@@ -201,6 +201,34 @@ export class Wheel {
     strike()
   }
 
+  /** Forward scroll at the frontier IS the typist: the reader sets the
+   *  pace by pulling text through the machine. Backward, everything
+   *  already typed stays typed — pages do not un-write themselves. */
+  surge(chars) {
+    let n = Math.max(1, Math.floor(chars))
+    while (n > 0 && this._queue.length) {
+      const line = this._queue[0]
+      const take = Math.min(n, line.full.length - line.shown)
+      if (take > 0) {
+        line.shown += take
+        n -= take
+        window.dispatchEvent(new CustomEvent('noir-type', { detail: { chars: take } }))
+      }
+      const done = line.shown >= line.full.length
+      line.el.textContent = done ? line.full : line.full.slice(0, line.shown) + CURSOR
+      line.flatEl.textContent = line.full.slice(0, line.shown)
+      if (!done) break
+      this._queue.shift()
+      n -= 2                                   // a breath per line, even surging
+    }
+    if (this.flatMode) this.flat.scrollTop = this.flat.scrollHeight
+    clearTimeout(this._typeTimer)              // re-arm the ambient typist cleanly
+    this._typing = false
+    if (this._queue.length) this._typeTimer = setTimeout(() => this._pump(), 160)
+    if (this._follow) this._target = this.tail
+    this._renderAll()
+  }
+
   /** Space bar: advance one beat (next paragraph boundary). */
   advanceBeat() {
     if (this.flatMode) { this.flat.scrollTop += this.flat.clientHeight * 0.7; return }
@@ -214,6 +242,12 @@ export class Wheel {
     stage.addEventListener('wheel', (e) => {
       if (this.flatMode) return
       e.preventDefault()
+      if (e.deltaY > 0 && this._queue.length && (this.atTail() || this._follow)) {
+        // forward at the frontier: the scroll pulls the text through
+        this._follow = true
+        this.surge(Math.min(180, Math.max(20, e.deltaY * 0.55)))
+        return
+      }
       this._target = null
       this._follow = false
       this.velocity += e.deltaY * 0.0017
@@ -223,10 +257,16 @@ export class Wheel {
     stage.addEventListener('touchstart', (e) => { touchY = e.touches[0].clientY }, { passive: true })
     stage.addEventListener('touchmove', (e) => {
       if (touchY == null || this.flatMode) return
+      const dy = touchY - e.touches[0].clientY
+      touchY = e.touches[0].clientY
+      if (dy > 0 && this._queue.length && (this.atTail() || this._follow)) {
+        this._follow = true
+        this.surge(Math.min(160, dy * 1.4))
+        return
+      }
       this._target = null
       this._follow = false
-      this.velocity += (touchY - e.touches[0].clientY) * 0.0046
-      touchY = e.touches[0].clientY
+      this.velocity += dy * 0.0046
     }, { passive: true })
     stage.addEventListener('touchend', () => { touchY = null })
 

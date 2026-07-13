@@ -74,8 +74,10 @@ let gameOver = false
 const score = new Score()
 
 // write to the drum AND the save file
+let lastAnchor = 'the opening'
 function put(text, cls = '') {
   transcript.push({ text, cls })
+  if (cls === 'doc-title') lastAnchor = text.replace(/^—\s*|\s*—$/g, '').trim()
   wheel.append(text, cls)
 }
 
@@ -154,6 +156,7 @@ async function refreshNotebook() {
     cityMap.setSpots([...spots, ...known])
   } catch { /* the board is garnish; never let it stop the case */ }
   renderDeduction()
+  renderNotes()
   const panel = $('#tc-panel')
   panel.classList.toggle('hidden', !getTradecraft())
   if (getTradecraft()) {
@@ -165,6 +168,61 @@ async function refreshNotebook() {
   }
   return grants
 }
+
+// Margin notes (author mode): the case plays exactly as the engine
+// presents it; the author annotates the text as it flows. Notes anchor
+// to the document on screen, persist per case, EXPORT as markdown for
+// the workshop, and the freshest few ride along to the Director as
+// advisory style notes — the game improves mid-session and after it.
+const notesKey = () => 'noir.notes.' + CASE.CASE_ID
+function getNotes() {
+  try { return JSON.parse(localStorage.getItem(notesKey()) ?? '[]') } catch { return [] }
+}
+function renderNotes() {
+  const on = localStorage.getItem('noir.notes.on') === '1'
+  $('#margin').classList.toggle('hidden', !on)
+  if (!on) return
+  const list = $('#note-list')
+  list.innerHTML = ''
+  for (const n of getNotes().slice(-6).reverse()) {
+    const li = document.createElement('li')
+    const b = document.createElement('b')
+    b.textContent = n.at
+    li.appendChild(b)
+    li.appendChild(document.createTextNode(n.note))
+    list.appendChild(li)
+  }
+}
+function wireNotes() {
+  $('#notes-toggle').checked = localStorage.getItem('noir.notes.on') === '1'
+  $('#notes-toggle').addEventListener('change', (e) => {
+    localStorage.setItem('noir.notes.on', e.target.checked ? '1' : '0')
+    renderNotes()
+  })
+  $('#note-add').addEventListener('click', () => {
+    const note = $('#note-input').value.trim()
+    if (!note) return
+    const notes = getNotes()
+    notes.push({ at: lastAnchor, note, when: new Date().toISOString() })
+    try { localStorage.setItem(notesKey(), JSON.stringify(notes)) } catch { /* keep playing */ }
+    $('#note-input').value = ''
+    renderNotes()
+  })
+  $('#note-export').addEventListener('click', () => {
+    const notes = getNotes()
+    const md = [
+      `# Margin notes — ${CASE.TITLE ?? CASE.CASE_ID} (${CASE.CASE_ID})`,
+      '', ...notes.map(n => `- **[${n.at}]** ${n.note}`), '',
+    ].join('\n')
+    try { navigator.clipboard?.writeText(md) } catch { /* download still happens */ }
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown' }))
+    a.download = `noir-notes-${CASE.CASE_ID.replace(/[^a-z0-9-]/gi, '_')}.md`
+    a.click()
+    URL.revokeObjectURL(a.href)
+  })
+}
+wireNotes()
 
 // The deduction board (DECISIONS §8): the player's own marks, suspects
 // against the three trails. The game never fills a cell — deduction is
@@ -356,14 +414,16 @@ function attachVoice() {
   if (!director?.live) return
   const getTail = () => transcript.slice(-10).map(l => l.text).filter(t => t.length > 2)
   const post = director.post
+  const getStyleNotes = () => getNotes().slice(-8).map(n => n.note)
   gm.voice = makeVoice({
     post,
     era: CASE.ERA,
     caseTitle: CASE.scopes.briefing?.name ?? CASE.CASE_ID,
     getTail,
+    getStyleNotes,
   })
   gm.interrogator = makeInterrogator({ post, era: CASE.ERA, getTail })
-  gm.converse = makeConverse({ post, getTail })
+  gm.converse = makeConverse({ post, getTail, getStyleNotes })
   gm.judge = makeJudge({ post })
   $('#director-status').textContent = `DIRECTOR: ${director.model}${director.browser ? ' (in-browser)' : ''}`
   $('#director-status').classList.remove('hidden')

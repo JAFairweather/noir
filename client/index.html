@@ -157,6 +157,18 @@
   .deduce-note { color: var(--accent-dim); font-size: 9px; margin-top: 5px; opacity: 0.7; }
   #tc-panel { margin-top: 12px; padding: 8px; border: 1px dashed color-mix(in srgb, var(--accent) 30%, transparent);
     color: var(--accent-dim); font-size: 10px; line-height: 1.6; letter-spacing: 0.04em; }
+  #margin { margin: 12px 0 4px; }
+  #margin h3 { font-size: 10px; letter-spacing: 0.3em; color: var(--accent-dim); margin-bottom: 6px; }
+  #note-input { width: 100%; background: color-mix(in srgb, var(--ink) 70%, black);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); color: var(--accent);
+    font: inherit; font-size: 11px; padding: 6px 7px; resize: vertical; }
+  #note-add, #note-export { background: transparent; color: var(--accent-dim);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    font: inherit; font-size: 10px; letter-spacing: 0.15em; padding: 4px 8px; cursor: pointer; margin-top: 5px; }
+  #note-add:hover, #note-export:hover { color: var(--accent); }
+  #note-list { list-style: none; padding: 0; margin: 8px 0 0; font-size: 10px; }
+  #note-list li { padding: 4px 0; border-bottom: 1px solid color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent-dim); }
+  #note-list li b { color: var(--accent); font-weight: normal; display: block; }
   #dir-box { margin: 14px 0 4px; }
   #dir-box .id-label { display: block; color: var(--accent-dim); letter-spacing: 0.2em; font-size: 10px; margin-bottom: 5px; }
   .dir-row { display: flex; gap: 6px; }
@@ -300,7 +312,17 @@
         directly on your account. A table address points at a sponsored
         Director. Blank + ENGAGE forgets both.</p>
       </div>
+      <div id="margin" class="hidden" aria-label="Margin notes">
+        <h3>MARGIN NOTES</h3>
+        <textarea id="note-input" rows="3" placeholder="a note on the text on screen…"></textarea>
+        <div class="dir-row">
+          <button id="note-add">PIN NOTE</button>
+          <button id="note-export">EXPORT</button>
+        </div>
+        <ul id="note-list"></ul>
+      </div>
       <label class="toggle"><input type="checkbox" id="flat-toggle"> flat mode (no motion)</label>
+      <label class="toggle"><input type="checkbox" id="notes-toggle"> margin notes (author mode)</label>
       <label class="toggle"><input type="checkbox" id="pen-toggle"> pen backdrop (the line)</label>
       <label class="toggle"><input type="checkbox" id="score-toggle"> score (original 19-TET)</label>
       <label class="toggle"><input type="checkbox" id="tc-toggle"> tradecraft view (protocol)</label>

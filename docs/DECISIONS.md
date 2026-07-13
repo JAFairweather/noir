@@ -214,3 +214,27 @@ buying software — a few thousand sats, stated once, in period voice
 ('The desk takes its retainer in advance. The desk has been burned
 before.'). Free tier stays forever: scripted prose is never paywalled,
 and a player's own key (door 1) never touches the table.
+
+## 12. What this is — the speakeasy (added 2026-07-13)
+
+The goal, in the owner's words: a small corner of the internet people
+DISCOVER, with the appeal of having found something genuinely unique —
+the feeling of walking into the cool room the moment you arrive. Not a
+venture; a place. Sponsored Director tokens are part of the door charge
+the house covers.
+
+Consequences, standing:
+- **One exceptional case beats ten good ones.** The front-door case
+  gets workshopped line by line. The instrument: MARGIN NOTES (author
+  mode) — play the case exactly as the engine presents it, annotate the
+  text as it flows (notes anchor to the document on screen), EXPORT as
+  markdown for the workshop, and the freshest notes ride to the
+  Director live as advisory style guidance. Feedback in, prose out,
+  repeat for a round or two of gameplay per case.
+- **The reader sets the pace.** Typing speed can never match every
+  reader, so the scroll drives the typewriter: forward scroll at the
+  frontier pulls text through the machine (the surge); backward,
+  everything already typed stays typed — pages do not un-write
+  themselves, same law as the pen's buildings. The ambient typist
+  remains for readers who just watch.
+- The pen backdrop stays and keeps getting refined.
