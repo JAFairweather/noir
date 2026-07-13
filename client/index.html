@@ -157,6 +157,14 @@
   .deduce-note { color: var(--accent-dim); font-size: 9px; margin-top: 5px; opacity: 0.7; }
   #tc-panel { margin-top: 12px; padding: 8px; border: 1px dashed color-mix(in srgb, var(--accent) 30%, transparent);
     color: var(--accent-dim); font-size: 10px; line-height: 1.6; letter-spacing: 0.04em; }
+  #dir-box { margin: 14px 0 4px; }
+  #dir-box .id-label { display: block; color: var(--accent-dim); letter-spacing: 0.2em; font-size: 10px; margin-bottom: 5px; }
+  .dir-row { display: flex; gap: 6px; }
+  #dir-key { flex: 1; background: color-mix(in srgb, var(--ink) 70%, black); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    color: var(--accent); font: inherit; font-size: 11px; padding: 5px 7px; min-width: 0; }
+  #dir-engage { background: transparent; color: var(--accent-dim); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    font: inherit; font-size: 10px; letter-spacing: 0.15em; padding: 5px 8px; cursor: pointer; }
+  #dir-engage:hover { color: var(--accent); }
   label.toggle { display: flex; gap: 6px; align-items: center; margin-top: 14px; color: var(--accent-dim); cursor: pointer; }
 
   /* --------------------------------------------------- command line */
@@ -282,6 +290,16 @@
         <span id="npub" title="Your nostr public key — the notebook belongs to it"></span>
       </div>
       <ul id="notebook-list"></ul>
+      <div id="dir-box">
+        <span class="id-label">DIRECTOR</span>
+        <div class="dir-row">
+          <input id="dir-key" type="password" placeholder="sk-ant… key, or a table address" autocomplete="off">
+          <button id="dir-engage">ENGAGE</button>
+        </div>
+        <p class="note">A key is stored only in this browser and calls Anthropic
+        directly on your account. A table address points at a sponsored
+        Director. Blank + ENGAGE forgets both.</p>
+      </div>
       <label class="toggle"><input type="checkbox" id="flat-toggle"> flat mode (no motion)</label>
       <label class="toggle"><input type="checkbox" id="pen-toggle"> pen backdrop (the line)</label>
       <label class="toggle"><input type="checkbox" id="score-toggle"> score (original 19-TET)</label>

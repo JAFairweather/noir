@@ -159,3 +159,27 @@ Two decisions from the field:
   (spec §4.4 holds by construction). The Director answers in era voice,
   grounded in the file, never granting, never inventing; the scripted
   miss line remains the no-AI fallback, and misses still cost heat.
+
+## 10. Director distribution — three doors, one game (added 2026-07-13)
+
+The Director reaches players three ways, all behind one transport shape
+(post(path, payload)), all failing soft to scripted prose:
+
+1. **Zero-install (the landing page IS the installer):** Anthropic's API
+   permits direct browser calls behind an explicit opt-in header. The
+   notebook has a DIRECTOR box — paste an `sk-ant-…` key, press ENGAGE,
+   and the Director wakes inside the page. The key lives only in that
+   browser's localStorage and travels only to api.anthropic.com on the
+   player's own account. client/browser-director.mjs mirrors the
+   service's prompts (keep in sync).
+2. **The local desk (developer's instrument):** `npm run director` —
+   now a cross-platform Node supervisor (scripts/director.mjs; macOS /
+   Windows / Linux) that pulls latest, runs the service, and relaunches
+   on the desk's RESTART WITH UPDATE. Panel, commentary, update button.
+3. **A sponsored table (hosted, James pays):** deploy the same service
+   anywhere Node runs, set the keys, and hand players the URL — the
+   same DIRECTOR box accepts a table address. Guardrails ship in the
+   service, all off by default: NOIR_ALLOWED_ORIGINS (CORS allowlist),
+   NOIR_RATE_LIMIT (per-IP per 5 min), NOIR_DAILY_CAP (calls per UTC
+   day — the table 'closes for tonight' gracefully). Control endpoints
+   (update/restart/stills) remain loopback-only always.

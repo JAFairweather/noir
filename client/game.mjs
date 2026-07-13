@@ -28,6 +28,7 @@ import { applyEra } from './art.mjs'
 import { setScene, enableDirectorScenes, getPenMode, setPenMode } from './scenes.mjs'
 import { CityMap } from './map.mjs'
 import { detectDirector, makeVoice, makeInterrogator, makeJudge, makeConverse } from './director.mjs'
+import { browserDirector } from './browser-director.mjs'
 import { showBurnCard, showEndCard, showSaveCard, showCaseSelect } from './burn.mjs'
 import { getOrCreatePlayerKey, getFlatMode, setFlatMode, getCaseId, setCaseId, getTradecraft, setTradecraft } from './settings.mjs'
 
@@ -351,20 +352,60 @@ function applyCase(mod) {
 // The Director voices beats when its local service is running (M3);
 // otherwise the scripted prose plays. Attached to whatever GM is current.
 function attachVoice() {
-  if (director?.images) enableDirectorScenes(director.url)
+  if (director?.images && director.url) enableDirectorScenes(director.url)
   if (!director?.live) return
-  const getTail = () => transcript.slice(-6).map(l => l.text).filter(t => t.length > 2)
+  const getTail = () => transcript.slice(-10).map(l => l.text).filter(t => t.length > 2)
+  const post = director.post
   gm.voice = makeVoice({
-    url: director.url,
+    post,
     era: CASE.ERA,
     caseTitle: CASE.scopes.briefing?.name ?? CASE.CASE_ID,
     getTail,
   })
-  gm.interrogator = makeInterrogator({ url: director.url, era: CASE.ERA, getTail })
-  gm.converse = makeConverse({ url: director.url, getTail })
-  gm.judge = makeJudge({ url: director.url })
-  $('#director-status').textContent = `DIRECTOR: ${director.model}`
+  gm.interrogator = makeInterrogator({ post, era: CASE.ERA, getTail })
+  gm.converse = makeConverse({ post, getTail })
+  gm.judge = makeJudge({ post })
+  $('#director-status').textContent = `DIRECTOR: ${director.model}${director.browser ? ' (in-browser)' : ''}`
   $('#director-status').classList.remove('hidden')
+}
+
+// Engage a Director from the notebook: an Anthropic key (stored only in
+// this browser; calls go straight to Anthropic on the player's account)
+// or a hosted table address someone else sponsors.
+function wireDirectorBox() {
+  const input = $('#dir-key')
+  const btn = $('#dir-engage')
+  if (!input || !btn) return
+  const current = localStorage.getItem('noir.anthropic.key') ? 'key engaged (this browser only)'
+    : localStorage.getItem('noir.gm.url') ? 'table: ' + localStorage.getItem('noir.gm.url')
+    : ''
+  if (current) input.placeholder = current
+  if (btn.dataset.wired) return               // placeholder refresh only — never stack listeners
+  btn.dataset.wired = '1'
+  btn.addEventListener('click', async () => {
+    const v = input.value.trim()
+    if (v.startsWith('sk-ant-')) {
+      localStorage.setItem('noir.anthropic.key', v)
+      localStorage.removeItem('noir.gm.url')
+    } else if (/^https?:\/\//.test(v)) {
+      localStorage.setItem('noir.gm.url', v.replace(/\/$/, ''))
+      localStorage.removeItem('noir.anthropic.key')
+    } else if (v === '') {
+      localStorage.removeItem('noir.anthropic.key')
+      localStorage.removeItem('noir.gm.url')
+      director = null
+      $('#director-status').classList.add('hidden')
+      input.placeholder = 'sk-ant… key, or a table address'
+      return
+    } else return
+    input.value = ''
+    director = (await detectDirector()) ?? browserDirector()
+    if (director?.live) {
+      attachVoice()
+      put('— a second typewriter starts up somewhere close. The Director is in. —', 'gm dim')
+    }
+    wireDirectorBox()
+  })
 }
 
 /** The preamble holds until the reader is ready: space, enter, or a tap. */
@@ -378,7 +419,12 @@ function waitForBegin() {
     const onKey = (e) => {
       if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); done() }
     }
-    const onTap = () => done()
+    const onTap = (e) => {
+      // The notebook is dashboard, not door: engaging a Director key or
+      // flipping a toggle at the preamble must not open the file.
+      if (e.target.closest?.('#notebook')) return
+      done()
+    }
     window.addEventListener('keydown', onKey, true)
     window.addEventListener('pointerdown', onTap, true)
   })
@@ -452,7 +498,8 @@ const pickCase = () => showCaseSelect([
   },
 ], (id) => freshStart(id))
 applyEra(CASE.ERA)
-director = await detectDirector()
+director = (await detectDirector()) ?? browserDirector()
+wireDirectorBox()
 if (!director) {
   // The entrance stays the same whether the page is local or hosted:
   // localhost is a secure origin, so even the HTTPS site may call the

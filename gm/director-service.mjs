@@ -251,6 +251,48 @@ if (REPLICATE) note('darkroom open — FLUX scenes enabled')
 const isLoopback = (req) =>
   ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress)
 
+// ------------------------------------------------- hosted-table guardrails
+// A sponsored Director serves strangers on somebody's dime. Three knobs,
+// all off by default so local play is untouched:
+//   NOIR_ALLOWED_ORIGINS  csv of origins allowed CORS (default: any)
+//   NOIR_RATE_LIMIT       AI calls per IP per 5 minutes (default: none)
+//   NOIR_DAILY_CAP        total AI calls per UTC day (default: none)
+const ALLOWED_ORIGINS = (process.env.NOIR_ALLOWED_ORIGINS ?? '').split(',').map(x => x.trim()).filter(Boolean)
+const RATE_LIMIT = Number(process.env.NOIR_RATE_LIMIT ?? 0)
+const DAILY_CAP = Number(process.env.NOIR_DAILY_CAP ?? 0)
+const rateBuckets = new Map()   // ip → [timestamps]
+let dayKey = '', dayCount = 0
+
+function guard(req, res) {
+  const origin = req.headers.origin
+  if (ALLOWED_ORIGINS.length && origin && !ALLOWED_ORIGINS.includes(origin)) {
+    res.writeHead(403, { 'content-type': 'application/json' }).end(JSON.stringify({ error: 'origin not at this table' }))
+    return false
+  }
+  if (DAILY_CAP) {
+    const today = new Date().toISOString().slice(0, 10)
+    if (today !== dayKey) { dayKey = today; dayCount = 0 }
+    if (++dayCount > DAILY_CAP) {
+      res.writeHead(200, { 'content-type': 'application/json' })
+        .end(JSON.stringify({ text: null, reply: null, match: null, error: 'the table is closed for tonight' }))
+      note('daily cap reached — the table is closed for tonight')
+      return false
+    }
+  }
+  if (RATE_LIMIT && !isLoopback(req)) {
+    const ip = req.socket.remoteAddress
+    const now = Date.now()
+    const bucket = (rateBuckets.get(ip) ?? []).filter(t => now - t < 300000)
+    bucket.push(now)
+    rateBuckets.set(ip, bucket)
+    if (bucket.length > RATE_LIMIT) {
+      res.writeHead(429, { 'content-type': 'application/json' }).end(JSON.stringify({ error: 'slow down' }))
+      return false
+    }
+  }
+  return true
+}
+
 const PANEL = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -404,6 +446,7 @@ const server = createServer(async (req, res) => {
   }
 
   if (req.method === 'POST' && req.url === '/scene') {
+    if (!guard(req, res)) return
     let raw = ''
     for await (const chunk of req) raw += chunk
     try {
@@ -422,6 +465,7 @@ const server = createServer(async (req, res) => {
   }
 
   if (req.method === 'POST' && req.url === '/interrogate') {
+    if (!guard(req, res)) return
     let raw = ''
     for await (const chunk of req) raw += chunk
     try {
@@ -438,6 +482,7 @@ const server = createServer(async (req, res) => {
   }
 
   if (req.method === 'POST' && req.url === '/verdict') {
+    if (!guard(req, res)) return
     let raw = ''
     for await (const chunk of req) raw += chunk
     try {
@@ -454,6 +499,7 @@ const server = createServer(async (req, res) => {
   }
 
   if (req.method === 'POST' && req.url === '/converse') {
+    if (!guard(req, res)) return
     let raw = ''
     for await (const chunk of req) raw += chunk
     try {
@@ -470,6 +516,7 @@ const server = createServer(async (req, res) => {
   }
 
   if (req.method === 'POST' && req.url === '/voice') {
+    if (!guard(req, res)) return
     let raw = ''
     for await (const chunk of req) raw += chunk
     try {
