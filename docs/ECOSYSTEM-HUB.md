@@ -26,21 +26,23 @@ door to *you*.
 
 ## 0. Key decisions to lock before any building
 
-### 0.1 Domain
+### 0.1 Domain — DECIDED: `nave.pub`
 
-- **.ed is not registerable** (not in the DNS root; .edu is restricted
-  to accredited US institutions). Crossed off.
-- **Recommended open TLDs** for a Nostr dev hub: `.dev` / `.app`
-  (auto-HTTPS via HSTS preload), `.pub` (thematically perfect —
-  pub/sub, and the speakeasy motif), `.xyz`, `.social`, `.build`.
-- **Cost:** ~$10–40/yr.
+**Registered: `nave.pub`.** (`north.*` was taken across `.pub`, `.dev`,
+and `.app`; `nave.pub` was clear.) The TLD is a deliberate win: `.pub`
+triple-loads — **pub/sub** (the protocol), **public house** (the
+speakeasy motif Noir already lives in), and **publish** (the writing /
+Substack front). Apps live at subdomains: `noir.nave.pub`,
+`nvoy.nave.pub`, `nherit.nave.pub`, and the reference relay at
+`relay.nave.pub`. Cost ~$10–40/yr; registered through Cloudflare so the
+registrar, DNS, and Pages hosting share one zone.
 
 ### 0.2 URL architecture — subdomains vs. paths
 
 **Recommendation: subdomains for apps, root for the hub. This is now
 decided, not open — two things we built this session prove it.**
 
-| | Subdomains (`noir.hub.tld`) | Paths (`hub.tld/noir`) |
+| | Subdomains (`noir.nave.pub`) | Paths (`nave.pub/noir`) |
 |---|---|---|
 | Web origin | Separate per app | One shared origin |
 | localStorage / IndexedDB | Isolated per app | Shared — apps read each other's data |
@@ -122,17 +124,27 @@ desk, and a role in the protocol story. Two different "Directors," one
 of them an actual protocol actor, will confuse every reader, diagram,
 and article.
 
-**Decision, locked: the hub is _North_.** "Director" stays reserved for
-Noir's game agent.
+**Decision, locked: the hub is _Nave_ (`nave.pub`).** "Director" stays
+reserved for Noir's game agent.
 
-**North** is the right name for a reason deeper than the N-family fit:
-*Identity = Freedom* is a direction, not a destination, and North is the
-thing you steer by. The hub is the fixed point the whole ecosystem
-orients to — the reference relay, the reference apps, the reference
-identity. The tagline writes itself: **"Find your North."** / **"True
-North for your data."** (Considered and set aside: _Nexus_ — accurate
-but generic; _Nave_ — the speakeasy motif, but too oblique for a front
-door.)
+**Nave** is the central hall of a building — the great room you enter
+through the front doors, from which every aisle and side-chapel opens.
+That is exactly what the hub is: the room you walk into, and the space
+every app branches off. *Every app opens off the Nave.*
+
+The name keeps a hidden thread back to _North_ (the first choice, taken
+across every TLD): "nave" descends from Latin *navis*, "ship" — the same
+root as *navigate*. So the hub still carries the seafaring, you-steer-by-
+it soul; the compass / ship iconography imagined for North survives
+intact. It also fits Noir's own vocabulary of rooms — the house, the
+table, the desk, the speakeasy — in a way a generic name never would.
+
+Taglines: **"Enter the Nave."** / **"Every app opens off the Nave."** /
+**"A room on the open internet that no one can take from you."** The one
+honest cost — "nave" is an obscure word (rhymes with *gave*) that a few
+readers misjudge on first glance — is on-brand for a speakeasy: you're
+slightly in-the-know to get it. (Considered and set aside: _North_ —
+loved, but unavailable; _Nexus_ — accurate but generic.)
 
 ---
 
@@ -145,7 +157,7 @@ door.)
 3. **Wildcard SSL** — automatic with Cloudflare; verify HSTS (mandatory
    on `.dev`/`.app`).
 4. **/.well-known/nostr.json** at the root — NIP-05 identities for the
-   ecosystem (`_@hub.tld`, optionally per-app). Small static file or a
+   ecosystem (`_@nave.pub`, optionally per-app). Small static file or a
    Worker.
 5. **Design system** — shared tokens + wordmark so every app and the
    hub feel like one ecosystem. See §5.2 (iconography) and §5.3 (the
@@ -158,10 +170,10 @@ NIP-05 resolves.
 
 ---
 
-## 2. North — the hub (and your front door)
+## 2. Nave — the hub (and your front door)
 
 Ship this early: it's the anchor everything links to, and it is a
-personal-brand asset as much as an ecosystem one. **North is two things
+personal-brand asset as much as an ecosystem one. **Nave is two things
 at once: the reference index of the NIP-DA ecosystem, and the canonical
 page for James A. Fairweather's body of work on self-sovereign identity.**
 Those aren't in tension — the throughline of every app *is* the personal
@@ -229,7 +241,7 @@ shared on nostr and elsewhere. A live "featured demo" embed or
 screenshot of Noir's tradecraft view makes an unusually strong hero —
 it is the protocol's privacy claim rendered as something you can watch.
 
-**Exit criteria:** `hub.tld` (North) live; indexes every project
+**Exit criteria:** `nave.pub` (Nave) live; indexes every project
 (placeholders where apps aren't up yet); carries the protocol case and
 the personal brand; shares cleanly.
 
@@ -241,13 +253,13 @@ Noir validates the entire pipeline — *both* hosting lanes — then that
 process freezes into a reusable runbook.
 
 1. **Static client:** Noir client → Cloudflare Pages project →
-   `noir.hub.tld` → SSL verified.
+   `noir.nave.pub` → SSL verified.
 2. **Hosted Director (the server lane):** the Director service →
    runtime host (Fly.io recommended for a clean single-command deploy,
    or the VPS). Set `NOIR_DIRECTOR_NSEC` to the existing agent key
    (same key = same agent; the house grant, notes, and delegated worlds
    follow the npub, not the box), `ANTHROPIC_API_KEY`, `NOIR_RELAYS`,
-   and the public guardrails (`NOIR_ALLOWED_ORIGINS=https://noir.hub.tld`,
+   and the public guardrails (`NOIR_ALLOWED_ORIGINS=https://noir.nave.pub`,
    `NOIR_RATE_LIMIT`, `NOIR_DAILY_CAP`). HTTPS in front.
 3. **NIP-07 test:** connect Alby / nos2x, confirm the per-origin
    permission grant and the master-identity gate for author mode.
@@ -258,9 +270,9 @@ process freezes into a reusable runbook.
    clean (the recent hardening should make this pass cleanly).
 6. **Write the "App Onboarding Runbook"** from exactly these steps:
    repo → Pages project → subdomain CNAME → SSL → NIP-07 smoke test →
-   relay smoke test → (server lane if any) → link from North.
+   relay smoke test → (server lane if any) → link from Nave.
 
-**Exit criteria:** Noir live at `noir.hub.tld` — both client and hosted
+**Exit criteria:** Noir live at `noir.nave.pub` — both client and hosted
 Director — fully functional, with a documented runbook.
 
 ---
@@ -273,14 +285,14 @@ first," not "which app do we finish."
 
 1. The five NIP-DA apps + Ntrigue: each is a static SPA (Pages only, no
    server lane), so each is a fast copy of the runbook's static path.
-2. For each: run the runbook, then flip its North card from placeholder
+2. For each: run the runbook, then flip its Nave card from placeholder
    to live link.
 3. Nherit is shipped, so it is no longer the "ship last because
    unwritten" case — sequence it wherever convenient. If any app gets a
    real polish pass first, that's fine; nothing blocks nothing.
 
 **Exit criteria:** every app live at its own subdomain and linked from
-North.
+Nave.
 
 ---
 
@@ -288,7 +300,7 @@ North.
 
 ### 5.1 Dedicated relay (recommended)
 
-Stand up `relay.hub.tld` on the VPS (Docker) so the suite's grant events
+Stand up `relay.nave.pub` on the VPS (Docker) so the suite's grant events
 have a canonical home and interop demos always work. This materially
 strengthens the traction story: anyone can point *any* NIP-DA-aware
 client at your reference relay.
@@ -299,8 +311,8 @@ Every app gets a real identity so the suite feels designed, not
 assembled:
 
 - **A per-app icon** used three ways: the browser favicon, the PWA
-  install icon (192/512 maskable), and the North app-grid card icon.
-- **One visual system across all eight** (the seven apps + North):
+  install icon (192/512 maskable), and the Nave app-grid card icon.
+- **One visual system across all eight** (the seven apps + Nave):
   shared grid, stroke weight, and a shared palette with a per-app accent
   — so a Nontact icon and a Noir icon are visibly siblings. The
   "N-monogram in a consistent frame, one accent color per app" pattern
@@ -332,7 +344,7 @@ onboarding moment.
 
 ### 5.4 Suite navigation, analytics, backups
 
-- Lightweight shared header linking back to North from every app.
+- Lightweight shared header linking back to Nave from every app.
 - Cloudflare Web Analytics (privacy-friendly, free); uptime monitor on
   the relay.
 - Backups for relay data and repos.
@@ -341,7 +353,7 @@ onboarding moment.
 
 ## 6. Launch & community
 
-- Announce North on nostr, tied to PR #2411 — lead with "here's the
+- Announce Nave on nostr, tied to PR #2411 — lead with "here's the
   whole ecosystem, live, and here's the protocol underneath it."
 - **The launch content already exists.** The three articles and eight
   figures are written. Publish them on the Substack, cross-post to
@@ -349,7 +361,7 @@ onboarding moment.
   view and the Notary ("physics by commitment") are the two most
   novel, most shareable demos in the whole suite — lead the technical
   audience with those.
-- North becomes the thing you point skeptical reviewers and potential
+- Nave becomes the thing you point skeptical reviewers and potential
   integrators (the Notedeck conversation) to: a working reference
   ecosystem, not a spec.
 
