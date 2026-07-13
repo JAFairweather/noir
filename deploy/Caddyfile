@@ -6,8 +6,28 @@
 	email {$ACME_EMAIL}
 }
 
-# The Noir Director API. The game CLIENT is on Cloudflare Pages at
-# noir.nave.pub and calls this endpoint.
+# The hub — the ecosystem front door. Static, served straight off the box
+# from ../nave (mounted read-only into this container at /srv/nave).
+nave.pub, www.nave.pub {
+	root * /srv/nave
+	encode gzip zstd
+	file_server
+}
+
+# The game client — static, served from ../client and the sibling modules
+# it imports (lib, gm, shared, eras), mounted read-only at /srv/site.
+# `/` lands on the client; the Director itself is a separate subdomain.
+noir.nave.pub {
+	root * /srv/site
+	encode gzip zstd
+	# .mjs must be served as JavaScript or the browser refuses the module.
+	@mjs path *.mjs
+	header @mjs Content-Type "text/javascript; charset=utf-8"
+	redir / /client/ 302
+	file_server
+}
+
+# The Noir Director API — the AI game master. The client above calls this.
 director.nave.pub {
 	reverse_proxy director:8787
 }

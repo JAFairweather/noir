@@ -5,15 +5,18 @@ as a container on the box you already pay for, behind one shared Caddy
 front door — so `director.nave.pub`, your Claude bot, and the future
 relay all live under one domain, one TLS terminator, one box.
 
-> **The map.** The game *client* is static and lives on Cloudflare Pages
-> at `noir.nave.pub`. This kit is the *Director API* at
-> `director.nave.pub`. Two subdomains, two hosts, one domain.
+> **The map.** One box, one Caddy, everything under `nave.pub`. No
+> Cloudflare — DNS is at Hover, Caddy does the certs, and the static sites
+> (the hub and the game client) are served straight off disk by the same
+> Caddy that reverse-proxies the Director.
 >
 > ```
 > Internet ──▶ Caddy (:443 on the VPS)
->                 ├─ director.nave.pub ──▶ Noir Director  (this container)
->                 ├─ bot.nave.pub      ──▶ your Claude bot (add later)
->                 └─ relay.nave.pub    ──▶ the relay        (Phase 5)
+>                 ├─ nave.pub          ──▶ the hub        (static, off disk)
+>                 ├─ noir.nave.pub     ──▶ the game client (static, off disk)
+>                 ├─ director.nave.pub ──▶ Noir Director   (this container)
+>                 ├─ luke.nave.pub     ──▶ OpenClaw / Luke (host :57419)
+>                 └─ relay.nave.pub    ──▶ the relay        (later)
 > ```
 
 ---
@@ -23,7 +26,7 @@ relay all live under one domain, one TLS terminator, one box.
 You'll need:
 - SSH access to the Hostinger VPS (you have this).
 - `nave.pub` with its DNS managed somewhere you can add records
-  (Cloudflare, per the ecosystem plan).
+  (Hover, where it's registered — no Cloudflare needed).
 - Two secrets from your local machine:
   - the contents of your local **`.director-key`** (`cat .director-key`
     in your noir folder) — the SAME key keeps your house, notes, and
