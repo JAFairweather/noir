@@ -266,10 +266,12 @@ wireNotes()
 // the one job the desk refuses to do for you. Marks persist per case.
 function renderDeduction() {
   const box = $('#deduce')
-  // The grid stays dark until the suspect board itself has been earned:
-  // four names on a table before the story has said them is a spoiler,
-  // not a tool.
-  if (!CASE.board || !gm?.unlocked?.has('board')) { box.classList.add('hidden'); return }
+  // The grid stays dark until the story has named the cast — but the
+  // board is only one of the documents that does. The trail lists (the
+  // rota, the key book, the personnel file) each print three of the
+  // four; any of them earns the player their own grid.
+  const castKnown = ['board', 'rota', 'keybook', 'personnel'].some(s => gm?.unlocked?.has(s))
+  if (!CASE.board || !castKnown) { box.classList.add('hidden'); return }
   box.classList.remove('hidden')
   const KEY = 'noir.deduce.' + CASE.CASE_ID
   let marks
@@ -407,6 +409,7 @@ const inEditable = (el) =>
   el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)
 window.addEventListener('keydown', (e) => {
   if (inEditable(e.target)) return        // fields own their keys — notes, keys, command
+  if (e.metaKey || e.ctrlKey || e.altKey) return   // Cmd+C must copy, not steal focus
   if (e.key === ' ') {
     e.preventDefault()
     wheel.advanceBeat()
