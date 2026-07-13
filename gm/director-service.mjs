@@ -114,7 +114,11 @@ async function refreshGrantedHouse() {
       MASTER_NPUB = master
       MANDATE = r.terms?.purpose ?? null
       TILL = await resolveTill(HOUSE_RELAY, r.master, r.house)
-      if (changed) note(`the house arrived by grant — running it on behalf of ${master.slice(0, 12)}…${MANDATE ? ` (mandate: ${MANDATE})` : ''}${TILL.lud16 ? ` · till: ${TILL.lud16} (${TILL.source})` : ''}${r.notesCount ? ` · ${r.notesCount} margin notes folded into the house voice` : ''}`)
+      if (changed) {
+        const line = `the house arrived by grant — running it on behalf of ${master.slice(0, 12)}…${MANDATE ? ` (mandate: ${MANDATE})` : ''}${TILL.lud16 ? ` · till: ${TILL.lud16} (${TILL.source})` : ''}${r.notesCount ? ` · ${r.notesCount} margin notes folded into the house voice` : ''}`
+        note(line)
+        console.log(`  ${line}`)
+      }
     } else if (HOUSE_SOURCE === 'granted') {
       HOUSE = FILE_HOUSE ?? UNMARKED
       HOUSE_SOURCE = FILE_HOUSE ? 'local file' : 'none'
@@ -122,6 +126,7 @@ async function refreshGrantedHouse() {
       MANDATE = null
       TILL = { lud16: null, source: 'none' }
       note('NVOY_GRANT_REVOKED — the master has withdrawn the house. The table stands unmarked tonight.')
+      console.log('  NVOY_GRANT_REVOKED — the master has withdrawn the house')
     }
   } catch { /* relay unreachable: keep what we have */ }
 }
@@ -663,7 +668,9 @@ server.listen(PORT, () => {
   console.log(`  agent identity: ${DIRECTOR_NPUB}`)
   console.log(HOUSE_SOURCE === 'granted'
     ? `  house held by grant from ${MASTER_NPUB}`
-    : `  house: ${HOUSE.name} (${HOUSE_SOURCE}) — register the agent npub in the nvoy console to delegate one`)
+    : process.env.NOIR_RELAYS
+      ? `  house: ${HOUSE.name} (${HOUSE_SOURCE}) — watching ${process.env.NOIR_RELAYS.split(',').length} relay(s) for a grant`
+      : `  house: ${HOUSE.name} (${HOUSE_SOURCE}) — set NOIR_RELAYS and grant one from the nvoy console`)
   console.log(KEY
     ? `  voice: ${MODEL}`
     : '  DRY MODE — no ANTHROPIC_API_KEY set; /voice returns fallbacks (scripted prose)')
