@@ -28,10 +28,16 @@ Four layers, each honest about what it adds (Fig. 1):
   publisher-owned, encrypted, addressable data set whose readership the
   publisher can change at any moment, including to zero. Revocation is
   a key rotation, not a policy (Figs. 2–3).
-- **The N-family** — Nontact (contact cards as an emergent view),
-  Nvelope (live documents, revocation instead of expiring links), Nvoy
-  (delegation of data to autonomous agents, with honest terms and a
-  ledger console).
+- **The N-family** — [Nontact](https://github.com/JAFairweather/nontact)
+  (contact cards as an emergent view),
+  [Nvelope](https://github.com/JAFairweather/nvelope) (live documents,
+  revocation instead of expiring links),
+  [Nvoy](https://github.com/JAFairweather/nvoy) (delegation of data to
+  autonomous agents, with honest terms and a ledger console), plus
+  [Nherit](https://github.com/JAFairweather/nherit),
+  [Ntrigue](https://github.com/JAFairweather/ntrigue), and
+  [Notegate](https://github.com/JAFairweather/notegate) — all shipped,
+  all public, all the same primitive.
 - **Noir** — everything at once, load-bearing, in public.
 
 ## Protocol as game mechanics
@@ -151,3 +157,16 @@ the in-memory relay satisfies the same interface as the live ones, so
 the whole stack proves itself with zero network. Which is, in the end,
 the whole aesthetic: a small dark room on the open internet where
 nothing asks for your trust, because everything can show its work.
+
+---
+
+*The stack, all public:
+[the NIP-DA protocol](https://github.com/JAFairweather/nostr-scoped-data-grants) ·
+[Nontact](https://github.com/JAFairweather/nontact) ·
+[Nvelope](https://github.com/JAFairweather/nvelope) ·
+[Nvoy](https://github.com/JAFairweather/nvoy) ·
+[Nherit](https://github.com/JAFairweather/nherit) ·
+[Ntrigue](https://github.com/JAFairweather/ntrigue) ·
+[Notegate](https://github.com/JAFairweather/notegate) ·
+[Noir](https://github.com/JAFairweather/noir) —
+[play Noir here](https://jafairweather.github.io/noir/client/).*

@@ -70,13 +70,13 @@ function fig1() {
   b += txt(X + 16, 335, 'LAYER 2 — THE N-FAMILY', { fill: C.cream, ls: 2 })
   const chips = [
     ['NONTACT', 'emergent views'], ['NVELOPE', 'blob scale'], ['NVOY', 'delegation'],
-    ['NTRIQUE*', 'concept'], ['NHERIT*', 'concept'],
+    ['NHERIT', 'shipped'], ['NTRIGUE', 'shipped'], ['NOTEGATE', 'shipped'],
   ]
   chips.forEach(([name, sub], i) => {
-    const cx = X + 16 + i * 162
-    b += box(cx, 350, 148, 46, { fill: C.panel2, stroke: name.includes('*') ? C.dim : C.gold, dash: name.includes('*') ? '4 3' : '' })
-    b += txt(cx + 74, 370, name, { size: 12, fill: name.includes('*') ? C.dim : C.cream, anchor: 'middle', ls: 1 })
-    b += txt(cx + 74, 387, sub, { size: 10, fill: C.dim, anchor: 'middle' })
+    const cx = X + 16 + i * 134
+    b += box(cx, 350, 122, 46, { fill: C.panel2 })
+    b += txt(cx + 61, 370, name, { size: 11, fill: C.cream, anchor: 'middle', ls: 1 })
+    b += txt(cx + 61, 387, sub, { size: 9.5, fill: C.dim, anchor: 'middle' })
   })
   // layer 3 — noir
   b += box(X, 80, BW, 195, { sw: 1.6 })

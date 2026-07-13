@@ -18,7 +18,7 @@ nothing. Ask any tabletop player about a GM who fudges dice.
 
 The usual fixes are prompt-shaped: "never reveal the culprit." Prompt
 promises are policy, and policy begs. We built something harder, in a
-playable mystery game called Noir, and the principle generalizes to
+playable mystery game called [Noir](https://github.com/JAFairweather/noir), and the principle generalizes to
 any generative world model:
 
 **Impose the physics cryptographically. Free the flesh linguistically.
@@ -90,7 +90,7 @@ few kilobytes of structured data (names, rooms, phrases, a registry of
 dead airships that doubles as a cipher, a voice), published as an
 encrypted scope under its author's cryptographic identity, and
 *granted* to the game's AI director over nostr using revocable data
-delegation (Nvoy). The director's next poll found a new world in its
+delegation ([Nvoy](https://github.com/JAFairweather/nvoy)). The director's next poll found a new world in its
 hands; the engine dressed its proven skeleton in it; the notary
 replayed it and sealed it; and the client offered it beside the
 built-in eras. A genre traveled the same wire as a contact card — and
@@ -125,3 +125,10 @@ they tell it where the walls are, and the turbulence between the walls
 is where all the beauty happens. That is the right relationship
 between cryptography and creativity in generative systems: the model
 gets the turbulence. The walls get the math.
+
+---
+
+*Working code, all public: [Noir](https://github.com/JAFairweather/noir)
+([play it](https://jafairweather.github.io/noir/client/)),
+[Nvoy](https://github.com/JAFairweather/nvoy), and
+[the NIP-DA protocol](https://github.com/JAFairweather/nostr-scoped-data-grants).*

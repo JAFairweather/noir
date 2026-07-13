@@ -37,7 +37,7 @@ The stack is four layers, each one honest about what it adds:
 |---|---|---|
 | 0 | **nostr** | Identity as keypairs; transport as dumb, replaceable relays; events as signed, self-authenticating data. |
 | 1 | **NIP-DA — Scoped Data Grants** | Private, *live*, *revocable* data sharing over public relays. The publisher keeps authorship; grantees dereference the current version; revocation is a key rotation, not a policy. |
-| 2 | **The N-family** (Nontact, Nvelope, Nvoy, …) | Each application stresses one protocol property: emergent views, blob-scale sharing, delegation to autonomous agents. |
+| 2 | **The N-family** (Nontact, Nvelope, Nvoy, Nherit, Ntrigue, Notegate) | Each application stresses one protocol property: emergent views, blob-scale sharing, delegation to autonomous agents. |
 | 3 | **Noir** | A playable mystery game in which *the protocol is the game*: documents are scopes, discovery is a grant, betrayal is a rotation, the game master is a delegated agent, feedback is a grant from the author's own key — and every generated world must pass a cryptographic-mechanical **Notary** before it may be dealt. |
 
 The through-line, stated once: **physics by commitment, flesh by
@@ -140,14 +140,18 @@ feedback loop possible (§4.8) — it was designed in before it was needed.
 Naming convention: **N + function.** Each sibling exists to stress a
 different property of the same primitive.
 
+All shipped, all public, all on the same vendored primitive:
+
 | App | Repo | One-line | Protocol property it stresses |
 |---|---|---|---|
-| **Nontact** | `nostr-scoped-data-grants` | The protocol repo plus a live contact-card manager. | *Emergent views*: an "address book" is not an app database — it is simply `addressBook()`, the sum of what people currently grant you. Update your card once; every holder dereferences the new truth. |
-| **Nvelope** | `nvelope` | Live document sharing. | *Blob scale + lifecycle*: revocation instead of expiring links; one-key recovery; the encrypted-blob pattern (Blossom-hosted ciphertext, key delivered by grant) for payloads too large for an event. |
-| **Nvoy** | `nvoy` | Scoped, revocable data delegation **to agentic workflows**; agent side mounts as an MCP server. | *Delegation*: the grantee is software. Adds the **nvoy terms extension** and the delegator **console** (ledger: "exactly what data do my agents hold right now, under what terms — show me the revocations"). |
-| **Noir** | `noir` | The spycraft mystery game / speakeasy. | *Everything at once*: content distribution, access revocation, agent delegation, identity, feedback, and payment pointers are all the same primitive. |
-| **Ntrique** | — | Named in the family; concept stage (no public repo to cite at time of writing). | — |
-| **Nherit** | — | Named in the family; concept stage (no public repo to cite at time of writing). | — |
+| **NIP-DA** (protocol) | [nostr-scoped-data-grants](https://github.com/JAFairweather/nostr-scoped-data-grants) | The protocol: spec + reference implementation. | The primitive itself. |
+| **Nontact** | [nontact](https://github.com/JAFairweather/nontact) | The live contact-card manager. | *Emergent views*: an "address book" is not an app database — it is simply `addressBook()`, the sum of what people currently grant you. Update your card once; every holder dereferences the new truth. |
+| **Nvelope** | [nvelope](https://github.com/JAFairweather/nvelope) | Live document sharing. | *Blob scale + lifecycle*: revocation instead of expiring links; one-key recovery; the encrypted-blob pattern (Blossom-hosted ciphertext, key delivered by grant) for payloads too large for an event. |
+| **Nvoy** | [nvoy](https://github.com/JAFairweather/nvoy) | Scoped, revocable data delegation **to agentic workflows**; agent side mounts as an MCP server. | *Delegation*: the grantee is software. Adds the **nvoy terms extension** and the delegator **console** (ledger: "exactly what data do my agents hold right now, under what terms — show me the revocations"). |
+| **Nherit** | [nherit](https://github.com/JAFairweather/nherit) | Shipped and functional. | *(One-liner to be drawn from the repo itself — this document only asserts what it can cite.)* |
+| **Ntrigue** | [ntrigue](https://github.com/JAFairweather/ntrigue) | Shipped and functional; in active development. | *(One-liner to be drawn from the repo itself.)* |
+| **Notegate** | [notegate](https://github.com/JAFairweather/notegate) | Shipped and functional. | *(One-liner to be drawn from the repo itself.)* |
+| **Noir** | [noir](https://github.com/JAFairweather/noir) · [play it](https://jafairweather.github.io/noir/client/) | The spycraft mystery game / speakeasy. | *Everything at once*: content distribution, access revocation, agent delegation, identity, feedback, and payment pointers are all the same primitive. |
 
 ### 3.1 Nvoy in one paragraph (because Noir leans on it hardest)
 

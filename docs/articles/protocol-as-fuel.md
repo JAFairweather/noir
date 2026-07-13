@@ -9,7 +9,7 @@ building on protocols instead of platforms.*
 Most software portfolios grow sideways: a company ships a product,
 then ships a second product, and the two share a login page and a
 billing system and not much else. This is a story about a portfolio
-that grew *upward* — five applications, each one standing on the same
+that grew *upward* — seven public repositories, each one standing on the same
 ~300-line protocol implementation, each one built because the layer
 below it hit a real wall.
 
@@ -39,20 +39,22 @@ Two design choices made everything after possible:
 
 ## The portfolio it fueled
 
-**Nontact** came first: the protocol repo plus a contact-card manager.
+**[Nontact](https://github.com/JAFairweather/nontact)** came first,
+alongside the [protocol repo](https://github.com/JAFairweather/nostr-scoped-data-grants)
+itself: a contact-card manager.
 Its insight is that an address book shouldn't be an app's database —
 it's an *emergent view*, the sum of what people currently grant you.
 Update your card once; every holder dereferences the new truth. Move,
 change numbers, remarry — one edit, everyone current, and anyone you
 drop simply stops seeing updates.
 
-**Nvelope** pushed on scale and lifecycle: live document sharing where
+**[Nvelope](https://github.com/JAFairweather/nvelope)** pushed on scale and lifecycle: live document sharing where
 a shared file is a scope, revocation replaces expiring links, and
 recovery needs only your key. Blobs too large for an event ride
 encrypted on Blossom with the key delivered by grant — same wire,
 bigger cargo.
 
-**Nvoy** made the leap that changed the trajectory: the grantee became
+**[Nvoy](https://github.com/JAFairweather/nvoy)** made the leap that changed the trajectory: the grantee became
 *software*. Delegating data to an AI agent is the moment access control
 stops being about politeness and starts being about survival — and the
 OAuth world has the wrong shape for it. A bearer token delegates
@@ -66,7 +68,15 @@ always rotation. The agent side mounts as an MCP server, so any
 MCP-speaking framework consumes delegated data with zero nostr
 knowledge.
 
-**Noir** then asked the unreasonable question: can the primitive carry
+The family kept growing on the same fuel —
+**[Nherit](https://github.com/JAFairweather/nherit)**,
+**[Ntrigue](https://github.com/JAFairweather/ntrigue)**, and
+**[Notegate](https://github.com/JAFairweather/notegate)** are all
+shipped and public, each the same primitive wearing a different job.
+
+**[Noir](https://github.com/JAFairweather/noir)**
+([play it](https://jafairweather.github.io/noir/client/)) then asked
+the unreasonable question: can the primitive carry
 *everything*? A whole game — content, permissions, identity, agent
 management, feedback, even payment pointers — with no other trust
 system in the building? It can. Documents are scopes; discovery is a
