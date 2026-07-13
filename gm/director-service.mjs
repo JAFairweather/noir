@@ -420,6 +420,10 @@ const PANEL = `<!doctype html>
   <span id="ver"></span>
 </div>
 <div id="agency" class="hint" style="margin-top:-6px"></div>
+<div class="row">
+  <button id="copy-npub">COPY AGENT NPUB</button>
+  <span class="hint" style="margin-top:0">${DIRECTOR_NPUB.slice(0, 24)}…</span>
+</div>
 <div id="out"></div>
 <ul id="feed"></ul>
 <p class="hint">Running commentary only — the desk never prints case secrets.<br>
@@ -443,6 +447,16 @@ async function tick() {
   } catch { document.getElementById('status').textContent = 'desk unreachable — restarting?' }
 }
 tick(); setInterval(tick, 2000)
+document.getElementById('copy-npub').onclick = async () => {
+  const npub = '${DIRECTOR_NPUB}'
+  try { await navigator.clipboard.writeText(npub) }
+  catch {
+    const t = document.createElement('textarea')
+    t.value = npub; document.body.appendChild(t); t.select()
+    document.execCommand('copy'); t.remove()
+  }
+  document.getElementById('out').textContent = 'agent npub copied — paste it wherever the Director must be named: the nvoy console, or your Noir client'
+}
 document.getElementById('update').onclick = async () => {
   document.getElementById('out').textContent = 'pulling…'
   const r = await (await fetch('/update', { method: 'POST' })).json()
