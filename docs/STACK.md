@@ -8,13 +8,8 @@ architectural diagrams, articles, and conversations with the nostr
 community. Everything in this document describes working, tested code in
 the repositories cited, except where explicitly marked as direction.*
 
-> Nostr defines itself as "the simplest open protocol that is able to
-> create a censorship-resistant global social network once and for
-> all." This stack reads that sentence one layer deeper: **the simplest
-> open protocol on which trust itself — who may see, who may act, who
-> may be cut off — becomes a portable, provable primitive. Not just a
-> social network that cannot be silenced: distributed applications that
-> cannot be dispossessed.**
+> **Nostr: the simplest open platform for secure, distributed
+> applications built on provable trust.**
 
 ---
 
