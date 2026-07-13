@@ -30,9 +30,9 @@ export async function publishHouse(relay, masterSk, house, directorPub, terms) {
 }
 
 /** Master publishes distilled margin notes as their own granted scope. */
-export async function publishHouseNotes(relay, masterSk, notes, directorPub) {
+export async function publishHouseNotes(relay, masterSk, notes, directorPub,
+                                        name = `House notes — ${notes.length} entries`) {
   const wire = { scopeId: randomScopeId(), generation: 1, scopeKey: newScopeKey() }
-  const name = `House notes — ${notes.length} entries`
   await publishScope(relay, masterSk, {
     ...wire,
     payload: { name, kind: 'house-notes', notes },
@@ -70,10 +70,12 @@ export async function revokeHouse(relay, masterSk, wire, houseName = 'the house'
  *  absent grant is the same thing: no house, an unmarked table. Nvoy
  *  terms on the grant are honored as compliance (expires_at ends the
  *  engagement; purpose is displayed as the agent's mandate). Granted
- *  note-scopes fold into the house's tuning. */
+ *  note-scopes fold into the house's tuning — but ONLY the master's:
+ *  anyone can gift-wrap a grant to a public npub, and a stranger must
+ *  not be able to tune the table's voice. */
 export async function resolveHouse(relay, directorSk, nowSec = Math.floor(Date.now() / 1000)) {
   let house = null, master = null, terms = null
-  const notes = []
+  const noteScopes = []
   for (const g of latestGrants(await receiveGrants(relay, directorSk))) {
     if (g.nvoy?.expires_at && g.nvoy.expires_at < nowSec) continue   // engagement over
     const res = await fetchScope(relay, g)
@@ -83,10 +85,11 @@ export async function resolveHouse(relay, directorSk, nowSec = Math.floor(Date.n
       master = g.publisher
       terms = g.nvoy ?? null
     } else if (res.data?.kind === 'house-notes' && Array.isArray(res.data.notes)) {
-      notes.push(...res.data.notes)
+      noteScopes.push({ publisher: g.publisher, notes: res.data.notes })
     }
   }
   if (!house) return null
+  const notes = noteScopes.filter(n => n.publisher === master).flatMap(n => n.notes)
   if (notes.length) {
     house = { ...house, tuning: { ...(house.tuning ?? {}), all: [...(house.tuning?.all ?? []), ...notes] } }
   }

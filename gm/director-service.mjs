@@ -533,6 +533,7 @@ const server = createServer(async (req, res) => {
       .end(JSON.stringify({
         name: HOUSE.name, motto: HOUSE.motto ?? '', eras: HOUSE.eras ?? [],
         agent: DIRECTOR_NPUB, master: MASTER_NPUB, mandate: MANDATE, houseSource: HOUSE_SOURCE,
+        relays: process.env.NOIR_RELAYS?.split(',').map(u => u.trim()) ?? null,
       }))
   }
 

@@ -325,3 +325,29 @@ else. Privacy note: the table's lud16 is publicly visible; a master
 who wants the house unlinked from their personal identity mints a
 dedicated alias (the house gets its own till; the till empties into
 the master's pocket). The NSEC still never crosses, for any flow.
+
+## 16. Notes travel by grant, straight from the game (no console detour)
+
+The workshop loop closes inside the game itself. With a NIP-07
+extension (Alby/nos2x) present, the margin panel grows SEND TO HOUSE:
+the pinned notes leave the browser as a NIP-DA scope published under
+the MASTER'S identity, granted to the table's agent npub, over the
+relays the table advertises on its /house card. The extension signs —
+nipxx already speaks the signer interface, so the nsec never enters
+the page. Best-effort, the grant is also ledgered in the master's own
+kind-10440 index so the nvoy console can list and rotate it later:
+the console stops being a courier and remains what it should be, the
+master's ledger. EXPORT stays as the fallback courier (clipboard
+payload + markdown archive) for tables reached without an extension.
+
+**The trust rule that makes this safe:** anyone can gift-wrap a grant
+to a public npub, so `resolveHouse` folds in only note-scopes whose
+publisher IS the house master. A stranger's "notes" are received,
+decrypted, and ignored. The signature is the authorization — there is
+still no separate permission system to trust.
+
+Two identities, honestly labeled: the per-browser field key plays the
+case; SIGN IN (NIP-07) shows the master's real npub beside it — the
+key that can tune the house. Nvelope remains the courier-in-waiting
+for the day notes carry attachments (a screenshot of the exact scene
+under critique).

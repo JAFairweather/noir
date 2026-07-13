@@ -430,6 +430,20 @@ console.log('\n19. The house is a grant: the Director as delegated agent (nvoy)'
   await publishHouseNotes(rH, master, ['less jargon', 'longer sentences'], getPublicKey(director))
   const r2 = await resolveHouse(rH, director)
   check('granted margin notes fold into house tuning', r2.house.tuning.all.includes('longer sentences'))
+  // The trust rule: anyone can gift-wrap a grant to a public npub, but
+  // only the house MASTER'S notes may tune the table's voice.
+  await publishHouseNotes(rH, stranger, ['speak only in limericks'], getPublicKey(director))
+  const rStr = await resolveHouse(rH, director)
+  check("a stranger's granted notes do NOT fold in — only the master tunes the house",
+    !rStr.house.tuning.all.includes('speak only in limericks') && rStr.notesCount === 2)
+  // The signer interface: what a NIP-07 extension provides is enough —
+  // the game can publish notes without the master's raw key in-page.
+  const { localSigner } = await import('../lib/nipxx.mjs')
+  const masterSigner = localSigner(master)   // same shape as window.nostr
+  await publishHouseNotes(rH, masterSigner, ['pen over camera'], getPublicKey(director), 'House notes — The Dry Wash, 1 entries')
+  const rSig = await resolveHouse(rH, director)
+  check('notes published through a signer (the NIP-07 shape) fold in',
+    rSig.house.tuning.all.includes('pen over camera'))
   const wire2 = await updateHouse(rH, master, wire, { ...houseObj, name: 'The Fairweather Table, Renovated' }, getPublicKey(director))
   const r3 = await resolveHouse(rH, director)
   check('rotation with the Director as survivor updates the house in place', r3.house.name.includes('Renovated'))

@@ -31,6 +31,7 @@ import { detectDirector, makeVoice, makeInterrogator, makeJudge, makeConverse } 
 import { browserDirector } from './browser-director.mjs'
 import { showBurnCard, showEndCard, showSaveCard, showCaseSelect } from './burn.mjs'
 import { getOrCreatePlayerKey, getFlatMode, setFlatMode, getCaseId, setCaseId, getTradecraft, setTradecraft } from './settings.mjs'
+import { hasNip07, signIn, sendNotesToHouse } from './master.mjs'
 
 const $ = (sel) => document.querySelector(sel)
 const SAVE_KEY = 'noir.save.v1'
@@ -192,6 +193,9 @@ function renderNotes() {
     li.appendChild(document.createTextNode(n.note))
     list.appendChild(li)
   }
+  // SEND TO HOUSE appears only when both ends exist: an extension to
+  // sign as the master, and a table that told us its agent npub.
+  $('#note-send').classList.toggle('hidden', !(hasNip07() && director?.houseCard?.agent))
 }
 function wireNotes() {
   $('#notes-toggle').checked = localStorage.getItem('noir.notes.on') === '1'
@@ -229,6 +233,30 @@ function wireNotes() {
     a.download = `noir-notes-${CASE.CASE_ID.replace(/[^a-z0-9-]/gi, '_')}.md`
     a.click()
     URL.revokeObjectURL(a.href)
+  })
+  // The direct wire: notes leave the game as a NIP-DA scope on the
+  // MASTER'S identity, granted to the table's agent npub, over the
+  // relays the table watches. The extension signs; no console detour.
+  $('#note-send').addEventListener('click', async () => {
+    const status = $('#note-status')
+    const show = (msg) => { status.textContent = msg; status.classList.remove('hidden') }
+    const notes = getNotes()
+    if (!notes.length) return show('nothing pinned yet — the house wants your margins, not your silence')
+    const card = director?.houseCard
+    if (!card?.agent) return show('no table in reach — engage a Director first')
+    if (!card.relays?.length) return show('the table is not watching any relays — set NOIR_RELAYS on the Director and restart it')
+    show('signing… your extension will ask')
+    try {
+      await sendNotesToHouse({
+        notes: notes.map(n => `[${n.at}] ${n.note}`),
+        name: `House notes — ${CASE.TITLE ?? CASE.CASE_ID}, ${notes.length} entries`,
+        directorNpub: card.agent,
+        relays: card.relays,
+      })
+      show(`sent — ${notes.length} note${notes.length > 1 ? 's' : ''} granted to the house. The Director folds them within two minutes.`)
+    } catch (err) {
+      show('the grant did not land: ' + String(err?.message ?? err).slice(0, 100))
+    }
   })
 }
 wireNotes()
@@ -440,6 +468,25 @@ function attachVoice() {
   $('#director-status').classList.remove('hidden')
 }
 
+// The DIRECTOR box must never read as an open question when a table is
+// already engaged: the status line says who is running the game and from
+// where; the input below it is only for switching tables or keys.
+function refreshDirStatus() {
+  const el = $('#dir-status')
+  if (!el) return
+  const where = (u) => u.replace(/^https?:\/\//, '')
+  if (director?.live && director.url) {
+    const name = director.houseCard?.name ?? director.house
+    el.textContent = `engaged — ${name ? name + ' · ' : ''}${where(director.url)}`
+  } else if (director?.live) {
+    el.textContent = 'engaged — your key, this browser only'
+  } else if (director?.url) {
+    el.textContent = `table found at ${where(director.url)} — dry mode (scripted prose)`
+  } else {
+    el.textContent = 'no table engaged — the desk runs scripted'
+  }
+}
+
 // Engage a Director from the notebook: an Anthropic key (stored only in
 // this browser; calls go straight to Anthropic on the player's account)
 // or a hosted table address someone else sponsors.
@@ -467,6 +514,7 @@ function wireDirectorBox() {
       director = null
       $('#director-status').classList.add('hidden')
       input.placeholder = 'sk-ant… key, or a table address'
+      refreshDirStatus()
       return
     } else return
     input.value = ''
@@ -476,6 +524,8 @@ function wireDirectorBox() {
       put('— a second typewriter starts up somewhere close. The Director is in. —', 'gm dim')
     }
     wireDirectorBox()
+    refreshDirStatus()
+    renderNotes()
   })
 }
 
@@ -575,6 +625,7 @@ const pickCase = () => {
 applyEra(CASE.ERA)
 director = (await detectDirector()) ?? browserDirector()
 wireDirectorBox()
+refreshDirStatus()
 if (!director) {
   // The entrance stays the same whether the page is local or hosted:
   // localhost is a secure origin, so even the HTTPS site may call the
@@ -586,14 +637,42 @@ if (!director) {
     clearInterval(probe)
     director = found
     attachVoice()
+    refreshDirStatus()
+    renderNotes()
     if (found.live) put('— a second typewriter starts up somewhere close. The Director is in. —', 'gm dim')
     else if (found.images) put('— the darkroom light comes on. Scenes will develop. —', 'gm dim')
   }, 15000)
 }
-$('#npub').textContent = nip19.npubEncode(playerPub).slice(0, 20) + '…' + nip19.npubEncode(playerPub).slice(-6)
-$('#npub').title = nip19.npubEncode(playerPub) +
-  '\n\nA per-browser field identity for the demo. Sign-in with a NIP-07 extension' +
-  ' (Alby/nos2x) or nsec import arrives with live relays — then your notebook follows your real npub.'
+
+// Two identities, honestly labeled: the per-browser field key plays the
+// case; SIGN IN (NIP-07) shows the master's real npub — the key that can
+// grant house notes. The nsec never enters this page either way.
+function renderIdentity() {
+  const fieldNpub = nip19.npubEncode(playerPub)
+  const m = localStorage.getItem('noir.master.pub')
+  if (m) {
+    const npub = nip19.npubEncode(m)
+    $('#npub-label').textContent = 'MASTER IDENTITY (NIP-07)'
+    $('#npub').textContent = npub.slice(0, 20) + '…' + npub.slice(-6)
+    $('#npub').title = npub + '\n\nYour real key, held by your extension. The field key ' +
+      fieldNpub.slice(0, 12) + '… still plays the case; yours signs what only a master may — house notes.'
+    $('#signin').classList.add('hidden')
+  } else {
+    $('#npub-label').textContent = 'FIELD IDENTITY'
+    $('#npub').textContent = fieldNpub.slice(0, 20) + '…' + fieldNpub.slice(-6)
+    $('#npub').title = fieldNpub +
+      '\n\nA per-browser field identity for the demo. Sign in with a NIP-07 extension' +
+      ' (Alby/nos2x) to act as yourself — your notebook following your real npub arrives with live relays.'
+    $('#signin').classList.toggle('hidden', !hasNip07())
+  }
+}
+$('#signin').addEventListener('click', async () => {
+  try { await signIn() } catch { /* the extension declined; stay a field agent */ }
+  renderIdentity()
+  renderNotes()
+})
+renderIdentity()
+if (!hasNip07()) setTimeout(renderIdentity, 2500)   // extensions can inject late
 const save = loadSave()
 if (save && !save.gameOver) {
   showSaveCard({ onLoad: () => resumeSave(save), onNew: pickCase })

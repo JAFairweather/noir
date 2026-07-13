@@ -162,10 +162,11 @@
   #note-input { width: 100%; background: color-mix(in srgb, var(--ink) 70%, black);
     border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); color: var(--accent);
     font: inherit; font-size: 11px; padding: 6px 7px; resize: vertical; }
-  #note-add, #note-export { background: transparent; color: var(--accent-dim);
+  #note-add, #note-export, #note-send, #signin { background: transparent; color: var(--accent-dim);
     border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
     font: inherit; font-size: 10px; letter-spacing: 0.15em; padding: 4px 8px; cursor: pointer; margin-top: 5px; }
-  #note-add:hover, #note-export:hover { color: var(--accent); }
+  #note-add:hover, #note-export:hover, #note-send:hover, #signin:hover { color: var(--accent); }
+  #dir-status:empty { display: none; }
   #note-list { list-style: none; padding: 0; margin: 8px 0 0; font-size: 10px; }
   #note-list li { padding: 4px 0; border-bottom: 1px solid color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent-dim); }
   #note-list li b { color: var(--accent); font-weight: normal; display: block; }
@@ -298,12 +299,14 @@
         <p class="deduce-note">your marks, not the desk’s — tap to cycle ✓ ✗</p>
       </div>
       <div id="identity">
-        <span class="id-label">FIELD IDENTITY</span>
+        <span class="id-label" id="npub-label">FIELD IDENTITY</span>
         <span id="npub" title="Your nostr public key — the notebook belongs to it"></span>
+        <button id="signin" class="hidden" title="Connect a NIP-07 extension (Alby, nos2x). Your real npub; your nsec stays in the extension.">SIGN IN</button>
       </div>
       <ul id="notebook-list"></ul>
       <div id="dir-box">
         <span class="id-label">DIRECTOR</span>
+        <p class="note" id="dir-status" style="margin: 0 0 5px"></p>
         <div class="dir-row">
           <input id="dir-key" type="password" placeholder="sk-ant… key, or a table address" autocomplete="off">
           <button id="dir-engage">ENGAGE</button>
@@ -318,7 +321,9 @@
         <div class="dir-row">
           <button id="note-add">PIN NOTE</button>
           <button id="note-export">EXPORT</button>
+          <button id="note-send" class="hidden" title="Grant these notes to the Director over NIP-DA — signed by your extension, your nsec never leaves it">SEND TO HOUSE</button>
         </div>
+        <p class="note hidden" id="note-status" style="margin: 5px 0 0"></p>
         <ul id="note-list"></ul>
       </div>
       <label class="toggle"><input type="checkbox" id="flat-toggle"> flat mode (no motion)</label>
