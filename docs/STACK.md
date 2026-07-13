@@ -8,7 +8,7 @@ architectural diagrams, articles, and conversations with the nostr
 community. Everything in this document describes working, tested code in
 the repositories cited, except where explicitly marked as direction.*
 
-> **Nostr: the simplest open platform for secure, distributed
+> **Nostr: the simplest open protocol for secure, distributed
 > applications built on provable trust.**
 
 ---
