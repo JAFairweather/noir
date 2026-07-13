@@ -67,8 +67,15 @@ const houseTuning = (era) => [...(HOUSE.tuning?.all ?? []), ...(HOUSE.tuning?.[e
 // rotation: the next dereference goes stale and the table stands
 // unmarked. Register this agent's npub in the nvoy console to delegate.
 const DIRECTOR_SK = (() => {
-  if (process.env.NOIR_DIRECTOR_NSEC) {
-    try { return nip19.decode(process.env.NOIR_DIRECTOR_NSEC).data } catch { /* fall through */ }
+  // Cloud deployments inject the identity as an env secret — nsec1… or
+  // raw hex both work. Same key anywhere = same agent: the npub is the
+  // whole identity, and the master's grants follow the npub, not the box.
+  const env = process.env.NOIR_DIRECTOR_NSEC
+  if (env) {
+    try {
+      if (env.startsWith('nsec1')) return nip19.decode(env).data
+      if (/^[0-9a-f]{64}$/i.test(env.trim())) return Uint8Array.from(env.trim().match(/.{2}/g).map(h => parseInt(h, 16)))
+    } catch { /* fall through */ }
   }
   const keyPath = join(ROOT_, '.director-key')
   try {
