@@ -1,0 +1,3 @@
+# noir.nave.pub serves the repo root so the client's ../lib, ../gm, ../eras
+# imports resolve; this sends the bare domain to the game entry.
+/    /client/    302

@@ -12,20 +12,24 @@ director.nave.pub {
 	reverse_proxy director:8787
 }
 
-# --- Luke — the Claude bot (OpenClaw), behind a lock -------------------
-# READ deploy/DEPLOY.md §8 before enabling this. Luke's container
-# (openclaw) can act on your VPS, so it must NEVER be exposed naked.
-# The block below keeps it behind HTTP basic auth and reaches the bot on
-# the host port the recon found (57419). Uncomment ONLY after you paste a
-# real password hash — an incomplete basic_auth block will stop Caddy
-# from starting (and take director.nave.pub down with it).
+# --- Luke — the Claude bot (OpenClaw), exposed the OpenClaw way --------
+# READ deploy/DEPLOY.md §8 before enabling. OpenClaw's Control UI is a
+# WebSocket app that REQUIRES https at the browser (its device auth uses
+# WebCrypto, which won't run over plain http off localhost). Caddy gives
+# the browser that https; the internal hop to 57419 stays plain. Caddy
+# proxies WebSockets natively — nothing extra needed.
+#
+# Luke's real lock is OpenClaw's OWN gateway auth (token/password, on by
+# default), pinned to this origin via gateway.controlUi.allowedOrigins =
+# https://luke.nave.pub. Do NOT wrap it in Caddy basic_auth — that fights
+# the WebSocket device-auth. For an OPTIONAL extra outer wall, an IP
+# allowlist is safe (it doesn't break the socket); see the commented
+# lines below.
 #
 # luke.nave.pub {
-# 	basic_auth {
-# 		# generate the hash, then paste "username hash" below:
-# 		#   docker run --rm caddy:2-alpine caddy hash-password --plaintext 'YOUR-STRONG-PASSWORD'
-# 		luke $2a$14$REPLACE_WITH_THE_HASH_YOU_GENERATED
-# 	}
+# 	# optional: only let your own IP reach Luke at all —
+# 	# @blocked not remote_ip 203.0.113.10/32   # <- your home/office IP
+# 	# respond @blocked "forbidden" 403
 # 	reverse_proxy host.docker.internal:57419
 # }
 #

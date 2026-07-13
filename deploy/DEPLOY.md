@@ -182,56 +182,58 @@ That's the whole story: one box, one front door, every project under
 
 ---
 
-## 8. Expose Luke (the Claude bot) at `luke.nave.pub` — behind a lock
+## 8. Expose Luke (OpenClaw) at `luke.nave.pub` — the OpenClaw way
 
-Luke is the `openclaw` container (`ghcr.io/hostinger/hvps-openclaw`),
-listening on host port **57419**. **Read this whole section before
-exposing it.**
+Luke is the `openclaw` container — a self-hosted AI-assistant gateway.
+It serves a **Control UI over a WebSocket** on host port **57419**.
+Exposing it correctly means honoring three facts about OpenClaw:
+
+- **HTTPS at the browser is mandatory.** OpenClaw's device auth uses the
+  WebCrypto API, which browsers refuse over plain HTTP off localhost. So
+  a TLS front door isn't hardening — it's required. Caddy provides it;
+  the internal hop to 57419 stays plain HTTP, which is fine.
+- **OpenClaw brings its own auth.** The gateway ships with token/password
+  auth on by default. That — not a Caddy basic-auth wrapper — is Luke's
+  lock. (Basic auth would fight OpenClaw's WebSocket device-auth. Don't.)
+- **Caddy proxies WebSockets natively.** No special config.
 
 ### The one real caution
 
-Luke is an *agent that can act on your VPS*. A public URL to an
-unauthenticated agent is a remote-control panel for your whole box —
-the single most dangerous thing you can put on the open internet. So the
-rule here is absolute: **never expose Luke without a lock.** The kit
-defaults to keeping the door shut (the `luke.nave.pub` block in
-`Caddyfile` ships commented out) precisely so you can't do it by
-accident.
+Luke is an *agent that can act on your box* (browser automation, skills,
+your messaging channels). Treat its front door seriously: keep OpenClaw's
+gateway auth on, pin `allowedOrigins`, and if you want, add an IP
+allowlist. The `luke.nave.pub` block in `Caddyfile` ships **commented
+out** so you enable it deliberately.
 
-Basic auth (below) is the *minimum* acceptable lock. Consider it the
-floor, not best-in-class:
-- It's a single shared password over TLS — fine for a personal tool,
-  weak for anything sensitive.
-- Stronger options, in ascending order: an IP allowlist in Caddy
-  (`@allowed remote_ip <your-ip>`), a bunker/SSO in front, or — most
-  on-brand for this stack — a nostr-signed auth check. Tell me how
-  locked-down you want Luke and I'll build the stronger version.
+### Enable it
 
-### Enable it (basic auth floor)
-
-1. **Confirm Luke actually serves HTTP on 57419** and that public access
-   is intended. (`curl -s localhost:57419` on the box — do you get a web
-   UI or an API? If it's not HTTP, this proxy won't work and we pick a
-   different exposure.)
-2. **Generate a password hash:**
-   ```bash
-   docker run --rm caddy:2-alpine caddy hash-password --plaintext 'YOUR-STRONG-PASSWORD'
-   ```
-3. **Edit `deploy/Caddyfile`** — uncomment the `luke.nave.pub` block and
-   paste the hash after `luke `. (An incomplete `basic_auth` block will
-   stop Caddy and take `director.nave.pub` down with it, so only
-   uncomment once the hash is in.)
-4. **DNS:** add an A record at Hover — `luke` → `187.77.13.232`.
-5. **Reload Caddy:**
+1. **Confirm OpenClaw's gateway auth is ON** and note its token/password
+   (in the OpenClaw Control UI / onboarding — it's on by default). This
+   is the lock; don't disable it.
+2. **Set the allowed origin.** In OpenClaw's config, set
+   `gateway.controlUi.allowedOrigins` to include `https://luke.nave.pub`
+   (full origin). This tells the Control UI to accept your new public
+   address. (Hostinger's template exposes the config via the panel /
+   the Control UI settings.)
+3. **DNS:** add an A record at Hover — `luke` → `187.77.13.232`.
+4. **Enable the vhost:** in `deploy/Caddyfile`, uncomment the
+   `luke.nave.pub { … }` block (optionally uncomment the IP-allowlist
+   lines and set your own IP for an extra outer wall). Then:
    ```bash
    cd deploy && docker compose up -d
    ```
-6. Visit `https://luke.nave.pub` — you should get a browser auth prompt,
-   then Luke.
+5. Visit `https://luke.nave.pub` — Caddy issues the cert, and OpenClaw's
+   own auth gate meets you. Log in with the gateway token/password.
 
 The `caddy` service already carries `host.docker.internal:host-gateway`
-(added in the compose file), which is how it reaches Luke on the host
-port from inside its container.
+(in the compose file), which is how it reaches Luke on the host port.
 
-Send me the recon output and I'll tailor §1 and §4 to exactly what's on
-your box.
+### If you want it locked down harder
+
+Basic-single-password isn't the ceiling. In ascending order: an **IP
+allowlist** (only your IP reaches Luke — the commented lines in the
+Caddyfile), **OpenClaw's trusted-proxy auth mode** (Caddy injects an
+identity header OpenClaw trusts), or a **nostr-signed gate** (prove
+you're Luke's master with your key — the same pattern as Noir's author
+mode, and the most on-brand for this stack). Tell me which and I'll
+build it.
