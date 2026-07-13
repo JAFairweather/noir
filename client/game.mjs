@@ -165,6 +165,8 @@ async function refreshNotebook() {
   }
   $('#heat-value').textContent = gm.heat
   $('#heat-lamp').style.setProperty('--heat', gm.heat / 100)
+  const fill = $('#heat-fill')
+  if (fill) fill.style.height = Math.min(100, gm.heat) + '%'
   // the board: white venues, accent people, hollow leads (map-as-board v2)
   try {
     const spots = []
@@ -777,6 +779,7 @@ function renderIdentity() {
     $('#npub').title = npub + '\n\nYour real key, held by your extension. The field key ' +
       fieldNpub.slice(0, 12) + '… still plays the case; yours signs what only a master may — house notes.'
     $('#signin').classList.add('hidden')
+    $('#signout').classList.remove('hidden')
   } else {
     $('#npub-label').textContent = 'FIELD IDENTITY'
     $('#npub').textContent = fieldNpub.slice(0, 20) + '…' + fieldNpub.slice(-6)
@@ -784,12 +787,18 @@ function renderIdentity() {
       '\n\nA per-browser field identity for the demo. Sign in with a NIP-07 extension' +
       ' (Alby/nos2x) to act as yourself — your notebook following your real npub arrives with live relays.'
     $('#signin').classList.toggle('hidden', !hasNip07())
+    $('#signout').classList.add('hidden')
   }
 }
 $('#signin').addEventListener('click', async () => {
   try { await signIn() } catch { /* the extension declined; stay a field agent */ }
   renderIdentity()
   renderNotes()
+})
+$('#signout').addEventListener('click', () => {
+  localStorage.removeItem('noir.master.pub')   // the extension keeps the keys; we only forget the label
+  renderIdentity()
+  renderNotes()                                // the author gate re-evaluates
 })
 renderIdentity()
 if (!hasNip07()) setTimeout(renderIdentity, 2500)   // extensions can inject late

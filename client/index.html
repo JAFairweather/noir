@@ -117,6 +117,24 @@
   .burn-line { color: #d0442c; letter-spacing: 0.12em; }
   .title-line { letter-spacing: 0.9em; color: #f4efe4; }
 
+  /* ------------------------------------------- the heat thermometer */
+  #heat-gauge {
+    width: 9px; flex: none; z-index: 2; position: relative;
+    background: color-mix(in srgb, var(--ink) 65%, black);
+    border-left: 1px solid color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+  #heat-gauge::after {   /* the burn notch: contacts sever at 80 */
+    content: ''; position: absolute; left: 0; right: 0; bottom: 80%;
+    border-top: 1px dashed color-mix(in srgb, #d0442c 70%, transparent);
+  }
+  #heat-fill {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 0%;
+    background: linear-gradient(to top, #d0442c, color-mix(in srgb, #d0442c 45%, var(--accent)));
+    box-shadow: 0 0 9px color-mix(in srgb, #d0442c 55%, transparent);
+    transition: height 0.9s ease;
+  }
+  @media (max-width: 720px) { #heat-gauge { display: none; } }
+
   /* ------------------------- notebook (the case) + rig (the config) */
   #notebook, #rig {
     flex: none; z-index: 2;
@@ -165,10 +183,10 @@
   #note-input { width: 100%; background: color-mix(in srgb, var(--ink) 70%, black);
     border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); color: var(--accent);
     font: inherit; font-size: 11px; padding: 6px 7px; resize: vertical; }
-  #note-add, #note-export, #note-send, #signin { background: transparent; color: var(--accent-dim);
+  #note-add, #note-export, #note-send, #signin, #signout { background: transparent; color: var(--accent-dim);
     border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
     font: inherit; font-size: 10px; letter-spacing: 0.15em; padding: 4px 8px; cursor: pointer; margin-top: 5px; }
-  #note-add:hover, #note-export:hover, #note-send:hover, #signin:hover { color: var(--accent); }
+  #note-add:hover, #note-export:hover, #note-send:hover, #signin:hover, #signout:hover { color: var(--accent); }
   #dir-status:empty { display: none; }
   #note-list { list-style: none; padding: 0; margin: 8px 0 0; font-size: 10px; }
   #note-list li { position: relative; padding: 4px 30px 4px 0; border-bottom: 1px solid color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent-dim); }
@@ -303,6 +321,9 @@
       <div id="drum"></div>
     </div>
     <div id="flat" class="hidden" aria-label="Case transcript, flat mode"></div>
+    <div id="heat-gauge" title="Heat — the city noticing you. Contacts start burning at the notch." aria-label="Heat gauge">
+      <div id="heat-fill"></div>
+    </div>
     <aside id="notebook">
       <h2>CASE NOTEBOOK</h2>
       <canvas id="citymap" aria-label="Case map: places visited and known"></canvas>
@@ -322,6 +343,7 @@
         <span class="id-label" id="npub-label">FIELD IDENTITY</span>
         <span id="npub" title="Your nostr public key — the notebook belongs to it"></span>
         <button id="signin" class="hidden" title="Connect a NIP-07 extension (Alby, nos2x). Your real npub; your nsec stays in the extension.">SIGN IN</button>
+        <button id="signout" class="hidden" title="Forget the master identity in this browser. The extension keeps your keys; the game goes back to the field key.">SIGN OUT</button>
       </div>
       <div id="dir-box">
         <span class="id-label">DIRECTOR</span>
