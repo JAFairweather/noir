@@ -32,6 +32,7 @@ import { browserDirector } from './browser-director.mjs'
 import { showBurnCard, showEndCard, showSaveCard, showCaseSelect } from './burn.mjs'
 import { getOrCreatePlayerKey, getFlatMode, setFlatMode, getCaseId, setCaseId, getTradecraft, setTradecraft } from './settings.mjs'
 import { hasNip07, signIn, sendNotesToHouse } from './master.mjs'
+import { verifyCase } from '../shared/verify.mjs'
 
 const $ = (sel) => document.querySelector(sel)
 const SAVE_KEY = 'noir.save.v1'
@@ -631,7 +632,19 @@ async function freshStart(caseId) {
   wheel.append('— press space, and the file opens —', 'gm dim', { instant: true })
   input.blur()
   await waitForBegin()
-  await gm.start(playerPub)
+  // The notary (DECISIONS §17): physics by commitment, flesh by language.
+  // NOTHING deals until the case proves itself — replayed through the
+  // real engine, fairness checked, commitment bound. Hand-written cases
+  // pass tonight; model-written cases will face the same door.
+  const proof = await verifyCase(CASE)
+  if (!proof.ok) {
+    console.error('notary refused:', proof.failures)
+    put('— the notary refuses the deal. This case failed its proofs. —', 'burn-line')
+    put(proof.failures[0] ?? '', 'gm dim')
+    return
+  }
+  const { commitment } = await gm.start(playerPub)
+  put(`— notarized: proved fair and solvable before the deal · solution sealed ${commitment.slice(0, 12)}… —`, 'gm dim')
   await syncFromGM()
   input.focus()
 }

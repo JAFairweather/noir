@@ -373,6 +373,21 @@ console.log('\n17. Deep cases: the deduction web (caseweb)')
       words.every(word => edge.match(`GO TO THE ${word.toUpperCase()}`)))
   }
 
+  // The notary (shared/verify.mjs): the same proofs this suite runs,
+  // packaged so the GAME refuses an unproven deal — the door every
+  // future author, human or model, must pass through.
+  const { verifyCase } = await import('../shared/verify.mjs')
+  for (const era of ['berlin-1938', 'neworleans-1968', 'paris-1954', 'meridian-1849']) {
+    const v = await verifyCase(generateWebCase('omega', era))
+    check(`${era} web: the notary passes a true case`, v.ok && v.failures.length === 0)
+  }
+  const sab = generateWebCase('omega', 'berlin-1938')
+  sab.walkthrough = sab.walkthrough.slice(0, -1)   // cut the accusation off the proof line
+  check('the notary refuses a case whose walkthrough cannot finish', !(await verifyCase(sab)).ok)
+  const sab2 = generateWebCase('omega', 'berlin-1938')
+  sab2.accusation = { ...sab2.accusation, culprit: sab2.accusation.wrong[0] }
+  check('the notary refuses a commitment that does not bind the culprit', !(await verifyCase(sab2)).ok)
+
   // Two lists are a coin flip: accusing a suspect who survives two of the
   // three lists must fail — the file closes unresolved, no epilogue.
   const w2 = generateWebCase('omega', 'berlin-1938')

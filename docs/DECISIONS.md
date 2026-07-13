@@ -351,3 +351,42 @@ case; SIGN IN (NIP-07) shows the master's real npub beside it — the
 key that can tune the house. Nvelope remains the courier-in-waiting
 for the day notes carry attachments (a screenshot of the exact scene
 under critique).
+
+## 17. The world-builder thesis: physics by commitment, flesh by language
+
+Where this is heading, said plainly: a language-based world builder
+with hard, cryptographically imposed constraints that ground the
+physics of the world — and freedom of the world building in between.
+
+A case is two things. The SKELETON is physics: who did it, what
+clears whom, what unlocks what, what burns, all canonically
+serialized, salted, hashed, and committed in the table's kind-0
+before the first grant is dealt. The FLESH is everything between
+those joists — every sentence, room, and name — and it is free
+country: hand-written today, granted as an era pack tomorrow,
+authored by the Director's model after that.
+
+The freedom is safe because of the NOTARY (shared/verify.mjs): no
+case deals until it proves, mechanically, (1) structure — the engine
+can play it, no dangling edges; (2) fairness — the culprit stands on
+all three lists, every innocent is cleared, no document names the
+killer early; (3) solvability — the walkthrough replayed through the
+real engine reaches the epilogue at zero heat with the whole web
+open; (4) commitment — the hash binds culprit to case. The client
+runs the notary at the table, before the deal, and types the verdict
+into the transcript: "notarized … solution sealed <hash>". A player
+never has to trust the author — human or model — only the proofs.
+
+The ladder up, each rung behind the same door:
+1. Era packs as delegated data — a Lisbon published under the
+   master's key, granted to the Director via nvoy, dressed over the
+   proven skeleton. New world, no new code.
+2. New archetypes as new generators — accusation-as-chain, the alibi
+   web — each with its own fairness clauses added to the notary.
+3. The Director authors — the model proposes skeleton and flesh
+   alike, and the notary replays, refuses, or seals. Generate freely;
+   ratify mechanically.
+
+The kind-0 fair-play commitment existed from the start; §17 makes it
+the constitution rather than a feature. The speakeasy's promise: the
+house can be as creative as it likes, and the game is provably fair.
