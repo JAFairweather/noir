@@ -287,3 +287,29 @@ mandate, `expires_at` ends the engagement by itself.
 Eight CI proofs: resolve, master attribution, terms/mandate, stranger
 gets nothing, expiry self-enforces, notes fold in, rotation updates in
 place, revocation unmakes the table.
+
+## 15. The three keys of the table (added 2026-07-13, direction)
+
+Answering "will I ever need the Director's nsec?" for good. Money
+never goes to the Director; grants eventually come FROM it; nobody
+ever logs in as it. The hierarchy:
+
+1. **The master key (yours).** Owns the house scope, receives ALL
+   payments (the table's kind-0 lightning address points at YOUR
+   wallet — zaps land with you; the Director merely VERIFIES public
+   zap receipts, custodying nothing), hires and fires the Director by
+   grant. Lives in your wallet/extension. Never on a server.
+2. **The table root key (the Director's stable npub).** The table's
+   public identity: signs fair-play commitments, certifies per-case
+   keys, carries the speakeasy's reputation. Back up the key file for
+   continuity; manage it only ever from layer 1 (revoke the house
+   grant — never 'log in'). Could later live in a NIP-46 bunker so
+   the nsec never touches the cloud box at all.
+3. **Per-case burner keys.** Publish worlds, grant scopes to players,
+   rotate on burns — the noisy signing. Disposable by design (already
+   the in-page pattern); the table root's certification makes a
+   burner trustworthy in the hosted era.
+
+Compromise at any layer is answered by the layer above: burner leaks,
+the table certifies a new one; table box owned, the master revokes
+the house; the master key never meets a server.
