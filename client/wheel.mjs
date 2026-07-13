@@ -271,6 +271,8 @@ export class Wheel {
     stage.addEventListener('touchend', () => { touchY = null })
 
     window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return
+      if (e.target.tagName === 'INPUT' && e.target.id !== 'cmd') return
       if (e.target.tagName === 'INPUT' && !['ArrowUp', 'ArrowDown'].includes(e.key)) return
       if (e.key === 'ArrowUp') { this._target = null; this._follow = false; this.velocity -= 0.23 }
       if (e.key === 'ArrowDown') { this._target = null; this._follow = false; this.velocity += 0.23 }

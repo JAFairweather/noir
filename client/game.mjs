@@ -362,8 +362,10 @@ input.addEventListener('keydown', (e) => {
     input.value = history[historyAt] ?? ''
   }
 })
+const inEditable = (el) =>
+  el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)
 window.addEventListener('keydown', (e) => {
-  if (e.target === input) return          // input owns its keys (incl. history)
+  if (inEditable(e.target)) return        // fields own their keys — notes, keys, command
   if (e.key === ' ') {
     e.preventDefault()
     wheel.advanceBeat()
@@ -477,6 +479,7 @@ function waitForBegin() {
       resolve()
     }
     const onKey = (e) => {
+      if (inEditable(e.target)) return    // typing a note is not opening the file
       if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); done() }
     }
     const onTap = (e) => {
