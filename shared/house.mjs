@@ -92,3 +92,22 @@ export async function resolveHouse(relay, directorSk, nowSec = Math.floor(Date.n
   }
   return { house, master, terms }
 }
+
+/** The table's till: where zaps land. The house may carry a literal
+ *  lud16 (a dedicated, unlinked alias — delegated private config); when
+ *  it does not, the Director mirrors the MASTER'S OWN public kind-0
+ *  profile — public data needs no grant, and the master changes wallets
+ *  by editing their profile once. The agent follows. */
+export async function resolveTill(relay, masterPub, house) {
+  if (house?.lud16) return { lud16: house.lud16, source: 'house scope' }
+  try {
+    const profiles = await relay.query({ kinds: [0], authors: [masterPub] })
+    const latest = profiles.sort((a, b) => b.created_at - a.created_at)[0]
+    if (latest) {
+      const meta = JSON.parse(latest.content)
+      const lud16 = meta.lud16 ?? meta.lud06 ?? null
+      if (lud16) return { lud16, source: "master's profile" }
+    }
+  } catch { /* no profile in reach */ }
+  return { lud16: null, source: 'none' }
+}

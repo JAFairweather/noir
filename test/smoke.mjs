@@ -436,6 +436,19 @@ console.log('\n19. The house is a grant: the Director as delegated agent (nvoy)'
   await revokeHouse(rH, master, wire2, houseObj.name)
   const r4 = await resolveHouse(rH, director)
   check('firing the Director (rotate past it) leaves the table unmarked', r4 === null)
+
+  // The till: house literal wins; otherwise the master's own PUBLIC
+  // profile is mirrored — public data needs no grant.
+  const { resolveTill } = await import('../shared/house.mjs')
+  const { finalizeEvent } = await import('nostr-tools')
+  await rH.publish(finalizeEvent({
+    kind: 0, created_at: Math.floor(Date.now() / 1000), tags: [],
+    content: JSON.stringify({ name: 'james', lud16: 'james@wallet.example' }),
+  }, master))
+  const t1 = await resolveTill(rH, getPublicKey(master), { name: 'x' })
+  check("no house lud16 → the till mirrors the master's profile", t1.lud16 === 'james@wallet.example' && t1.source === "master's profile")
+  const t2 = await resolveTill(rH, getPublicKey(master), { name: 'x', lud16: 'table@till.example' })
+  check('a house lud16 (dedicated alias) overrides the profile', t2.lud16 === 'table@till.example' && t2.source === 'house scope')
 }
 
 console.log(`\n${passed} passed, ${failed} failed`)

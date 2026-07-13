@@ -20,7 +20,7 @@ import { writeFileSync } from 'node:fs'
 import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
 import { Relay } from '../lib/relay.mjs'
 import { LiveRelay } from '../lib/liverelay.mjs'
-import { resolveHouse } from '../shared/house.mjs'
+import { resolveHouse, resolveTill } from '../shared/house.mjs'
 import { readFile } from 'node:fs/promises'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -57,6 +57,7 @@ let HOUSE = FILE_HOUSE ?? UNMARKED
 let HOUSE_SOURCE = FILE_HOUSE ? 'local file' : 'none'
 let MASTER_NPUB = null
 let MANDATE = null
+let TILL = { lud16: null, source: 'none' }
 const houseTuning = (era) => [...(HOUSE.tuning?.all ?? []), ...(HOUSE.tuning?.[era] ?? [])]
 
 // --------------------------------------------- the Director as nvoy agent
@@ -112,12 +113,14 @@ async function refreshGrantedHouse() {
       HOUSE_SOURCE = 'granted'
       MASTER_NPUB = master
       MANDATE = r.terms?.purpose ?? null
-      if (changed) note(`the house arrived by grant — running it on behalf of ${master.slice(0, 12)}…${MANDATE ? ` (mandate: ${MANDATE})` : ''}`)
+      TILL = await resolveTill(HOUSE_RELAY, r.master, r.house)
+      if (changed) note(`the house arrived by grant — running it on behalf of ${master.slice(0, 12)}…${MANDATE ? ` (mandate: ${MANDATE})` : ''}${TILL.lud16 ? ` · till: ${TILL.lud16} (${TILL.source})` : ''}`)
     } else if (HOUSE_SOURCE === 'granted') {
       HOUSE = FILE_HOUSE ?? UNMARKED
       HOUSE_SOURCE = FILE_HOUSE ? 'local file' : 'none'
       MASTER_NPUB = null
       MANDATE = null
+      TILL = { lud16: null, source: 'none' }
       note('NVOY_GRANT_REVOKED — the master has withdrawn the house. The table stands unmarked tonight.')
     }
   } catch { /* relay unreachable: keep what we have */ }
@@ -502,7 +505,7 @@ const server = createServer(async (req, res) => {
     return res.writeHead(200, { 'content-type': 'application/json' })
       .end(JSON.stringify({
         ok: true, director: !!KEY, model: KEY ? MODEL : null, images: !!REPLICATE,
-        house: HOUSE.name, agent: DIRECTOR_NPUB, master: MASTER_NPUB, mandate: MANDATE, houseSource: HOUSE_SOURCE,
+        house: HOUSE.name, agent: DIRECTOR_NPUB, master: MASTER_NPUB, mandate: MANDATE, houseSource: HOUSE_SOURCE, till: TILL.lud16,
       }))
   }
 
