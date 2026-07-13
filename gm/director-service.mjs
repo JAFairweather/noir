@@ -638,6 +638,16 @@ const server = createServer(async (req, res) => {
   res.writeHead(404).end()
 })
 
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`another Director already holds the desk on port ${PORT}.`)
+    console.error(`  dismiss it:   lsof -ti :${PORT} | xargs kill`)
+    console.error(`  or move desks: NOIR_GM_PORT=8788 npm run director`)
+    process.exit(1)
+  }
+  throw err
+})
+
 server.listen(PORT, () => {
   console.log(`noir-gm director on http://localhost:${PORT}  (control panel: open that URL)`)
   console.log(`  agent identity: ${DIRECTOR_NPUB}`)
