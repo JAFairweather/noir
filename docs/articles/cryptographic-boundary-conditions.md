@@ -73,6 +73,8 @@ included. Fail, and there is no deal. Our test suite includes sabotaged
 worlds — a truncated proof line, a forged culprit — and proves the door
 stays shut.
 
+![Fig. 6 — One deal, notarized](https://raw.githubusercontent.com/JAFairweather/noir/main/docs/figures/fig6-notarized-deal.png)
+
 The consequence is an inversion of the trust model that we think is
 the whole future of generative content: **once the door exists, the
 author's trustworthiness is irrelevant.** Hand-written by a human,
@@ -102,6 +104,8 @@ the notary. Rung three: the model proposes skeleton and flesh alike,
 and the notary replays, refuses, or seals. The constraint system never
 loosens as the generator gets stronger; that is the design's entire
 posture. Capability grows inside a fixed constitution.
+
+![Fig. 8 — The world-builder ladder](https://raw.githubusercontent.com/JAFairweather/noir/main/docs/figures/fig8-world-builder-ladder.png)
 
 ## Why this generalizes
 

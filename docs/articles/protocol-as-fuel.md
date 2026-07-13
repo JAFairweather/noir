@@ -27,6 +27,10 @@ revocation is not an ACL edit — it is a **key rotation**. Re-encrypt,
 re-grant the survivors, done. The revoked party's key simply stops
 opening the current ciphertext.
 
+![Fig. 2 — Anatomy of a grant](https://raw.githubusercontent.com/JAFairweather/noir/main/docs/figures/fig2-anatomy-of-a-grant.png)
+
+![Fig. 3 — Revocation as rotation](https://raw.githubusercontent.com/JAFairweather/noir/main/docs/figures/fig3-revocation-as-rotation.png)
+
 Two design choices made everything after possible:
 
 - **Honesty.** A revoked reader keeps whatever plaintext they already
@@ -68,11 +72,24 @@ always rotation. The agent side mounts as an MCP server, so any
 MCP-speaking framework consumes delegated data with zero nostr
 knowledge.
 
-The family kept growing on the same fuel —
-**[Nherit](https://github.com/JAFairweather/nherit)**,
-**[Ntrigue](https://github.com/JAFairweather/ntrigue)**, and
-**[Notegate](https://github.com/JAFairweather/notegate)** are all
-shipped and public, each the same primitive wearing a different job.
+The family kept growing on the same fuel, each sibling pointing the
+primitive at a different hard problem.
+**[Nherit](https://github.com/JAFairweather/nherit)** turned it toward
+*time*: a family break-glass legacy vault — one estate record in
+per-beneficiary scopes, heirs holding revocable grants, the whole
+thing reconstituting from a single key printed on paper. No company
+between you and your family.
+**[Ntrigue](https://github.com/JAFairweather/ntrigue)** turned it
+toward *adversaries*: a phones-only party game of secrets, dilemmas,
+and blackmail, where every answer is an encrypted scope and pairwise
+prisoner's-dilemma exchanges decide who sees what. Its design law —
+*you can revoke a secret, but you can't un-tell it* — is the
+protocol's honesty clause played for stakes.
+**[Notegate](https://github.com/JAFairweather/notegate)** turned it
+toward the *newsroom*: serverless tip intake where a tip line is a
+keypair, sources are ephemeral keys with a 12-word phrase as their
+only way back, proof-of-work is the spam toll, and the grant index
+is the case docket.
 
 **[Noir](https://github.com/JAFairweather/noir)**
 ([play it](https://jafairweather.github.io/noir/client/)) then asked
@@ -86,6 +103,8 @@ playtest feedback travels back as scopes signed by the master's own
 key; and the newest step delivers entire *worlds* — a steampunk era as
 pure data — over the same wire, gated by a mechanical fairness prover
 before any of it may be played.
+
+![Fig. 1 — The layer cake](https://raw.githubusercontent.com/JAFairweather/noir/main/docs/figures/fig1-layer-cake.png)
 
 ## The pattern worth stealing
 

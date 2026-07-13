@@ -70,7 +70,7 @@ function fig1() {
   b += txt(X + 16, 335, 'LAYER 2 — THE N-FAMILY', { fill: C.cream, ls: 2 })
   const chips = [
     ['NONTACT', 'emergent views'], ['NVELOPE', 'blob scale'], ['NVOY', 'delegation'],
-    ['NHERIT', 'shipped'], ['NTRIGUE', 'shipped'], ['NOTEGATE', 'shipped'],
+    ['NHERIT', 'succession'], ['NTRIGUE', 'secrets as stakes'], ['NOTEGATE', 'anonymous intake'],
   ]
   chips.forEach(([name, sub], i) => {
     const cx = X + 16 + i * 134

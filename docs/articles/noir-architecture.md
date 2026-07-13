@@ -34,11 +34,16 @@ Four layers, each honest about what it adds (Fig. 1):
   revocation instead of expiring links),
   [Nvoy](https://github.com/JAFairweather/nvoy) (delegation of data to
   autonomous agents, with honest terms and a ledger console), plus
-  [Nherit](https://github.com/JAFairweather/nherit),
-  [Ntrigue](https://github.com/JAFairweather/ntrigue), and
-  [Notegate](https://github.com/JAFairweather/notegate) — all shipped,
-  all public, all the same primitive.
+  [Nherit](https://github.com/JAFairweather/nherit) (a family
+  break-glass legacy vault),
+  [Ntrigue](https://github.com/JAFairweather/ntrigue) (a party game of
+  secrets and blackmail — Noir's sibling at the games table), and
+  [Notegate](https://github.com/JAFairweather/notegate) (serverless
+  newsroom tip intake) — all shipped, all public, all the same
+  primitive.
 - **Noir** — everything at once, load-bearing, in public.
+
+![Fig. 1 — The layer cake](https://raw.githubusercontent.com/JAFairweather/noir/main/docs/figures/fig1-layer-cake.png)
 
 ## Protocol as game mechanics
 
@@ -86,6 +91,8 @@ story: *— notarized: proved fair and solvable before the deal ·
 solution sealed a3f81c29d0b4… —*. The thesis in one line: **physics by
 commitment, flesh by language.**
 
+![Fig. 6 — One deal, notarized](https://raw.githubusercontent.com/JAFairweather/noir/main/docs/figures/fig6-notarized-deal.png)
+
 ## The Director is an employee, not an owner
 
 Each table has a personality — its **house**: name, motto, era menu,
@@ -97,12 +104,16 @@ the house: rotate with the Director as survivor. **Fire the Director:
 rotate past it** — its next poll returns `NVOY_GRANT_REVOKED` and the
 desk announces that the table stands unmarked tonight (Fig. 4).
 
+![Fig. 4 — The house handshake](https://raw.githubusercontent.com/JAFairweather/noir/main/docs/figures/fig4-house-handshake.png)
+
 Three keys, three custody zones (Fig. 5): the master's key never
 touches a server; the Director's key holds nothing but revocable
 grants; per-case burner keys do the noisy signing and are disposable.
 Even payments follow the pattern without custody: the table's lightning
 pointer mirrors the master's own public profile — the agent displays
 where value goes; it never holds any.
+
+![Fig. 5 — The three keys of the table](https://raw.githubusercontent.com/JAFairweather/noir/main/docs/figures/fig5-three-keys.png)
 
 ## The workshop loop: feedback as delegation
 
@@ -119,6 +130,8 @@ is the authorization. There is still no permission system anywhere.
 This loop has operated in production: field notes from live play have
 rewritten the openings of all four eras, added permanent voice rules,
 and fixed interaction bugs. The game is edited by playing it.
+
+![Fig. 7 — Feedback as delegation](https://raw.githubusercontent.com/JAFairweather/noir/main/docs/figures/fig7-workshop-loop.png)
 
 ## Worlds by wire
 
@@ -137,6 +150,8 @@ That is the ladder (Fig. 8): worlds as data today; new mystery
 archetypes next, each adding its own fairness clauses to the Notary;
 and eventually the Director proposing whole worlds itself — generate
 freely, ratify mechanically. The author can be wrong. The deal cannot.
+
+![Fig. 8 — The world-builder ladder](https://raw.githubusercontent.com/JAFairweather/noir/main/docs/figures/fig8-world-builder-ladder.png)
 
 ## What's actually novel here
 
