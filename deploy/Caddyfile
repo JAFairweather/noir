@@ -42,25 +42,32 @@ director.nave.pub {
 	reverse_proxy director:8787
 }
 
-# --- Luke — the Claude bot (OpenClaw), exposed the OpenClaw way --------
-# READ deploy/DEPLOY.md §8 before enabling. OpenClaw's Control UI is a
-# WebSocket app that REQUIRES https at the browser (its device auth uses
-# WebCrypto, which won't run over plain http off localhost). Caddy gives
-# the browser that https; the internal hop to 57419 stays plain. Caddy
-# proxies WebSockets natively — nothing extra needed.
-#
-# Luke's real lock is OpenClaw's OWN gateway auth (token/password, on by
-# default), pinned to this origin via gateway.controlUi.allowedOrigins =
-# https://luke.nave.pub. Do NOT wrap it in Caddy basic_auth — that fights
-# the WebSocket device-auth. For an OPTIONAL extra outer wall, an IP
-# allowlist is safe (it doesn't break the socket); see the commented
-# lines below.
+# --- Luke — a delegated agent, cockpit behind a nostr-signed gate ------
+# READ docs/LUKE.md before enabling. Two planes on one host:
+#   /            → Luke's public card + gate endpoints (luke-service)
+#   /cockpit*    → the real OpenClaw Control UI (host :57419), but ONLY
+#                  after forward_auth to the gate returns 200. The gate
+#                  opens for exactly one key: your NIP-98-signed master npub.
+# OpenClaw's own gateway auth stays on as the inner lock (defense in depth);
+# set its gateway.controlUi.allowedOrigins to include https://luke.nave.pub.
+# Requires the `luke` compose service up (docker compose --profile luke up -d).
 #
 # luke.nave.pub {
-# 	# optional: only let your own IP reach Luke at all —
-# 	# @blocked not remote_ip 203.0.113.10/32   # <- your home/office IP
-# 	# respond @blocked "forbidden" 403
-# 	reverse_proxy host.docker.internal:57419
+# 	encode gzip zstd
+#
+# 	# The cockpit: OpenClaw, gated by the nostr-signed session.
+# 	@cockpit path /cockpit /cockpit/*
+# 	handle @cockpit {
+# 		forward_auth luke:8790 {
+# 			uri /gate/verify
+# 		}
+# 		reverse_proxy host.docker.internal:57419
+# 	}
+#
+# 	# Everything else: Luke's public card + the /gate/* login flow.
+# 	handle {
+# 		reverse_proxy luke:8790
+# 	}
 # }
 #
 # relay.nave.pub {

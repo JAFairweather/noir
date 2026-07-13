@@ -6,3 +6,5 @@ house.grant.jsonl
 
 # deploy secrets (never commit)
 deploy/.env
+luke/.env
+luke/.luke-key

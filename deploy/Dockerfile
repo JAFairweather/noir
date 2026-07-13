@@ -22,6 +22,10 @@ COPY gm ./gm
 COPY lib ./lib
 COPY shared ./shared
 COPY eras ./eras
+# Luke — the delegated-agent service + cockpit gate (same image, run via a
+# command override in compose). Small and dependency-light; harmless in the
+# Director image if unused.
+COPY luke ./luke
 # A local house is optional — a GRANTED house (from the nvoy console)
 # outranks it anyway. The bracket makes the copy tolerate its absence.
 COPY house.jso[n] ./

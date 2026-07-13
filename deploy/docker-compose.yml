@@ -29,6 +29,33 @@ services:
       retries: 3
       start_period: 15s
 
+  # Luke — the delegated-agent card + the nostr-signed cockpit gate.
+  # Same image as the Director (it carries luke/), run with a command
+  # override. Reads its own env from luke/.env so Luke's key and master
+  # npub never mix with the Director's. Optional: only comes up if you
+  # `docker compose up -d luke` (and uncomment the luke.nave.pub Caddy
+  # block). See docs/LUKE.md.
+  luke:
+    profiles: ["luke"]          # opt-in: `docker compose --profile luke up -d`
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: noir-director:latest
+    restart: unless-stopped
+    env_file: ../luke/.env
+    environment:
+      - LUKE_PORT=8790
+    command: ["node", "luke/luke-service.mjs"]
+    expose:
+      - "8790"
+    networks: [nave]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8790/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
