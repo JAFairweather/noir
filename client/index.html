@@ -381,10 +381,19 @@
     <span class="hint">ENTER send · SPACE next beat · ↑↓ rotate</span>
   </footer>
   <script>
-    // network-first worker: a plain reload always gets the current build.
-    // updateViaCache 'none' means the worker script itself is never
-    // served stale either.
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js', { updateViaCache: 'none' }).catch(() => {})
+    // No service worker anymore — it caused stale-module blank screens.
+    // Proactively evict any worker a returning visitor still has, and
+    // purge its caches. (sw.js is a kill switch that also self-heals
+    // browsers via the SW update check.) A plain reload is now always the
+    // current build, served straight from the CDN.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations()
+        .then((regs) => regs.forEach((r) => r.unregister()))
+        .catch(() => {})
+    }
+    if (window.caches && caches.keys) {
+      caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {})
+    }
   </script>
   <script type="module" src="./game.mjs"></script>
 </body>

@@ -1,31 +1,29 @@
-// sw.js — genuinely network-first for same-origin GETs.
+// sw.js — KILL SWITCH.
 //
-// GitHub Pages serves everything with a fixed 10-minute cache. The
-// first version of this worker called fetch() with default cache mode,
-// which RESPECTS that header — so during rapid deploys the browser
-// could assemble the ES-module graph from two different builds, and a
-// mixed graph fails to import: a blank page with no error visible.
-// 'no-cache' forces revalidation on every asset (cheap: unchanged
-// files come back 304), so the whole graph always comes from one
-// consistent version. Offline still falls back to the last good copy.
-
-const CACHE = 'noir-v2'
+// Noir used to ship a caching service worker. It caused stale-module
+// blank screens: during rapid deploys a browser could assemble the
+// ES-module graph from two different builds, and a mixed graph fails to
+// import — a blank page with no visible error. The offline benefit was
+// never worth that risk for a CDN-served game.
+//
+// So the app no longer uses a service worker at all. This file exists
+// ONLY to evict any previously-installed worker: it purges every cache,
+// unregisters itself, and reloads controlled pages once — clean, from
+// the network. The browser delivers this to already-controlled browsers
+// automatically via its service-worker update check, so poisoned tabs
+// self-heal on their next visit with no user action.
 
 self.addEventListener('install', () => self.skipWaiting())
-self.addEventListener('activate', (e) => e.waitUntil(
-  caches.keys()
-    .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-    .then(() => clients.claim())
-))
 
-self.addEventListener('fetch', (e) => {
-  const url = new URL(e.request.url)
-  if (url.origin !== location.origin || e.request.method !== 'GET') return
-  e.respondWith(
-    fetch(e.request, { cache: 'no-cache' }).then((res) => {
-      const copy = res.clone()
-      caches.open(CACHE).then((c) => c.put(e.request, copy))
-      return res
-    }).catch(() => caches.match(e.request))
-  )
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    for (const key of await caches.keys()) await caches.delete(key)
+    await self.registration.unregister()
+    for (const client of await self.clients.matchAll()) {
+      try { client.navigate(client.url) } catch { /* older clients: next manual reload is clean */ }
+    }
+  })())
 })
+
+// No fetch handler on purpose: every request goes straight to the network
+// (and the browser's normal HTTP cache), exactly as if no worker existed.
