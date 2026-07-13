@@ -258,3 +258,32 @@ operator edits one JSON file and opens an entirely different room —
 same game, different house, different voice. Margin-notes workshops
 distill INTO house tuning: session notes that prove out graduate to
 house.json.
+
+## 14. The Director is an nvoy agent (added 2026-07-13)
+
+The wild step, and the obvious one: the house master's house is not a
+config file — it is a NIP-DA scope on the MASTER'S identity, granted
+(kind-440) to the Director's own keypair. The Director is a delegated
+agent running games on the master's behalf, and its authority IS the
+grant. This is nvoy (github.com/JAFairweather/nvoy) exactly — same
+wire (noir's libs were vendored from it), plus the nvoy terms
+extension honored as compliance: `purpose` displays as the agent's
+mandate, `expires_at` ends the engagement by itself.
+
+- The service holds a persistent agent identity (.director-key /
+  NOIR_DIRECTOR_NSEC); its npub prints in the boot banner and on the
+  desk — that npub is what the master registers in the NVOY CONSOLE,
+  which becomes the house-master's control room: author the house
+  scope, grant it, watch the ledger, rotate on a schedule, revoke.
+- Resolution order: granted house > house.json > unmarked table.
+  Transport: NOIR_RELAYS (live, what the console uses) or a local
+  events file. Re-dereferenced every two minutes: updates arrive by
+  rotation-with-survivor, and revocation is LIVE — the desk logs
+  NVOY_GRANT_REVOKED and the table stands unmarked by the next poll.
+- Margin notes graduate the same way: granted house-notes scopes fold
+  into the house tuning. The master's taste is data on the master's
+  key, delegated like everything else.
+
+Eight CI proofs: resolve, master attribution, terms/mandate, stranger
+gets nothing, expiry self-enforces, notes fold in, rotation updates in
+place, revocation unmakes the table.

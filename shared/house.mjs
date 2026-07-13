@@ -1,0 +1,94 @@
+// house.mjs — the house as a NIP-DA scope; the Director as delegated agent.
+//
+// The wild step, made literal: the house master's house — its name, its
+// rooms, its dialog tuning, the distilled margin notes — is not a config
+// file. It is an encrypted kind-30440 scope published under the MASTER'S
+// identity, and the Director (which has its own nsec/npub) holds it only
+// because the master GRANTED it (kind-440). The Director is an agent
+// running games on the master's behalf, and its authority is a grant:
+//   - update the house  → rotate with the Director as survivor
+//   - fire the Director → rotate with no survivors; the key it holds
+//     goes stale and the table stands unmarked by nightfall.
+// The game about scoped data grants is operated through scoped data
+// grants. There is no separate permission system to trust.
+
+import { newScopeKey, publishScope, grant, rotateScope, receiveGrants, latestGrants, fetchScope } from '../lib/nipxx.mjs'
+
+const randomScopeId = () =>
+  'house' + [...crypto.getRandomValues(new Uint8Array(6))].map(b => (b % 36).toString(36)).join('')
+
+/** Master publishes the house and hands the Director its grant. */
+export async function publishHouse(relay, masterSk, house, directorPub, terms) {
+  const wire = { scopeId: randomScopeId(), generation: 1, scopeKey: newScopeKey() }
+  const name = `House — ${house.name ?? 'unnamed'}`
+  await publishScope(relay, masterSk, {
+    ...wire,
+    payload: { name, kind: 'house', house },
+  })
+  await grant(relay, masterSk, directorPub, { ...wire, scopeName: name, terms })
+  return wire
+}
+
+/** Master publishes distilled margin notes as their own granted scope. */
+export async function publishHouseNotes(relay, masterSk, notes, directorPub) {
+  const wire = { scopeId: randomScopeId(), generation: 1, scopeKey: newScopeKey() }
+  const name = `House notes — ${notes.length} entries`
+  await publishScope(relay, masterSk, {
+    ...wire,
+    payload: { name, kind: 'house-notes', notes },
+  })
+  await grant(relay, masterSk, directorPub, { ...wire, scopeName: name })
+  return wire
+}
+
+/** Update the house in place: rotate, keeping the Director inside. */
+export async function updateHouse(relay, masterSk, wire, house, directorPub) {
+  const name = `House — ${house.name ?? 'unnamed'}`
+  const { generation } = await rotateScope(relay, masterSk, {
+    scopeId: wire.scopeId, generation: wire.generation,
+    payload: { name, kind: 'house', house },
+    scopeName: name,
+    survivors: [directorPub],
+  })
+  return { ...wire, generation }
+}
+
+/** Fire the Director: rotate past it. Its key goes stale; the house is withdrawn. */
+export async function revokeHouse(relay, masterSk, wire, houseName = 'the house') {
+  const name = `House — ${houseName}`
+  const { generation } = await rotateScope(relay, masterSk, {
+    scopeId: wire.scopeId, generation: wire.generation,
+    payload: { name, kind: 'house', house: null },
+    scopeName: name,
+    survivors: [],
+  })
+  return { ...wire, generation }
+}
+
+/** The Director reads its standing: whatever house it has been granted.
+ *  Returns { house, master, terms } or null — a revoked, expired, or
+ *  absent grant is the same thing: no house, an unmarked table. Nvoy
+ *  terms on the grant are honored as compliance (expires_at ends the
+ *  engagement; purpose is displayed as the agent's mandate). Granted
+ *  note-scopes fold into the house's tuning. */
+export async function resolveHouse(relay, directorSk, nowSec = Math.floor(Date.now() / 1000)) {
+  let house = null, master = null, terms = null
+  const notes = []
+  for (const g of latestGrants(await receiveGrants(relay, directorSk))) {
+    if (g.nvoy?.expires_at && g.nvoy.expires_at < nowSec) continue   // engagement over
+    const res = await fetchScope(relay, g)
+    if (res.status !== 'ok') continue
+    if (res.data?.kind === 'house' && res.data.house) {
+      house = res.data.house
+      master = g.publisher
+      terms = g.nvoy ?? null
+    } else if (res.data?.kind === 'house-notes' && Array.isArray(res.data.notes)) {
+      notes.push(...res.data.notes)
+    }
+  }
+  if (!house) return null
+  if (notes.length) {
+    house = { ...house, tuning: { ...(house.tuning ?? {}), all: [...(house.tuning?.all ?? []), ...notes] } }
+  }
+  return { house, master, terms }
+}

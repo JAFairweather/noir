@@ -410,5 +410,33 @@ console.log('\n18. The desk converses (context pack + seam)')
     JSON.parse(d2[d2.length - 1].content).text.includes('Nothing gives'))
 }
 
+console.log('\n19. The house is a grant: the Director as delegated agent (nvoy)')
+{
+  const { publishHouse, publishHouseNotes, updateHouse, revokeHouse, resolveHouse } = await import('../shared/house.mjs')
+  const rH = new Relay()
+  const master = generateSecretKey()
+  const director = generateSecretKey()
+  const stranger = generateSecretKey()
+  const houseObj = { name: 'The Fairweather Table', eras: [{ id: 'berlin-1938', label: 'B' }], tuning: { all: ['implication over spectacle'] } }
+  const terms = { purpose: 'run Noir games on my behalf', expires_at: Math.floor(Date.now() / 1000) + 86400 }
+  const wire = await publishHouse(rH, master, houseObj, getPublicKey(director), terms)
+  const r1 = await resolveHouse(rH, director)
+  check('the Director resolves the granted house', r1?.house?.name === 'The Fairweather Table')
+  check('the grant names its master', r1?.master === getPublicKey(master))
+  check('nvoy terms ride the grant (mandate)', r1?.terms?.purpose === 'run Noir games on my behalf' && r1?.terms?.nvoy === 1)
+  check('a stranger holding no grant has no house', (await resolveHouse(rH, stranger)) === null)
+  const expired = await resolveHouse(rH, director, Math.floor(Date.now() / 1000) + 90000)
+  check('an expired engagement ends itself (expires_at honored)', expired === null)
+  await publishHouseNotes(rH, master, ['less jargon', 'longer sentences'], getPublicKey(director))
+  const r2 = await resolveHouse(rH, director)
+  check('granted margin notes fold into house tuning', r2.house.tuning.all.includes('longer sentences'))
+  const wire2 = await updateHouse(rH, master, wire, { ...houseObj, name: 'The Fairweather Table, Renovated' }, getPublicKey(director))
+  const r3 = await resolveHouse(rH, director)
+  check('rotation with the Director as survivor updates the house in place', r3.house.name.includes('Renovated'))
+  await revokeHouse(rH, master, wire2, houseObj.name)
+  const r4 = await resolveHouse(rH, director)
+  check('firing the Director (rotate past it) leaves the table unmarked', r4 === null)
+}
+
 console.log(`\n${passed} passed, ${failed} failed`)
 process.exit(failed ? 1 : 0)

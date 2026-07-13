@@ -1,2 +1,5 @@
 node_modules/
 .env
+.director-key
+house.grant.jsonl
+.master-key

@@ -16,6 +16,11 @@
 
 import { createServer } from 'node:http'
 import { execFile } from 'node:child_process'
+import { writeFileSync } from 'node:fs'
+import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools'
+import { Relay } from '../lib/relay.mjs'
+import { LiveRelay } from '../lib/liverelay.mjs'
+import { resolveHouse } from '../shared/house.mjs'
 import { readFile } from 'node:fs/promises'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -45,9 +50,73 @@ const ROOT = ROOT_
 // and its dialog tuning (persistent voice notes, per era and overall).
 // Another operator edits house.json and runs a different room entirely;
 // the engine's era ids are the only constraint on what a table may offer.
-let HOUSE = { name: 'an unmarked table', motto: '', eras: [], tuning: {} }
-try { HOUSE = JSON.parse(readFileSync(join(ROOT_, 'house.json'), 'utf8')) } catch { /* generic table */ }
+const UNMARKED = { name: 'an unmarked table', motto: '', eras: [], tuning: {} }
+let FILE_HOUSE = null
+try { FILE_HOUSE = JSON.parse(readFileSync(join(ROOT_, 'house.json'), 'utf8')) } catch { /* no local house */ }
+let HOUSE = FILE_HOUSE ?? UNMARKED
+let HOUSE_SOURCE = FILE_HOUSE ? 'local file' : 'none'
+let MASTER_NPUB = null
+let MANDATE = null
 const houseTuning = (era) => [...(HOUSE.tuning?.all ?? []), ...(HOUSE.tuning?.[era] ?? [])]
+
+// --------------------------------------------- the Director as nvoy agent
+// The Director has its OWN keypair, and the house it runs can be a NIP-DA
+// scope on the MASTER'S identity, granted to this key (nvoy semantics:
+// same wire, plus the terms extension — purpose, expires_at — honored as
+// compliance). A granted house outranks house.json. Revocation is a key
+// rotation: the next dereference goes stale and the table stands
+// unmarked. Register this agent's npub in the nvoy console to delegate.
+const DIRECTOR_SK = (() => {
+  if (process.env.NOIR_DIRECTOR_NSEC) {
+    try { return nip19.decode(process.env.NOIR_DIRECTOR_NSEC).data } catch { /* fall through */ }
+  }
+  const keyPath = join(ROOT_, '.director-key')
+  try {
+    return Uint8Array.from(readFileSync(keyPath, 'utf8').trim().match(/.{2}/g).map(h => parseInt(h, 16)))
+  } catch {
+    const sk = generateSecretKey()
+    try { writeFileSync(keyPath, [...sk].map(b => b.toString(16).padStart(2, '0')).join(''), { mode: 0o600 }) } catch { /* ephemeral then */ }
+    return sk
+  }
+})()
+const DIRECTOR_NPUB = nip19.npubEncode(getPublicKey(DIRECTOR_SK))
+
+// Where the grants live: real relays (NOIR_RELAYS, comma-separated wss
+// urls — the console publishes there) or an events file for offline use.
+const HOUSE_RELAY = (() => {
+  if (process.env.NOIR_RELAYS) return new LiveRelay(process.env.NOIR_RELAYS.split(',').map(u => u.trim()))
+  const file = process.env.NOIR_HOUSE_FILE ?? join(ROOT_, 'house.grant.jsonl')
+  try {
+    const events = readFileSync(file, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l))
+    const r = new Relay()
+    r.events = events
+    return r
+  } catch { return null }
+})()
+
+async function refreshGrantedHouse() {
+  if (!HOUSE_RELAY) return
+  try {
+    const r = await resolveHouse(HOUSE_RELAY, DIRECTOR_SK)
+    if (r) {
+      const master = nip19.npubEncode(r.master)
+      const changed = HOUSE_SOURCE !== 'granted' || JSON.stringify(HOUSE) !== JSON.stringify(r.house)
+      HOUSE = r.house
+      HOUSE_SOURCE = 'granted'
+      MASTER_NPUB = master
+      MANDATE = r.terms?.purpose ?? null
+      if (changed) note(`the house arrived by grant — running it on behalf of ${master.slice(0, 12)}…${MANDATE ? ` (mandate: ${MANDATE})` : ''}`)
+    } else if (HOUSE_SOURCE === 'granted') {
+      HOUSE = FILE_HOUSE ?? UNMARKED
+      HOUSE_SOURCE = FILE_HOUSE ? 'local file' : 'none'
+      MASTER_NPUB = null
+      MANDATE = null
+      note('NVOY_GRANT_REVOKED — the master has withdrawn the house. The table stands unmarked tonight.')
+    }
+  } catch { /* relay unreachable: keep what we have */ }
+}
+refreshGrantedHouse()
+setInterval(refreshGrantedHouse, 120000)   // revocation is live, not boot-only
 
 const bibles = new Map()
 async function bible(era) {
@@ -335,6 +404,7 @@ const PANEL = `<!doctype html>
   <button id="restart" style="display:none">RESTART WITH UPDATE</button>
   <span id="ver"></span>
 </div>
+<div id="agency" class="hint" style="margin-top:-6px"></div>
 <div id="out"></div>
 <ul id="feed"></ul>
 <p class="hint">Running commentary only — the desk never prints case secrets.<br>
@@ -348,6 +418,9 @@ async function tick() {
     document.getElementById('status').textContent = a.model
       ? 'live — ' + a.model + (a.images ? ' + FLUX' : '') : 'dry mode — scripted prose (no API key)'
     document.getElementById('ver').textContent = 'build ' + a.version + ' · up ' + Math.floor(a.uptime/60000) + 'm'
+    document.getElementById('agency').textContent = a.master
+      ? 'house: ' + a.house + ' — held by grant from ' + a.master.slice(0, 16) + '…' + (a.mandate ? ' · mandate: ' + a.mandate : '')
+      : 'house: ' + a.house + ' (' + a.houseSource + ') · agent ' + a.agent.slice(0, 16) + '…'
     document.getElementById('feed').innerHTML = a.log.slice().reverse()
       .map(e => '<li><time>' + fmt(e.t) + '</time>' + e.line.replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))
         + (e.still ? '<img class="still" loading="lazy" src="/still?k=' + encodeURIComponent(e.still) + '" onerror="this.remove()">' : '')
@@ -420,12 +493,18 @@ const server = createServer(async (req, res) => {
 
   if (req.method === 'GET' && req.url === '/health') {
     return res.writeHead(200, { 'content-type': 'application/json' })
-      .end(JSON.stringify({ ok: true, director: !!KEY, model: KEY ? MODEL : null, images: !!REPLICATE, house: HOUSE.name }))
+      .end(JSON.stringify({
+        ok: true, director: !!KEY, model: KEY ? MODEL : null, images: !!REPLICATE,
+        house: HOUSE.name, agent: DIRECTOR_NPUB, master: MASTER_NPUB, mandate: MANDATE, houseSource: HOUSE_SOURCE,
+      }))
   }
 
   if (req.method === 'GET' && req.url === '/house') {
     return res.writeHead(200, { 'content-type': 'application/json' })
-      .end(JSON.stringify({ name: HOUSE.name, motto: HOUSE.motto ?? '', eras: HOUSE.eras ?? [] }))
+      .end(JSON.stringify({
+        name: HOUSE.name, motto: HOUSE.motto ?? '', eras: HOUSE.eras ?? [],
+        agent: DIRECTOR_NPUB, master: MASTER_NPUB, mandate: MANDATE, houseSource: HOUSE_SOURCE,
+      }))
   }
 
   if (req.method === 'GET' && (req.url === '/' || req.url === '/desk')) {
@@ -446,6 +525,7 @@ const server = createServer(async (req, res) => {
     return res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({
       ok: true, version: VERSION, model: KEY ? MODEL : null, images: !!REPLICATE,
       uptime: Date.now() - STARTED, log: ACTIVITY,
+      house: HOUSE.name, agent: DIRECTOR_NPUB, master: MASTER_NPUB, mandate: MANDATE, houseSource: HOUSE_SOURCE,
     }))
   }
 
@@ -560,6 +640,10 @@ const server = createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`noir-gm director on http://localhost:${PORT}  (control panel: open that URL)`)
+  console.log(`  agent identity: ${DIRECTOR_NPUB}`)
+  console.log(HOUSE_SOURCE === 'granted'
+    ? `  house held by grant from ${MASTER_NPUB}`
+    : `  house: ${HOUSE.name} (${HOUSE_SOURCE}) — register the agent npub in the nvoy console to delegate one`)
   console.log(KEY
     ? `  voice: ${MODEL}`
     : '  DRY MODE — no ANTHROPIC_API_KEY set; /voice returns fallbacks (scripted prose)')
