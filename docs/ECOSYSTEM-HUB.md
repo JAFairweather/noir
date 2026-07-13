@@ -122,19 +122,17 @@ desk, and a role in the protocol story. Two different "Directors," one
 of them an actual protocol actor, will confuse every reader, diagram,
 and article.
 
-**Decision to lock: the hub gets an N-family name of its own, and
-"Director" stays reserved for Noir's game agent.**
+**Decision, locked: the hub is _North_.** "Director" stays reserved for
+Noir's game agent.
 
-Recommended hub names (pick one; the plan doesn't depend on which):
-
-- **Nexus** *(recommended)* — the connection point of the whole
-  ecosystem; professional, instantly legible, and true to function.
-- **North** — the north star everything orients to; pairs naturally
-  with the "Identity = Freedom" thesis (the thing you navigate by).
-- **Nave** — the central hall of a building; carries the speakeasy /
-  architectural motif already in Noir.
-
-This document uses **Nexus** as the working name below; swap freely.
+**North** is the right name for a reason deeper than the N-family fit:
+*Identity = Freedom* is a direction, not a destination, and North is the
+thing you steer by. The hub is the fixed point the whole ecosystem
+orients to — the reference relay, the reference apps, the reference
+identity. The tagline writes itself: **"Find your North."** / **"True
+North for your data."** (Considered and set aside: _Nexus_ — accurate
+but generic; _Nave_ — the speakeasy motif, but too oblique for a front
+door.)
 
 ---
 
@@ -160,10 +158,10 @@ NIP-05 resolves.
 
 ---
 
-## 2. Nexus — the hub (and your front door)
+## 2. North — the hub (and your front door)
 
 Ship this early: it's the anchor everything links to, and it is a
-personal-brand asset as much as an ecosystem one. **Nexus is two things
+personal-brand asset as much as an ecosystem one. **North is two things
 at once: the reference index of the NIP-DA ecosystem, and the canonical
 page for James A. Fairweather's body of work on self-sovereign identity.**
 Those aren't in tension — the throughline of every app *is* the personal
@@ -231,7 +229,7 @@ shared on nostr and elsewhere. A live "featured demo" embed or
 screenshot of Noir's tradecraft view makes an unusually strong hero —
 it is the protocol's privacy claim rendered as something you can watch.
 
-**Exit criteria:** `hub.tld` (Nexus) live; indexes every project
+**Exit criteria:** `hub.tld` (North) live; indexes every project
 (placeholders where apps aren't up yet); carries the protocol case and
 the personal brand; shares cleanly.
 
@@ -260,7 +258,7 @@ process freezes into a reusable runbook.
    clean (the recent hardening should make this pass cleanly).
 6. **Write the "App Onboarding Runbook"** from exactly these steps:
    repo → Pages project → subdomain CNAME → SSL → NIP-07 smoke test →
-   relay smoke test → (server lane if any) → link from Nexus.
+   relay smoke test → (server lane if any) → link from North.
 
 **Exit criteria:** Noir live at `noir.hub.tld` — both client and hosted
 Director — fully functional, with a documented runbook.
@@ -275,14 +273,14 @@ first," not "which app do we finish."
 
 1. The five NIP-DA apps + Ntrigue: each is a static SPA (Pages only, no
    server lane), so each is a fast copy of the runbook's static path.
-2. For each: run the runbook, then flip its Nexus card from placeholder
+2. For each: run the runbook, then flip its North card from placeholder
    to live link.
 3. Nherit is shipped, so it is no longer the "ship last because
    unwritten" case — sequence it wherever convenient. If any app gets a
    real polish pass first, that's fine; nothing blocks nothing.
 
 **Exit criteria:** every app live at its own subdomain and linked from
-Nexus.
+North.
 
 ---
 
@@ -301,8 +299,8 @@ Every app gets a real identity so the suite feels designed, not
 assembled:
 
 - **A per-app icon** used three ways: the browser favicon, the PWA
-  install icon (192/512 maskable), and the Nexus app-grid card icon.
-- **One visual system across all eight** (the seven apps + Nexus):
+  install icon (192/512 maskable), and the North app-grid card icon.
+- **One visual system across all eight** (the seven apps + North):
   shared grid, stroke weight, and a shared palette with a per-app accent
   — so a Nontact icon and a Noir icon are visibly siblings. The
   "N-monogram in a consistent frame, one accent color per app" pattern
@@ -334,7 +332,7 @@ onboarding moment.
 
 ### 5.4 Suite navigation, analytics, backups
 
-- Lightweight shared header linking back to Nexus from every app.
+- Lightweight shared header linking back to North from every app.
 - Cloudflare Web Analytics (privacy-friendly, free); uptime monitor on
   the relay.
 - Backups for relay data and repos.
@@ -343,7 +341,7 @@ onboarding moment.
 
 ## 6. Launch & community
 
-- Announce Nexus on nostr, tied to PR #2411 — lead with "here's the
+- Announce North on nostr, tied to PR #2411 — lead with "here's the
   whole ecosystem, live, and here's the protocol underneath it."
 - **The launch content already exists.** The three articles and eight
   figures are written. Publish them on the Substack, cross-post to
@@ -351,7 +349,7 @@ onboarding moment.
   view and the Notary ("physics by commitment") are the two most
   novel, most shareable demos in the whole suite — lead the technical
   audience with those.
-- Nexus becomes the thing you point skeptical reviewers and potential
+- North becomes the thing you point skeptical reviewers and potential
   integrators (the Notedeck conversation) to: a working reference
   ecosystem, not a spec.
 
