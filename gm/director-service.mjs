@@ -42,7 +42,10 @@ try {
 const PORT = Number(process.env.NOIR_GM_PORT ?? 8787)
 const MODEL = process.env.NOIR_MODEL ?? 'claude-sonnet-5'
 const KEY = process.env.ANTHROPIC_API_KEY
-const REPLICATE = process.env.REPLICATE_API_TOKEN
+// The darkroom is opt-in now (DECISIONS: the pen is the picture; FLUX
+// was burning tokens on scenes the game no longer shows). A token in
+// .env spends nothing unless NOIR_SCENES=1 turns the lights on.
+const REPLICATE = process.env.NOIR_SCENES === '1' ? process.env.REPLICATE_API_TOKEN : null
 const IMAGE_MODEL = process.env.NOIR_IMAGE_MODEL ?? 'black-forest-labs/flux-schnell'
 const ROOT = ROOT_
 
@@ -583,7 +586,7 @@ const server = createServer(async (req, res) => {
     for await (const chunk of req) raw += chunk
     try {
       const payload = JSON.parse(raw)
-      if (!REPLICATE) throw new Error('no REPLICATE_API_TOKEN — procedural scenes only')
+      if (!REPLICATE) throw new Error('the darkroom is closed — NOIR_SCENES=1 (plus REPLICATE_API_TOKEN) reopens it')
       const image = await scene(payload)
       note(`developed a scene — ${payload.era ?? '?'} / ${payload.kind ?? '?'}`,
         { still: `${payload.era}|${payload.kind}|${payload.seed}` })
@@ -691,6 +694,6 @@ server.listen(PORT, () => {
     : '  DRY MODE — no ANTHROPIC_API_KEY set; /voice returns fallbacks (scripted prose)')
   console.log(REPLICATE
     ? `  scenes: ${IMAGE_MODEL} (FLUX stills, duotoned client-side)`
-    : '  scenes: procedural (set REPLICATE_API_TOKEN for FLUX stills)')
+    : '  scenes: the pen (procedural line work; NOIR_SCENES=1 re-opens the FLUX darkroom)')
   console.log('  open the client (npm run serve) — it will detect the Director automatically')
 })
