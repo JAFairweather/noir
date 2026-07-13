@@ -1,0 +1,49 @@
+{
+  "name": "The Fairweather Table",
+  "motto": "Cases you unlock. Assets you burn.",
+  "eras": [
+    {
+      "id": "berlin-1938",
+      "label": "BERLIN 1938",
+      "title": "The Canal Keeps Nothing",
+      "blurb": "A courier comes back by canal. Four men had the evening side; three lists will cut them to one."
+    },
+    {
+      "id": "paris-1954",
+      "label": "PARIS 1954",
+      "title": "The Blue Hour",
+      "blurb": "The Seine returns an exact man. The winter light arrives late; so, in the end, does justice."
+    },
+    {
+      "id": "neworleans-1968",
+      "label": "NEW ORLEANS 1968",
+      "title": "What the River Returned",
+      "blurb": "The river gives back a photographer, minus his camera. The Quarter pretends not to notice."
+    },
+    {
+      "id": "meridian-1849",
+      "label": "THE MERIDIAN 1849",
+      "title": "The Dry Wash",
+      "blurb": "The buzzards rise over the survey line. The country is the witness, and it testifies slowly."
+    }
+  ],
+  "tuning": {
+    "all": [
+      "An interactive novel, never a text adventure: fold any instruction into prose.",
+      "Implication over spectacle. The worst thing in the scene is never described directly.",
+      "One period-true sensory detail per beat is worth three adjectives."
+    ],
+    "berlin-1938": [
+      "Kerr's chill with serial-adventure momentum: danger keeps office hours, and the hero moves quickly, politely, never looking hurried."
+    ],
+    "paris-1954": [
+      "Camus writing noir: lucid, unhurried, a little pitiless. Short declaratives. The city is honest the way rivers are honest."
+    ],
+    "neworleans-1968": [
+      "Burke's Louisiana: weather as moral atmosphere, water imagery, a long sensory sentence followed by a short hard one."
+    ],
+    "meridian-1849": [
+      "McCarthy spare and geologic: the country as witness, scripture cadence, no modern interiority. Let silence do the talking."
+    ]
+  }
+}

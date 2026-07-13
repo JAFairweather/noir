@@ -21,7 +21,7 @@ import {
 import { StubGM } from '../gm/stubgm.mjs'
 import { CASES, CASE_LIST } from '../gm/cases/registry.mjs'
 import { generateCase } from '../gm/casegen.mjs'
-import { generateWebCase } from '../gm/caseweb.mjs'
+import { generateWebCase, SUPPORTED_ERAS } from '../gm/caseweb.mjs'
 import { Wheel } from './wheel.mjs'
 import { Score } from './audio.mjs'
 import { applyEra } from './art.mjs'
@@ -425,7 +425,7 @@ function attachVoice() {
   gm.interrogator = makeInterrogator({ post, era: CASE.ERA, getTail })
   gm.converse = makeConverse({ post, getTail, getStyleNotes })
   gm.judge = makeJudge({ post })
-  $('#director-status').textContent = `DIRECTOR: ${director.model}${director.browser ? ' (in-browser)' : ''}`
+  $('#director-status').textContent = director.house ? `TABLE: ${director.house}` : `DIRECTOR: ${director.model}${director.browser ? ' (in-browser)' : ''}`
   $('#director-status').classList.remove('hidden')
 }
 
@@ -528,35 +528,38 @@ async function resumeSave(save) {
   input.focus()
 }
 
-const pickCase = () => showCaseSelect([
-  // Long form only (decision, 2026-07-13): every case is a novel — four
-  // suspects, three trails, three lists. One per era. The short cases
-  // remain in the repo and the CI as engine proofs, not offerings.
+// The house's rooms: when seated at a table (a connected Director with a
+// house card), the picker offers THAT table's scenarios in its order and
+// words. Otherwise, the default four. Either way, only eras the engine
+// can actually build are offered.
+const DEFAULT_ERAS = [
   {
-    id: `web:berlin-1938:${Math.random().toString(36).slice(2, 8)}`,
-    label: 'BERLIN 1938',
-    title: 'The Canal Keeps Nothing',
+    id: 'berlin-1938', label: 'BERLIN 1938', title: 'The Canal Keeps Nothing',
     blurb: 'A courier comes back by canal. Four men had the evening side; three lists will cut them to one.',
   },
   {
-    id: `web:paris-1954:${Math.random().toString(36).slice(2, 8)}`,
-    label: 'PARIS 1954',
-    title: 'The Blue Hour',
+    id: 'paris-1954', label: 'PARIS 1954', title: 'The Blue Hour',
     blurb: 'The Seine returns an exact man. The winter light arrives late; so, in the end, does justice.',
   },
   {
-    id: `web:neworleans-1968:${Math.random().toString(36).slice(2, 8)}`,
-    label: 'NEW ORLEANS 1968',
-    title: 'What the River Returned',
+    id: 'neworleans-1968', label: 'NEW ORLEANS 1968', title: 'What the River Returned',
     blurb: 'The river gives back a photographer, minus his camera. The Quarter pretends not to notice.',
   },
   {
-    id: `web:meridian-1849:${Math.random().toString(36).slice(2, 8)}`,
-    label: 'THE MERIDIAN 1849',
-    title: 'The Dry Wash',
+    id: 'meridian-1849', label: 'THE MERIDIAN 1849', title: 'The Dry Wash',
     blurb: 'The buzzards rise over the survey line. The country is the witness, and it testifies slowly.',
   },
-], (id) => freshStart(id))
+]
+const pickCase = () => {
+  const rooms = (director?.houseCard?.eras?.length ? director.houseCard.eras : DEFAULT_ERAS)
+    .filter(e => SUPPORTED_ERAS.includes(e.id))
+  showCaseSelect(rooms.map(e => ({
+    id: `web:${e.id}:${Math.random().toString(36).slice(2, 8)}`,
+    label: e.label ?? e.id,
+    title: e.title ?? '',
+    blurb: e.blurb ?? '',
+  })), (id) => freshStart(id))
+}
 applyEra(CASE.ERA)
 director = (await detectDirector()) ?? browserDirector()
 wireDirectorBox()

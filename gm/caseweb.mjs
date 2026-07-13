@@ -170,6 +170,8 @@ const WEB_MERIDIAN = {
 
 // ---------------------------------------------------------------- builder
 
+export const SUPPORTED_ERAS = ['berlin-1938', 'neworleans-1968', 'paris-1954', 'meridian-1849']
+
 export function generateWebCase(seed, era = 'berlin-1938') {
   const make = {
     'berlin-1938': webBerlin,

@@ -35,9 +35,13 @@ export async function detectDirector(url = localStorage.getItem('noir.gm.url') ?
     const res = await fetch(`${url}/health`, { signal: ctrl.signal })
     clearTimeout(timer)
     const info = await res.json()
-    return info.ok
-      ? { url, live: !!info.director, model: info.model, images: !!info.images, post: httpPost(url) }
-      : null
+    if (!info.ok) return null
+    const dir = { url, live: !!info.director, model: info.model, images: !!info.images, house: info.house, post: httpPost(url) }
+    try {
+      const h = await fetch(`${url}/house`).then(r => r.json())
+      if (h?.eras?.length) dir.houseCard = h
+    } catch { /* a table with no card is still a table */ }
+    return dir
   } catch { return null }
 }
 

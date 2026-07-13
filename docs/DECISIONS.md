@@ -238,3 +238,23 @@ Consequences, standing:
   themselves, same law as the pen's buildings. The ambient typist
   remains for readers who just watch.
 - The pen backdrop stays and keeps getting refined.
+
+## 13. Every table is a different room (added 2026-07-13)
+
+A Director is not infrastructure; it is THE HOUSE. Each table carries
+its own identity in `house.json`: the table's name, its motto, the
+SCENARIOS it offers (the picker is built from the house card of
+whatever table you are seated at), and its DIALOG TUNING — persistent
+per-era voice notes that ride every voice, converse, and interrogation
+call (advisory; the hard rules always win). GET /house serves the
+card; /health carries the house name; the notebook status line reads
+'TABLE: <name>' when seated.
+
+The engine's era ids are the only constraint on what a table may
+offer (client filters against SUPPORTED_ERAS). The Fairweather Table
+runs four rooms: Berlin 1938 (Kerr-with-momentum), Paris 1954 (Camus),
+New Orleans 1968 (Burke), the Meridian 1849 (McCarthy). Another
+operator edits one JSON file and opens an entirely different room —
+same game, different house, different voice. Margin-notes workshops
+distill INTO house tuning: session notes that prove out graduate to
+house.json.
