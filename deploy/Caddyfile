@@ -8,10 +8,20 @@
 
 # The hub — the ecosystem front door. Static, served straight off the box
 # from ../nave (mounted read-only into this container at /srv/nave).
-nave.pub, www.nave.pub {
+# The apex gets its OWN cert block: bundling www in here would make Caddy
+# order ONE cert for both names, and if www fails to validate (it has no
+# explicit A record — only the wildcard) the whole order fails and the
+# apex goes down with it. Keep them independent.
+nave.pub {
 	root * /srv/nave
 	encode gzip zstd
 	file_server
+}
+
+# www just points at the apex. Its own block, so if its cert ever stalls
+# it can't take nave.pub with it.
+www.nave.pub {
+	redir https://nave.pub{uri} permanent
 }
 
 # The game client — static, served from ../client and the sibling modules
