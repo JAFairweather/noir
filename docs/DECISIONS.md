@@ -313,3 +313,15 @@ ever logs in as it. The hierarchy:
 Compromise at any layer is answered by the layer above: burner leaks,
 the table certifies a new one; table box owned, the master revokes
 the house; the master key never meets a server.
+
+**The lightning-pointer question, resolved:** the Director necessarily
+knows the master's NPUB (it is the grant's publisher — that is how the
+agent knows whose house it runs; npubs are public identity, not
+secrets). The master's LIGHTNING ADDRESS is a public payment pointer
+(pay-only, never withdraw) and travels inside the house scope itself —
+a `lud16` field the Director stamps into the table's kind-0. Delegated
+in, updated by rotation, withdrawn by revocation, like everything
+else. Privacy note: the table's lud16 is publicly visible; a master
+who wants the house unlinked from their personal identity mints a
+dedicated alias (the house gets its own till; the till empties into
+the master's pocket). The NSEC still never crosses, for any flow.
