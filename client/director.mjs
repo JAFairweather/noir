@@ -10,7 +10,17 @@
 //      stored locally, calling Anthropic directly. Zero install.
 // Every path fails soft to the scripted line: the game must always play.
 
-const DEFAULT_URL = 'http://localhost:8787'
+// Where to look for a Director when the player hasn't pasted a table URL.
+// Served from *.nave.pub → the hosted table's Director; anywhere else
+// (localhost, github.io) → a local dev Director. A pasted table address
+// (localStorage noir.gm.url) always wins over this default.
+const HOSTED_DIRECTOR = 'https://director.nave.pub'
+const defaultDirectorUrl = () => {
+  try {
+    if (typeof location !== 'undefined' && /(^|\.)nave\.pub$/i.test(location.hostname)) return HOSTED_DIRECTOR
+  } catch { /* no location (tests) */ }
+  return 'http://localhost:8787'
+}
 
 const httpPost = (url, ms = 15000) => async (path, payload) => {
   const ctrl = new AbortController()
@@ -28,7 +38,7 @@ const httpPost = (url, ms = 15000) => async (path, payload) => {
   }
 }
 
-export async function detectDirector(url = localStorage.getItem('noir.gm.url') ?? DEFAULT_URL) {
+export async function detectDirector(url = localStorage.getItem('noir.gm.url') ?? defaultDirectorUrl()) {
   try {
     const ctrl = new AbortController()
     const timer = setTimeout(() => ctrl.abort(), 1500)

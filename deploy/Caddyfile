@@ -1,0 +1,25 @@
+# The one front door for everything on nave.pub.
+# Caddy fetches + renews Let's Encrypt certs automatically, as long as
+# each name's DNS A record points at this box and ports 80+443 are open.
+
+{
+	email {$ACME_EMAIL}
+}
+
+# The Noir Director API. The game CLIENT is on Cloudflare Pages at
+# noir.nave.pub and calls this endpoint.
+director.nave.pub {
+	reverse_proxy director:8787
+}
+
+# --- Consolidate the rest of your dev under this same front door ---
+# Each addition is one block. The target container must share the `nave`
+# Docker network (so Caddy can resolve it by name), or use its host:port.
+#
+# bot.nave.pub {
+# 	reverse_proxy claudebot:PORT     # your Claude bot's container name + port
+# }
+#
+# relay.nave.pub {
+# 	reverse_proxy relay:PORT         # the nostr relay (Phase 5)
+# }

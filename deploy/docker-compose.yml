@@ -1,0 +1,52 @@
+# The Noir Director + a shared Caddy front door, for one Hostinger VPS.
+#
+# Caddy terminates HTTPS for EVERYTHING on nave.pub (auto Let's Encrypt),
+# and reverse-proxies each subdomain to its container. Adding your Claude
+# bot or the relay later is three lines in ./Caddyfile — one front door,
+# many services. This is the whole point of consolidating on one box.
+#
+#   cd deploy && cp .env.example .env   # then fill it in
+#   docker compose up -d --build
+#   docker compose logs -f director
+
+services:
+  director:
+    build:
+      context: ..                 # repo root, so the Dockerfile's COPYs resolve
+      dockerfile: deploy/Dockerfile
+    image: noir-director:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - NOIR_GM_PORT=8787
+    expose:
+      - "8787"                    # internal only; Caddy is the public face
+    networks: [nave]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8787/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"                   # ACME http-01 challenge + http→https redirect
+      - "443:443"
+    env_file: .env                # Caddy reads ACME_EMAIL from here
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data          # certificates persist here — do not delete
+      - caddy_config:/config
+    networks: [nave]
+    depends_on: [director]
+
+networks:
+  nave:
+    name: nave
+
+volumes:
+  caddy_data:
+  caddy_config:

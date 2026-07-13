@@ -33,9 +33,11 @@ and `.app`; `nave.pub` was clear.) The TLD is a deliberate win: `.pub`
 triple-loads — **pub/sub** (the protocol), **public house** (the
 speakeasy motif Noir already lives in), and **publish** (the writing /
 Substack front). Apps live at subdomains: `noir.nave.pub`,
-`nvoy.nave.pub`, `nherit.nave.pub`, and the reference relay at
-`relay.nave.pub`. Cost ~$10–40/yr; registered through Cloudflare so the
-registrar, DNS, and Pages hosting share one zone.
+`nvoy.nave.pub`, `nherit.nave.pub`, etc. Two of the subdomains are the
+VPS's, not Pages': `director.nave.pub` (Noir's Director API — the game
+client at `noir.nave.pub` calls it) and `relay.nave.pub` (the reference
+relay). Cost ~$10–40/yr; registered through Cloudflare so the registrar,
+DNS, and Pages hosting share one zone.
 
 ### 0.2 URL architecture — subdomains vs. paths
 
@@ -223,16 +225,18 @@ and flip to a live link as each app rolls out (§4).
 
 A clearly-marked section (or a linked `/about`) gathering:
 
-- **Substack** — the essays (Protocol as Fuel, Cryptographic Boundary
-  Conditions, the Noir architecture, and what follows).
-- **LinkedIn** — professional profile.
-- **The JA Fairweather page** — personal site / bio.
+- **Substack** — <https://jafairweather.substack.com/> — the essays
+  (Protocol as Fuel, Cryptographic Boundary Conditions, the Noir
+  architecture, and what follows).
+- **LinkedIn** — <https://www.linkedin.com/in/jafairweather/> —
+  professional profile.
+- **The JA Fairweather page** — personal site / bio. *(URL TBD.)*
 - **"Identity = Freedom"** — the thesis page: the manifesto tying the
   ecosystem to the idea, and the reason a reader should care beyond the
-  code.
+  code. *(URL TBD — could be its own page or a section of the JA page.)*
 
-*(Provide the exact URLs and I'll wire them in; placeholders stand in
-until then.)*
+*(Still need: the JA Fairweather personal-site URL and, if separate, the
+Identity = Freedom page.)*
 
 ### 2.5 Technical
 

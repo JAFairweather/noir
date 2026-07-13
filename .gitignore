@@ -3,3 +3,6 @@ node_modules/
 .director-key
 house.grant.jsonl
 .master-key
+
+# deploy secrets (never commit)
+deploy/.env
