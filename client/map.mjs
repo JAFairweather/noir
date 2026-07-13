@@ -287,8 +287,11 @@ export class CityMap {
   draw() {
     const canvas = this.canvas
     if (!canvas || !this.g) return
-    const dpr = 2
-    canvas.width = W * dpr; canvas.height = H * dpr
+    // render at the canvas's real on-screen size — the notebook column
+    // scales with the window now, and the map must stay sharp when wide
+    const cssW = canvas.clientWidth || W
+    const dpr = Math.max(2, (window.devicePixelRatio || 1) * (cssW / W))
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr)
     const ctx = canvas.getContext('2d')
     ctx.scale(dpr, dpr)
     const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#c39a56'

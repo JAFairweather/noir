@@ -266,7 +266,10 @@ wireNotes()
 // the one job the desk refuses to do for you. Marks persist per case.
 function renderDeduction() {
   const box = $('#deduce')
-  if (!CASE.board) { box.classList.add('hidden'); return }
+  // The grid stays dark until the suspect board itself has been earned:
+  // four names on a table before the story has said them is a spoiler,
+  // not a tool.
+  if (!CASE.board || !gm?.unlocked?.has('board')) { box.classList.add('hidden'); return }
   box.classList.remove('hidden')
   const KEY = 'noir.deduce.' + CASE.CASE_ID
   let marks
@@ -412,6 +415,18 @@ window.addEventListener('keydown', (e) => {
 })
 
 $('#nb-toggle').addEventListener('click', () => $('#notebook').classList.toggle('open'))
+
+// GEAR: the rig (identity, Director, margin notes, switches) is its own
+// column, and hideable — the case reads wider with the toolbox stowed.
+{
+  const rig = $('#rig')
+  if (localStorage.getItem('noir.rig.stowed') === '1') rig.classList.add('stowed')
+  $('#rig-toggle').addEventListener('click', () => {
+    if (window.innerWidth <= 720) { rig.classList.toggle('open'); return }
+    rig.classList.toggle('stowed')
+    localStorage.setItem('noir.rig.stowed', rig.classList.contains('stowed') ? '1' : '0')
+  })
+}
 // reading a dossier from the notebook should hand the phone back to the drum
 $('#notebook-list').addEventListener('click', () => {
   if (window.innerWidth <= 720) $('#notebook').classList.remove('open')
@@ -544,7 +559,7 @@ function waitForBegin() {
     const onTap = (e) => {
       // The notebook is dashboard, not door: engaging a Director key or
       // flipping a toggle at the preamble must not open the file.
-      if (e.target.closest?.('#notebook')) return
+      if (e.target.closest?.('#notebook') || e.target.closest?.('#rig')) return
       done()
     }
     window.addEventListener('keydown', onKey, true)

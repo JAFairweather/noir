@@ -87,10 +87,10 @@
   }
   .drum-line {
     position: absolute;
-    left: 13%;
-    width: min(72ch, 76%);
+    left: 8%;
+    width: min(92ch, 84%);
     text-align: left;
-    font-size: 16px; line-height: 1.55;
+    font-size: clamp(15px, 0.5vw + 10px, 19px); line-height: 1.55;
     white-space: pre-wrap;
     color: color-mix(in srgb, var(--accent) 62%, #f4efe4);
     text-shadow: 0 0 10px var(--ink), 0 0 4px var(--ink), 0 1px 2px var(--ink);
@@ -100,8 +100,8 @@
   .drum-line.focal { color: #f4efe4; text-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent); }
   #flat {
     position: absolute; inset: 0; overflow-y: auto;
-    padding: 24px clamp(24px, 14vw, 180px) 40vh;
-    font-size: 16px; line-height: 1.6;
+    padding: 24px clamp(24px, 10vw, 150px) 40vh;
+    font-size: clamp(15px, 0.5vw + 10px, 19px); line-height: 1.6;
     text-shadow: 0 0 10px var(--ink), 0 0 4px var(--ink), 0 1px 2px var(--ink);
   }
   .flat-line { white-space: pre-wrap; }
@@ -117,14 +117,17 @@
   .burn-line { color: #d0442c; letter-spacing: 0.12em; }
   .title-line { letter-spacing: 0.9em; color: #f4efe4; }
 
-  /* ------------------------------------------------------- notebook */
-  #notebook {
-    width: 270px; flex: none; z-index: 2;
+  /* ------------------------- notebook (the case) + rig (the config) */
+  #notebook, #rig {
+    flex: none; z-index: 2;
     border-left: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
     padding: 14px; font-size: 13px; overflow-y: auto;
     background: color-mix(in srgb, var(--ink) 82%, black);
   }
-  #notebook h2 { font-size: 12px; letter-spacing: 0.3em; color: var(--accent-dim); margin-bottom: 10px; }
+  #notebook { width: clamp(280px, 26vw, 460px); }
+  #rig { width: clamp(220px, 17vw, 300px); }
+  #rig.stowed { display: none; }
+  #notebook h2, #rig h2 { font-size: 12px; letter-spacing: 0.3em; color: var(--accent-dim); margin-bottom: 10px; }
   #citymap {
     width: 100%; aspect-ratio: 240 / 190; margin-bottom: 10px;
     border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
@@ -141,7 +144,7 @@
   #notebook li:hover { border-color: var(--accent); }
   .scope-stale { opacity: 0.45; cursor: default; text-decoration: line-through; }
   .scope-status { color: #d0442c; font-size: 11px; }
-  #notebook .note { color: var(--accent-dim); font-size: 11px; margin-top: 14px; line-height: 1.5; }
+  #notebook .note, #rig .note { color: var(--accent-dim); font-size: 11px; margin-top: 14px; line-height: 1.5; }
   .tc-meta { display: block; width: 100%; color: var(--accent-dim); font-size: 10px; letter-spacing: 0.04em; margin-top: 4px; word-break: break-all; }
   #deduce { margin: 12px 0 4px; }
   #deduce h3 { font-size: 10px; letter-spacing: 0.3em; color: var(--accent-dim); margin-bottom: 6px; }
@@ -251,12 +254,14 @@
   /* the Director's still under the ink: present, not loud */
   .backdrop-canvas.plate.active { opacity: 0.22; }
 
-  #nb-toggle {
+  #nb-toggle, #rig-toggle {
     display: none; background: transparent; color: var(--accent);
     border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
     font-family: var(--era-font); font-size: 11px; letter-spacing: 0.25em;
     padding: 3px 10px; cursor: pointer;
   }
+  #rig-toggle { display: inline-block; color: var(--accent-dim); }
+  #rig-toggle:hover { color: var(--accent); }
   @media (max-width: 720px) {
     header { padding: 8px 10px; font-size: 11px; letter-spacing: 0.08em; gap: 8px; }
     header .wordmark { font-size: 13px; letter-spacing: 0.3em; }
@@ -264,12 +269,13 @@
     #nb-toggle { display: inline-block; }
     .drum-line { left: 5%; width: 90%; font-size: 15px; }
     #flat { padding: 16px 14px 40vh; font-size: 14px; }
-    #notebook {
+    #notebook, #rig {
       position: fixed; right: 0; top: 40px; bottom: 56px; width: min(82vw, 320px);
       transform: translateX(100%); transition: transform 0.25s; z-index: 6;
       border-left: 1px solid var(--accent);
     }
-    #notebook.open { transform: none; }
+    #rig { display: block; }   /* .stowed yields to the slide-away on phones */
+    #notebook.open, #rig.open { transform: none; }
     footer { padding: 8px 10px 12px; }
     footer .hint { display: none; }
     .block-cursor { left: 26px; bottom: 12px; }
@@ -281,6 +287,7 @@
   <header>
     <span class="wordmark">NOIR</span>
     <button id="nb-toggle" aria-label="Toggle case notebook">FILES</button>
+    <button id="rig-toggle" aria-label="Toggle table and gear panel">GEAR</button>
     <span id="era-label"></span>
     <span><span id="director-status" class="hidden" title="A local Director service is voicing this case"></span>
     HEAT <span id="heat-value">0</span><span id="heat-lamp">●</span></span>
@@ -298,12 +305,18 @@
         <table id="deduce-grid"></table>
         <p class="deduce-note">your marks, not the desk’s — tap to cycle ✓ ✗</p>
       </div>
+      <ul id="notebook-list"></ul>
+      <p class="note">Everything here was earned or handed to you, and it can be taken back.
+      A burned contact stays legible exactly as far as you already read. Nothing in this
+      city is yours forever.</p>
+    </aside>
+    <aside id="rig">
+      <h2>GEAR</h2>
       <div id="identity">
         <span class="id-label" id="npub-label">FIELD IDENTITY</span>
         <span id="npub" title="Your nostr public key — the notebook belongs to it"></span>
         <button id="signin" class="hidden" title="Connect a NIP-07 extension (Alby, nos2x). Your real npub; your nsec stays in the extension.">SIGN IN</button>
       </div>
-      <ul id="notebook-list"></ul>
       <div id="dir-box">
         <span class="id-label">DIRECTOR</span>
         <p class="note" id="dir-status" style="margin: 0 0 5px"></p>
@@ -332,9 +345,6 @@
       <label class="toggle"><input type="checkbox" id="score-toggle"> score (original 19-TET)</label>
       <label class="toggle"><input type="checkbox" id="tc-toggle"> tradecraft view (protocol)</label>
       <div id="tc-panel" class="hidden"></div>
-      <p class="note">Everything here was earned or handed to you, and it can be taken back.
-      A burned contact stays legible exactly as far as you already read. Nothing in this
-      city is yours forever.</p>
     </aside>
   </main>
   <footer>
