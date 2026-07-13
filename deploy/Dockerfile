@@ -12,8 +12,10 @@ FROM node:22-alpine
 WORKDIR /app
 
 # Install production deps first so this layer caches across code changes.
+# `npm ci` when the lockfile is in sync; fall back to `npm install` if a
+# fresh clone's lock has drifted, so the build never wedges on that.
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev --no-audit --no-fund
+RUN npm ci --omit=dev --no-audit --no-fund || npm install --omit=dev --no-audit --no-fund
 
 # The Director's own code and data.
 COPY gm ./gm
