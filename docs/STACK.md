@@ -565,6 +565,9 @@ doorway labeled NOTARY; the doorway's lintel is the kind-0 commitment.
 
 ## 9. Content angles
 
+
+- **"Protocol as Fuel"** - the overal NIP-DA protocol, and how it fueled a portfolio of solutions all centered on secure, revokable data grants
+- **"Cryptographic Boundary Conditions for World Models"** - how cryptographic constraint conditions are imposed as hard skeleton in generative world creation
 - **"Revocation is a key rotation"** — the OAuth-contrast piece; Nvoy's
   framing, Noir's burned-contact mechanic as the emotional demo.
 - **"The game that can't cheat"** — solution commitments + the Notary;

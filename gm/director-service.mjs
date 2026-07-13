@@ -58,6 +58,7 @@ let FILE_HOUSE = null
 try { FILE_HOUSE = JSON.parse(readFileSync(join(ROOT_, 'house.json'), 'utf8')) } catch { /* no local house */ }
 let HOUSE = FILE_HOUSE ?? UNMARKED
 let HOUSE_SOURCE = FILE_HOUSE ? 'local file' : 'none'
+let WORLDS = Array.isArray(FILE_HOUSE?.worlds) ? FILE_HOUSE.worlds : []   // delegated eras (kind 'world' scopes; house.json may carry them too)
 let MASTER_NPUB = null
 let MANDATE = null
 let TILL = { lud16: null, source: 'none' }
@@ -111,14 +112,15 @@ async function refreshGrantedHouse() {
     const r = await resolveHouse(HOUSE_RELAY, DIRECTOR_SK)
     if (r) {
       const master = nip19.npubEncode(r.master)
-      const changed = HOUSE_SOURCE !== 'granted' || JSON.stringify(HOUSE) !== JSON.stringify(r.house)
+      const changed = HOUSE_SOURCE !== 'granted' || JSON.stringify(HOUSE) !== JSON.stringify(r.house) || JSON.stringify(WORLDS) !== JSON.stringify(r.worlds ?? [])
       HOUSE = r.house
       HOUSE_SOURCE = 'granted'
       MASTER_NPUB = master
       MANDATE = r.terms?.purpose ?? null
+      WORLDS = r.worlds ?? []
       TILL = await resolveTill(HOUSE_RELAY, r.master, r.house)
       if (changed) {
-        const line = `the house arrived by grant — running it on behalf of ${master.slice(0, 12)}…${MANDATE ? ` (mandate: ${MANDATE})` : ''}${TILL.lud16 ? ` · till: ${TILL.lud16} (${TILL.source})` : ''}${r.notesCount ? ` · ${r.notesCount} margin notes folded into the house voice` : ''}`
+        const line = `the house arrived by grant — running it on behalf of ${master.slice(0, 12)}…${MANDATE ? ` (mandate: ${MANDATE})` : ''}${TILL.lud16 ? ` · till: ${TILL.lud16} (${TILL.source})` : ''}${r.notesCount ? ` · ${r.notesCount} margin notes folded into the house voice` : ''}${WORLDS.length ? ` · ${WORLDS.length} delegated world${WORLDS.length > 1 ? 's' : ''}: ${WORLDS.map(w => w.label).join(', ')}` : ''}`
         note(line)
         console.log(`  ${line}`)
       }
@@ -128,6 +130,7 @@ async function refreshGrantedHouse() {
       MASTER_NPUB = null
       MANDATE = null
       TILL = { lud16: null, source: 'none' }
+      WORLDS = Array.isArray(FILE_HOUSE?.worlds) ? FILE_HOUSE.worlds : []
       note('NVOY_GRANT_REVOKED — the master has withdrawn the house. The table stands unmarked tonight.')
       console.log('  NVOY_GRANT_REVOKED — the master has withdrawn the house')
     }
@@ -535,6 +538,7 @@ const server = createServer(async (req, res) => {
     return res.writeHead(200, { 'content-type': 'application/json' })
       .end(JSON.stringify({
         name: HOUSE.name, motto: HOUSE.motto ?? '', eras: HOUSE.eras ?? [],
+        worlds: WORLDS,
         agent: DIRECTOR_NPUB, master: MASTER_NPUB, mandate: MANDATE, houseSource: HOUSE_SOURCE,
         relays: process.env.NOIR_RELAYS?.split(',').map(u => u.trim()) ?? null,
       }))

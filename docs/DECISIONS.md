@@ -390,3 +390,20 @@ The ladder up, each rung behind the same door:
 The kind-0 fair-play commitment existed from the start; §17 makes it
 the constitution rather than a feature. The speakeasy's promise: the
 house can be as creative as it likes, and the game is provably fair.
+
+## 18. Rung 1 shipped: worlds by wire (2026-07-13)
+
+An era is data now. `generateWorldCase(seed, pack)` dresses the proven
+deduction-web skeleton in whatever a WORLD PACK supplies — names,
+rooms, phrases, a ledger of dead airships, a voice — and the Notary
+gates the deal exactly as it gates the built-ins. The pack travels as
+a `kind: 'world'` NIP-DA scope on the master's identity, granted to
+the Director via nvoy; `resolveHouse` folds in only the MASTER'S
+worlds (the notes trust rule, applied to entire realities), the
+/house card advertises them, and the client seats them beside the
+built-in eras. First delegated world: NEW ALBION 2040 — dirigibles,
+digital newsprint, steam velocipedes ("The Mooring Ledger",
+docs/worlds/new-albion-2040.json, console-ready). The presentation
+layer degrades honestly for unknown eras: default palette, lattice
+map, generic pen scenes; the pack's tuning carries the literary DNA
+through the Director's voice.

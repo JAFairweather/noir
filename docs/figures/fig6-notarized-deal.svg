@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="600" viewBox="0 0 980 600" font-family="Courier New, Courier, monospace">
+<defs><marker id="arr-gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+     <path d="M0,0 L10,5 L0,10 z" fill="#c39a56"/></marker>
+<marker id="arr-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+     <path d="M0,0 L10,5 L0,10 z" fill="#6b5530"/></marker>
+<marker id="arr-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+     <path d="M0,0 L10,5 L0,10 z" fill="#d64532"/></marker>
+<marker id="arr-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+     <path d="M0,0 L10,5 L0,10 z" fill="#9fd08a"/></marker>
+<marker id="arr-cream" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+     <path d="M0,0 L10,5 L0,10 z" fill="#f4efe4"/></marker></defs>
+<rect width="100%" height="100%" fill="#0d0a07"/>
+<rect x="40" y="90" width="240" height="130" fill="#171106" stroke="#c39a56" stroke-width="1.2"  rx="2"/><text x="160" y="118" font-size="13" fill="#f4efe4" text-anchor="middle" letter-spacing="2" >CASE MODULE</text><text x="160" y="142" font-size="11" fill="#c39a56" text-anchor="middle" letter-spacing="0" >any author:</text>
+<text x="160" y="158" font-size="11" fill="#c39a56" text-anchor="middle" letter-spacing="0" >hand-written · era pack</text>
+<text x="160" y="174" font-size="11" fill="#c39a56" text-anchor="middle" letter-spacing="0" >template · language model</text>
+<text x="160" y="190" font-size="11" fill="#c39a56" text-anchor="middle" letter-spacing="0" >(free to be wrong)</text><line x1="280" y1="155" x2="360" y2="155" stroke="#c39a56" stroke-width="1.4"  marker-end="url(#arr-gold)"/><rect x="360" y="60" width="280" height="220" fill="#171106" stroke="#9fd08a" stroke-width="1.8"  rx="2"/><text x="500" y="90" font-size="13" fill="#f4efe4" text-anchor="middle" letter-spacing="3" font-weight="bold">THE NOTARY</text><text x="500" y="108" font-size="10" fill="#6b5530" text-anchor="middle" letter-spacing="0" >shared/verify.mjs — before any deal</text><text x="386" y="136" font-size="11" fill="#c39a56" text-anchor="start" letter-spacing="0" >1  structure — no dangling edges</text>
+<text x="386" y="154" font-size="11" fill="#c39a56" text-anchor="start" letter-spacing="0" >2  fairness — all lists · all cleared</text>
+<text x="386" y="172" font-size="11" fill="#c39a56" text-anchor="start" letter-spacing="0" >   · no early naming</text>
+<text x="386" y="190" font-size="11" fill="#c39a56" text-anchor="start" letter-spacing="0" >3  solvability — walkthrough REPLAYED</text>
+<text x="386" y="208" font-size="11" fill="#c39a56" text-anchor="start" letter-spacing="0" >   through the real engine, heat 0</text>
+<text x="386" y="226" font-size="11" fill="#c39a56" text-anchor="start" letter-spacing="0" >4  commitment — salted, binds culprit</text><line x1="640" y1="130" x2="720" y2="130" stroke="#9fd08a" stroke-width="1.4"  marker-end="url(#arr-green)"/><text x="680" y="118" font-size="11" fill="#9fd08a" text-anchor="middle" letter-spacing="1" >SEALED</text><rect x="712" y="90" width="240" height="84" fill="#171106" stroke="#9fd08a" stroke-width="1.2"  rx="2"/><text x="830" y="114" font-size="10" fill="#c39a56" text-anchor="middle" letter-spacing="0" >kind-0 commitment</text>
+<text x="830" y="129" font-size="10" fill="#c39a56" text-anchor="middle" letter-spacing="0" >salted SHA-256 of the solution</text>
+<text x="830" y="144" font-size="10" fill="#c39a56" text-anchor="middle" letter-spacing="0" >published BEFORE the first grant</text><line x1="830" y1="174" x2="830" y2="230" stroke="#9fd08a" stroke-width="1.4"  marker-end="url(#arr-green)"/><rect x="712" y="230" width="240" height="66" fill="#171106" stroke="#c39a56" stroke-width="1.2"  rx="2"/><text x="830" y="256" font-size="10" fill="#c39a56" text-anchor="middle" letter-spacing="0" >briefing granted</text>
+<text x="830" y="271" font-size="10" fill="#c39a56" text-anchor="middle" letter-spacing="0" >— notarized … solution sealed a3f8… —</text><line x1="640" y1="240" x2="700" y2="330" stroke="#d64532" stroke-width="1.4"  marker-end="url(#arr-red)"/><text x="658" y="300" font-size="11" fill="#d64532" text-anchor="middle" letter-spacing="1" >REFUSED</text><rect x="600" y="330" width="260" height="80" fill="#171106" stroke="#d64532" stroke-width="1.2" stroke-dasharray="5 3" rx="2"/><text x="730" y="356" font-size="10" fill="#d64532" text-anchor="middle" letter-spacing="0" >no deal — failures listed</text>
+<text x="730" y="371" font-size="10" fill="#d64532" text-anchor="middle" letter-spacing="0" >sabotage cases (truncated walkthrough,</text>
+<text x="730" y="386" font-size="10" fill="#d64532" text-anchor="middle" letter-spacing="0" >forged culprit) die here · CI-proven</text><text x="490" y="480" font-size="14" fill="#f4efe4" text-anchor="middle" letter-spacing="1" >Generate freely. Ratify mechanically.</text><text x="490" y="504" font-size="12" fill="#c39a56" text-anchor="middle" letter-spacing="0" >The author can be wrong; the deal cannot.</text><text x="24" y="582" font-size="11" fill="#6b5530" text-anchor="start" letter-spacing="2" >FIG. 6 — ONE DEAL, NOTARIZED</text>
+</svg>

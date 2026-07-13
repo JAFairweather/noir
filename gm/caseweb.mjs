@@ -2732,3 +2732,620 @@ function webMeridian(seed) {
     },
   }
 }
+
+// ------------------------------------------------------- worlds by wire
+// Rung 1 of the world-builder ladder (DECISIONS §17): an era is DATA.
+// A world pack — names, rooms, phrases, a ledger, a voice — is published
+// as a NIP-DA scope under the master's key and granted to the Director
+// via nvoy. This builder dresses the proven deduction-web skeleton in
+// whatever the pack supplies; the Notary refuses anything that does not
+// prove out. The pack author writes a world, never a mechanism.
+
+export function validateWorldPack(p) {
+  const bad = []
+  const need = (k, ok) => { if (!ok) bad.push(`pack.${k} missing or malformed`) }
+  need('id', typeof p?.id === 'string' && /^[a-z0-9-]{3,}$/.test(p?.id ?? ''))
+  need('label', typeof p?.label === 'string' && p.label.length > 2)
+  need('title', typeof p?.title === 'string')
+  need('blurb', typeof p?.blurb === 'string')
+  need('surnames', Array.isArray(p?.surnames) && p.surnames.length >= 6)
+  need('roles', Array.isArray(p?.roles) && p.roles.length >= 4)
+  need('victims', Array.isArray(p?.victims) && p.victims.length >= 1)
+  need('victimRole', typeof p?.victimRole === 'string')
+  need('company', typeof p?.company === 'string')
+  need('site', typeof p?.site === 'string')
+  need('doc', typeof p?.doc === 'string')
+  need('room', typeof p?.room === 'string')
+  need('lodging', typeof p?.lodging === 'string')
+  need('listNames', p?.listNames?.rota && p?.listNames?.keybook && p?.listNames?.personnel)
+  need('watchName', typeof p?.watchName === 'string')
+  need('motiveKeyword', typeof p?.motiveKeyword === 'string')
+  need('motiveDoc', typeof p?.motiveDoc === 'string')
+  need('stashPlace', typeof p?.stashPlace === 'string' && p.stashPlace.includes('{WORD}'))
+  need('words', Array.isArray(p?.words) && p.words.length >= 1 &&
+    p.words.every(w => /^[A-Z]{4,8}$/.test(w) && new Set(w).size === w.length))
+  if (Array.isArray(p?.words) && p?.ledger) {
+    for (const w of p.words) for (const L of w)
+      if (typeof p.ledger[L] !== 'string') bad.push(`pack.ledger missing entry for letter ${L} of ${w}`)
+  } else need('ledger', false)
+  need('informants', Array.isArray(p?.informants) && p.informants.length >= 1 &&
+    p.informants.every(i => i.name && i.role && i.venue && i.alias))
+  need('herrings', Array.isArray(p?.herrings) && p.herrings.length >= 2 &&
+    p.herrings.every(h => h.name && h.trade && h.clears))
+  need('details', Array.isArray(p?.details) && p.details.length >= 1 &&
+    p.details.every(d => d.phrase && d.column && d.counter))
+  need('nights', Array.isArray(p?.nights) && p.nights.length >= 1 &&
+    p.nights.every(n => Array.isArray(n) && n.length === 2))
+  need('beats', Array.isArray(p?.beats) && p.beats.length === 3)
+  return bad
+}
+
+export function generateWorldCase(seed, pack) {
+  const bad = validateWorldPack(pack)
+  if (bad.length) throw new Error('world pack invalid: ' + bad.join('; '))
+  const rand = mulberry32(hash('world|' + pack.id + '|' + String(seed)))
+  const ERA = pack.id
+  const CASE_ID = `world:${pack.id}:${seed}`
+  const fill = (s, victim) => s.replaceAll('{VICTIM}', victim)
+
+  const S = dealSuspects(rand, pack.surnames, pack.roles)
+  const victim = pick(rand, pack.victims)
+  const word = pick(rand, pack.words)
+  const room = pack.room
+  const lodging = pack.lodging
+  const informant = pick(rand, pack.informants)
+  const [herring, herring2] = pickN(rand, pack.herrings, 2)
+  const detail = pick(rand, pack.details)
+  const [nightAbbr, nightWord] = pick(rand, pack.nights)
+  const stashPlace = pack.stashPlace.replaceAll('{WORD}', word)
+  const ledgerLines = word.split('').map(L => `  ${pack.ledger[L]}`)
+  const T = dealTimeline(rand, [
+    { time: '21:00', label: fill(pack.beats[0], victim) },
+    { time: '22:10', label: fill(pack.beats[1], victim) },
+    { time: '23:30', label: fill(pack.beats[2], victim) },
+  ])
+  const L = pack.listNames
+
+  const scopes = {
+    briefing: {
+      name: `Letter of Engagement — ${victim}`,
+      burnable: false,
+      payload: {
+        kind: 'dossier', scene: pack.style?.scene ?? 'office',
+        title: `LETTER OF ENGAGEMENT — ${victim}, FOUND AT ${pack.site.toUpperCase()}`,
+        body: [
+          `${victim} kept the honest count for ${pack.company}, and was`,
+          `found at ${pack.site} with the count unfinished. The people`,
+          'paid to notice such things had stopped noticing, which is',
+          `why ${pack.company} now pays a stranger. That is you.`,
+          '',
+          `Someone on the inside has been trading ${pack.doc} against`,
+          `goods that never existed, and ${victim} had lately taken to`,
+          'counting more than was asked. People who count what others',
+          'prefer uncounted do not always get to finish the column.',
+          '',
+          'Four names held the inside this season. Ask for the suspect',
+          'board and look at them plainly.',
+          '',
+          `With this letter sits ${victim}'s working ledger. All season`,
+          'the dead entries were struck through, and under the',
+          'strikings, one line in a careful hand: first letters, first.',
+          'The ledger reads so:',
+          '',
+          ...ledgerLines,
+          '',
+          `${victim} lodged at ${lodging}. Nobody has been through it.`,
+          `And mind ${herring.name} — ${herring.trade}. The office`,
+          'flagged the name, for whatever such suspicion is worth.',
+        ].join('\n'),
+      },
+    },
+    board: {
+      name: 'The Suspect Board',
+      burnable: false,
+      payload: {
+        kind: 'dossier', scene: 'office',
+        title: 'FOUR NAMES — THE INSIDE',
+        body: [
+          'Four names and no order to them, set down plain:',
+          '',
+          ...S.suspects.map(n => `  ${n} — ${S.role[n]}`),
+          '',
+          `All four held the inside while the ${pack.doc} moved. Three`,
+          'things will name the one: the nights, the keys, and what a',
+          'witness saw. Bring back a list for each. One name will still',
+          'be standing when the other three have been crossed out.',
+        ].join('\n'),
+      },
+    },
+    room: {
+      name: `${victim}'s Lodgings`,
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: pack.style?.scene ?? 'street',
+        title: `${lodging.toUpperCase()} — THE DEAD MAN'S ROOM`,
+        body: [
+          `The room is small and squared away, the room of a person who`,
+          'counted for a living. The landlady has touched nothing. The',
+          'dust has touched everything, evenly, like a fair auditor.',
+          '',
+          'On the desk: pen, blotter, and the imprint of a ledger that',
+          'is not here — it sits with your letter of engagement. On the',
+          'sill, arranged, the stubs of struck-out entries copied over',
+          'and over, as if practicing the strikethrough itself.',
+          '',
+          'First letters, first. The dead do not repeat themselves for',
+          'their health. Read the struck entries down their left edge.',
+        ].join('\n'),
+      },
+    },
+    stash: {
+      name: `The Cache — ${stashPlace}`,
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'yard',
+        title: `${stashPlace.toUpperCase()} — WHAT WAS HIDDEN`,
+        body: [
+          `${stashPlace} gives up a wrapped packet, sealed against the`,
+          `weather by somebody who meant it to be found by a reader and`,
+          'nobody else.',
+          '',
+          `Inside: fair copies of ${pack.doc}, matched against entries`,
+          'that exist in no honest book, and a note in the tally hand:',
+          '',
+          `  "The coin moves on ${nightWord} nights. Pull ${L.rota}`,
+          '  and see whose nights those are. Count everything. Trust',
+          '  the count."',
+          '',
+          'A dead hand pointing at a living list. Go and pull it.',
+        ].join('\n'),
+      },
+    },
+    rota: {
+      name: L.rota[0].toUpperCase() + L.rota.slice(1),
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'office',
+        title: `${L.rota.toUpperCase()} — THE ${nightWord.toUpperCase()} NIGHTS`,
+        body: [
+          `${L.rota}, copied out for the ${nightWord} watch, the nights`,
+          'the coin moved:',
+          '',
+          ...S.nightSet.map(n => `    ${n} — ${S.role[n]}`),
+          '',
+          `  ${S.nightCleared}: off the rolls those nights — posted`,
+          '  away on company business, entered and countersigned, and',
+          '  the counter-signature is not a friend of his.',
+          '',
+          'ONE OF THE THREE LISTS. Lay it flat and keep it dry. Two',
+          'more and the four names come down to one.',
+        ].join('\n'),
+      },
+    },
+    watcherlog: {
+      name: pack.watchName[0].toUpperCase() + pack.watchName.slice(1),
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'street',
+        title: `${pack.watchName.toUpperCase()} — THE LAST NIGHT, PAGES LOOSE`,
+        body: [
+          `The watch keeps a log because somebody once ordered it, and`,
+          'keeps it badly because nobody ever reads it. Three entries',
+          `survive from ${victim}'s last night, and the binding did not.`,
+          '',
+          'A person goes out before they are met. They are met before',
+          'anyone comes back. Set the entries in the order the night',
+          'spent them — say it plain: "timeline A B C".',
+          '',
+          ...T.cards,
+          '',
+          'Read the last entry twice. What went out does not all come',
+          'back, and what comes back walks alone.',
+        ].join('\n'),
+      },
+    },
+    site: {
+      name: `The Scene — ${pack.site}`,
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'yard',
+        title: `${pack.site.toUpperCase()} — WHAT THE SCENE KEPT`,
+        body: [
+          `${pack.site} at the hour the log names. Stand where the`,
+          'meeting stood. The place keeps what falls on it, and it has',
+          'kept this:',
+          '',
+          `A blank of the company's ${pack.doc}, torn at the corner —`,
+          'unissued stock, the seal margin still on it. Paper that',
+          `clean has no business here. Unissued ${pack.doc} live in`,
+          `${room} under lock, and every key is entered in`,
+          `${L.keybook}.`,
+          '',
+          'Ask who holds keys. The ledger has no reason to lie.',
+          'Ledgers rarely do. It is the hands around them.',
+        ].join('\n'),
+      },
+    },
+    keybook: {
+      name: L.keybook[0].toUpperCase() + L.keybook.slice(1),
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'office',
+        title: `${L.keybook.toUpperCase()} — ${room.toUpperCase()}`,
+        body: [
+          'The one book nobody ever thought to fear, copied entire:',
+          '',
+          `  Keys to ${room}, issued and carried:`,
+          ...S.accessSet.map(n => `    ${n} — ${S.role[n]}`),
+          '',
+          `  ${S.accessCleared}: surrendered his key at the spring`,
+          '  audit; the surrender is entered and witnessed. He has not',
+          '  been inside since, and has said so often enough that',
+          '  people have begun to believe him.',
+          '',
+          `ONE OF THE THREE LISTS. The blank at ${pack.site} came out`,
+          'of that room behind one of these keys. Set this beside',
+          `${L.rota} and watch the four names thin.`,
+        ].join('\n'),
+      },
+    },
+    herring: {
+      name: `Inquiry — ${herring.name}`,
+      burnable: false,
+      payload: {
+        kind: 'dossier',
+        title: `INQUIRY — ${herring.name}`,
+        body: [
+          `${herring.name}: ${herring.trade}. Greets your questions the`,
+          'way such trades greet all questions — agreeably, and with a',
+          'ready account of every hour under suspicion.',
+          '',
+          `An afternoon settles it: ${herring.name} ${herring.clears}.`,
+          'Not your name.',
+          '',
+          `But ${herring.name} knew ${victim}, and pays the debt the`,
+          `only coin such people carry: "${victim} took the same tea at`,
+          `${informant.venue} every change of watch. ${informant.name}`,
+          'sees everyone twice a day and has buried opinions of them',
+          'all. Nobody asks. That is the whole of that power."',
+        ].join('\n'),
+      },
+    },
+    herring2: {
+      name: `Inquiry — ${herring2.name}`,
+      burnable: false,
+      payload: {
+        kind: 'dossier',
+        title: `INQUIRY — ${herring2.name}`,
+        body: [
+          `${herring2.name}: ${herring2.trade}. Keeps both hands in`,
+          'plain sight the whole interview, the habit of a person whose',
+          'hands have been discussed in front of magistrates. Even so,',
+          `half a day closes it: ${herring2.name} ${herring2.clears}.`,
+          '',
+          'A door that opens onto nothing. Every city is built of',
+          'them, and this one more than most.',
+        ].join('\n'),
+      },
+    },
+    informant: {
+      name: `Informant — ${informant.name}`,
+      burnable: true,
+      payload: {
+        kind: 'npc', scene: 'cafe',
+        title: `CONTACT — ${informant.name}, ${informant.role.toUpperCase()}, ${informant.venue.toUpperCase()}`,
+        body: [
+          `${informant.venue}, between rushes, the urn hissing to`,
+          `itself. ${informant.name} works while talking and watches`,
+          'everything, out of a habit older than the employer.',
+          '',
+          `"${victim}? Paid on time. Said thank you. Some nights lately`,
+          'another one came through after — never with, never far',
+          'behind either. Like a shadow that has not been introduced.',
+          '',
+          `Ask me about ${victim}'s man and I will tell you what these`,
+          'eyes took down. They are the only pair here nobody ever',
+          'thought worth buying."',
+          '',
+          'Go gently. There is no second pair of eyes in this city.',
+        ].join('\n'),
+      },
+    },
+    statement: {
+      name: 'Statement — What the Eyes Took Down',
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'cafe',
+        title: `STATEMENT — THE ONE WHO CAME AFTER ${victim}`,
+        body: [
+          'Given low, over the counter, in the voice of somebody',
+          'setting down a weight they are tired of carrying:',
+          '',
+          `"Twice I saw the one who followed ${victim}, and both times`,
+          `the same: ${detail.phrase}. I notice hands and habits. Faces`,
+          'are for other people. Habits are for work, and work tells."',
+          '',
+          `A habit is a fact wearing clothes. ${pack.company} keeps its`,
+          `facts in ${L.personnel}. Open the book and find whose habit`,
+          'that is.',
+        ].join('\n'),
+      },
+    },
+    personnel: {
+      name: L.personnel[0].toUpperCase() + L.personnel.slice(1),
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'office',
+        title: `${L.personnel.toUpperCase()} — PARTICULARS OF THE FOUR`,
+        body: [
+          `${L.personnel}, at the pages where work writes what people`,
+          'will not say of themselves. Against the witness\'s mark —',
+          `${detail.column} — the book answers:`,
+          '',
+          ...S.detailSet.map(n => `    ${n} — yes, per the record`),
+          '',
+          `  ${S.detailCleared}: ${detail.counter}.`,
+          '',
+          `ONE OF THE THREE LISTS. Lay it beside ${L.rota} and`,
+          `${L.keybook}. Three lists. Four names. One name on all`,
+          'three, and the count — the honest count — is finished.',
+        ].join('\n'),
+      },
+    },
+    motive: {
+      name: `The Motive — ${pack.motiveDoc}`,
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'office',
+        title: `${pack.motiveDoc.toUpperCase()} — WHY THE COUNT DIED`,
+        body: [
+          `${pack.motiveDoc}, in season order, exactly as a careful`,
+          `hand left them. ${victim} had found the seam: ${pack.doc}`,
+          'issued against nothing, the proceeds rinsed through honest',
+          'columns a page at a time, patient as water.',
+          '',
+          'The last entries are flagged in the tally hand, and the flag',
+          'is a date — the audit that never got to happen. Whoever',
+          'moved the paper knew the count was closing on them, and',
+          'closed the counter first.',
+          '',
+          'No name is written here. Names are what the three lists are',
+          'for. This page only tells you why.',
+        ].join('\n'),
+      },
+    },
+    resolution: {
+      name: 'Resolution — The Count Finished',
+      burnable: false,
+      payload: {
+        kind: 'epilogue', scene: 'epilogue',
+        title: 'RESOLUTION — THE COUNT FINISHED',
+        body: [
+          'They are taken at the morning shift, in front of the whole',
+          `floor, because ${pack.company} understands what examples are`,
+          `for. ${S.culprit}, ${S.role[S.culprit]}. On the rolls for the`,
+          `${nightAbbr} watch. Carrying a live key to ${room}. And`,
+          `${L.personnel} agreeing, in the company's own dry hand, with`,
+          'what the unbought eyes watched that habit do twice.',
+          '',
+          `${victim}'s tally goes into the record, and the record for`,
+          'once holds, because it was weighed before it was written.',
+          '',
+          'The city goes on doing what it does, which is everything,',
+          'loudly, except remember. You will remember. That was the',
+          'engagement, and it is discharged.',
+        ].join('\n'),
+      },
+    },
+  }
+
+  const edges = [
+    {
+      to: 'board', requires: ['briefing'],
+      lead: 'The office will lay out the suspect board when asked.',
+      match: (t) => t.includes('SUSPECT') || t.includes('BOARD') || (t.includes('FOUR') && (t.includes('NAMES') || t.includes('MEN'))),
+      response: 'The board is turned to the light and the four names look back at you.',
+    },
+    {
+      to: 'room', requires: ['briefing'],
+      lead: `${victim} lodged at ${lodging}. Nobody has been through the room.`,
+      match: venueMatch(lodging),
+      response: 'The landlady unlocks it and does not come in. Some rooms people prefer to leave to strangers.',
+    },
+    {
+      to: 'stash', requires: ['briefing'],
+      lead: 'The struck-out ledger entries are a message: first letters, first.',
+      answerKey: `The first letters of the struck entries spell ${word} — ${stashPlace}.`,
+      match: (t) => t.includes(word),
+      response: 'It opens as if it had been waiting for a reader. It had.',
+    },
+    {
+      to: 'rota', requires: ['stash'],
+      lead: `The coin moved on ${nightWord} nights; nobody has pulled ${L.rota}.`,
+      match: (t) => t.includes('ROLLS') || t.includes('ROSTER') || t.includes('DUTY') || venueMatch(L.rota)(t),
+      response: 'The copy is made by lamplight and handed over without a word, which is its own opinion.',
+    },
+    {
+      to: 'watcherlog', requires: ['briefing'],
+      lead: `The watch kept a log on the last night. ${pack.watchName} — the pages are loose but they exist.`,
+      match: (t) => (t.includes('LOG') && (t.includes('WATCH') || t.includes('NIGHT') || t.includes('PATROL') || t.includes('GUARD'))) || venueMatch(pack.watchName)(t),
+      response: 'The pages are handed over loose, like a debt someone is glad to be rid of.',
+    },
+    timelineEdge(T.answer, {
+      to: 'site', requires: ['watcherlog'],
+      lead: 'Three watch entries wait on their order: "timeline A B C".',
+      answerKey: `The correct order of the watch entries is ${T.answer.split('').join(' ')}.`,
+      response: 'Out, met, and one walking back — the night sets true, and the scene will show you where.',
+      failResponse: 'Set so, the night breaks its own spine: nobody returns before they have gone out. (Heat rises.)',
+    }),
+    {
+      to: 'keybook', requires: ['site'],
+      lead: `Unissued ${pack.doc} live in ${room}. Nobody has asked who carries keys.`,
+      match: (t) => t.includes('KEY') || venueMatch(room)(t),
+      response: `${L.keybook} opens — the one book nobody ever thought to fear.`,
+    },
+    {
+      to: 'herring', requires: ['briefing'],
+      lead: `The office flagged ${herring.name} — ${herring.trade}. Worth an afternoon, maybe.`,
+      match: (t) => t.includes(herring.name),
+      response: `${herring.name} receives you with an alibi already poured.`,
+    },
+    {
+      to: 'herring2', requires: ['briefing'],
+      lead: `A second name rides the edge of this: ${herring2.name}, ${herring2.trade}.`,
+      match: (t) => t.includes(herring2.name),
+      response: `${herring2.name} keeps both hands where you can see them, which tells most of it.`,
+    },
+    {
+      to: 'informant', requires: ['herring'],
+      lead: `${herring.name} pointed at ${informant.venue}: nobody asks there, and that is the whole of that power.`,
+      match: (t) => t.includes(informant.alias) || venueMatch(informant.venue)(t),
+      response: `${informant.venue}, between rushes. The eyes nobody thought to buy look up from the work.`,
+    },
+    {
+      to: 'statement', requires: ['informant'],
+      lead: `${informant.name} is waiting to be asked about ${victim}'s man.`,
+      match: (t) => t.includes(victim),
+      response: 'The tea is poured unasked, and the statement comes out slow and level.',
+    },
+    {
+      to: 'personnel', requires: ['statement'],
+      lead: `A witness mark wants checking: open ${L.personnel}.`,
+      match: (t) => t.includes('PARTICULARS') || t.includes('PERSONNEL') || (t.includes('BOOK') && !t.includes('KEY')) || venueMatch(L.personnel)(t),
+      response: 'The book opens where such books always open: at what the work left of the people.',
+    },
+    {
+      to: 'motive', requires: ['rota', 'keybook'],
+      lead: `Two lists in hand. ${pack.motiveDoc} can still say why the count died.`,
+      match: (t) => t.includes('WHY') || t.includes('MOTIVE') || t.includes(pack.motiveKeyword) || venueMatch(pack.motiveDoc)(t),
+      response: `${pack.motiveDoc} come out in season order, exactly as a careful hand left them.`,
+    },
+  ]
+
+  const accusation = {
+    culprit: S.culprit,
+    wrong: [...S.suspects.slice(1), herring.name, herring2.name, informant.alias],
+    unlocks: 'resolution',
+    correctResponse: 'They are taken at the morning shift, in front of the whole floor.',
+    wrongResponse: (name) =>
+      `${name} is taken, and released, and the release costs you what releases cost: ` +
+      'the real name walks while the error is being apologized for. One list is not ' +
+      'three. The engagement closes unresolved.',
+  }
+
+  const burnTriggers = {
+    press: {
+      scope: 'informant',
+      match: (t) => (t.includes('PRESS') || t.includes('THREATEN') || t.includes('FORCE')) && t.includes(informant.alias),
+      reason: 'Contact compromised: pressed in public. The counter is closed to you.',
+      response: 'You lean, and the whole room sees you lean, and by the next rush the tea is poured for everyone but one.',
+    },
+    heatThreshold: 80,
+    heatReason: 'Contact compromised: the city has taken notice past bearing. Severed.',
+  }
+
+  const npcs = {
+    informant: {
+      aliases: [informant.alias],
+      fallback: `${informant.name} goes on working and lets the silence ask your question better than you did.`,
+      lines: [
+        {
+          match: (t) => t.includes(victim),
+          disposition: 1,
+          response: `"${victim} said thank you every day of the season. Nobody says thank you. I have thought on that more than a person's thanks deserves."`,
+        },
+        {
+          match: (t) => t.includes('BRIBE') || t.includes('PAY') || t.includes('MONEY') || t.includes('COIN'),
+          heat: 5,
+          response: 'The coin sits on the counter between you, untaken, gathering the room\'s attention. (Heat rises.)',
+        },
+      ],
+    },
+  }
+
+  const hints = [
+    {
+      match: (t) => t.includes('ACROSTIC') || t.includes('LEDGER') || t.includes('LETTERS') || t.includes('ENTRIES'),
+      response: 'The dead hand\'s own instruction: first letters, first. Read the struck entries down their left edge.',
+    },
+    {
+      match: (t) => t.includes('LIST') || t.includes('INTERSECT') || t.includes('CROSS'),
+      response: `Three lists: ${L.rota}, ${L.keybook}, ${L.personnel}. Four names. Yours is the one name standing on all three.`,
+    },
+    {
+      match: (t) => t.includes(victim),
+      response: `${victim} kept the honest count and died of it. What is known of the dead you hold in the letter of engagement. Who profited is four names, and three trails will thin them to one.`,
+    },
+  ]
+
+  const walkthrough = [
+    'show me the suspect board',
+    `go to ${lodging.toLowerCase()}`,
+    `the ledger spells ${word.toLowerCase()} — open ${stashPlace.toLowerCase()}`,
+    `pull ${L.rota.toLowerCase()} for the ${nightWord.toLowerCase()} nights`,
+    `get ${pack.watchName.toLowerCase()}`,
+    `timeline ${T.answer.split('').join(' ').toLowerCase()}`,
+    `who holds keys to ${room.toLowerCase()}`,
+    `ask about ${herring.name.toLowerCase()}`,
+    `ask about ${herring2.name.toLowerCase()}`,
+    `go to ${informant.venue.toLowerCase()} and find ${informant.alias.toLowerCase()}`,
+    `ask about ${victim.toLowerCase()}'s man`,
+    `open ${L.personnel.toLowerCase()}`,
+    `${pack.motiveKeyword.toLowerCase()}: why did the count die`,
+    `accuse ${S.culprit.toLowerCase()}`,
+  ]
+
+  return {
+    CASE_ID, ERA, TITLE: pack.title, LABEL: pack.label, STYLE: pack.style ?? null,
+    scopes, edges, accusation, burnTriggers, npcs, hints,
+    heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, max: 100, tail: 60 },
+    missResponse: undefined,
+    helpText: [
+      'PROCEDURE — the rules of the engagement:',
+      '',
+      'Say it plain: go somewhere, ask someone, check a thing. The',
+      'desk is literal.',
+      '',
+      'The struck ledger is a message: first letters, first. A night',
+      'in pieces wants an order — "timeline A B C". This case is a',
+      'web: three trails, three lists, and your name is the one name',
+      'on all three. Certain? "accuse <name>" — said once. Lost?',
+      '"review" and the desk reads it back without judgment.',
+      '',
+      'Your notebook keeps every page you have earned. A burned',
+      'contact stays burned. Mind the heat.',
+    ].join('\n'),
+    opening: (pack.openingLines ?? [
+      pack.label, '',
+      `${pack.company} lost its ${pack.victimRole} this week: {VICTIM},`,
+      `found at ${pack.site} with the count unfinished.`,
+      '',
+      'Four names held the inside. Three trails will bring them down',
+      'to one: the coin, the keys, and the one witness nobody ever',
+      'thought worth buying.',
+    ]).map(l => fill(l, victim)).join('\n'),
+    preamble: (pack.preambleLines ?? [
+      'Every document you earn goes into your Case Notebook, on the',
+      'right, and what you have read stays yours. People are',
+      'otherwise: mishandle a source and they are gone for good, with',
+      'everything they still had to say.',
+      '',
+      'A name set in CAPITALS belongs to the case, the dead included —',
+      'the desk answers for them all. Ask about them, or go to them.',
+      '',
+      'Write your reports in plain language. Type "help" at any time',
+      'for procedure.',
+    ]).map(l => fill(l, victim)).join('\n'),
+    openingScene: pack.style?.scene ?? 'street',
+    board: {
+      suspects: sortNames(S.suspects),
+      columns: ['nights', 'keys', 'witness'],
+    },
+    lists: { rota: L.rota, keybook: L.keybook, personnel: L.personnel },
+    walkthrough,
+    solutionCommitment: {
+      salt: `world-${pack.id}-${seed}`,
+      canonical: () => JSON.stringify({ case: CASE_ID, culprit: S.culprit, salt: `world-${pack.id}-${seed}` }),
+    },
+  }
+}

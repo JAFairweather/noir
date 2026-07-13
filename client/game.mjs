@@ -21,7 +21,7 @@ import {
 import { StubGM } from '../gm/stubgm.mjs'
 import { CASES, CASE_LIST } from '../gm/cases/registry.mjs'
 import { generateCase } from '../gm/casegen.mjs'
-import { generateWebCase, SUPPORTED_ERAS } from '../gm/caseweb.mjs'
+import { generateWebCase, generateWorldCase, SUPPORTED_ERAS } from '../gm/caseweb.mjs'
 import { Wheel } from './wheel.mjs'
 import { Score } from './audio.mjs'
 import { applyEra } from './art.mjs'
@@ -47,6 +47,13 @@ const resolveCase = (id) => {
     const rest = id.slice(4)
     const sep = rest.indexOf(':')
     return sep > 0 ? generateWebCase(rest.slice(sep + 1), rest.slice(0, sep)) : generateWebCase(rest)
+  }
+  if (id?.startsWith('world:')) {
+    // A delegated era: the pack rode a NIP-DA grant from the master to
+    // the Director, and the Director's /house card carries it to us.
+    const [, worldId, seed] = id.split(':')
+    const pack = director?.houseCard?.worlds?.find(w => w.id === worldId)
+    try { return pack ? generateWorldCase(seed, pack) : null } catch { return null }
   }
   if (!id?.startsWith('gen:')) return null
   const rest = id.slice(4)
@@ -506,7 +513,7 @@ function applyCase(mod) {
   setCaseId(mod.CASE_ID)
   const era = applyEra(mod.ERA)
   score.setEra(mod.ERA)
-  $('#era-label').textContent = era.label + (mod.TITLE ? ` — ${mod.TITLE}` : '')
+  $('#era-label').textContent = (mod.LABEL ?? era.label) + (mod.TITLE ? ` — ${mod.TITLE}` : '')
   cityMap.setCase(mod.ERA, mod.CASE_ID)
   setScene(mod.openingScene ?? 'street', mod.ERA, mod.CASE_ID)
 }
@@ -692,12 +699,17 @@ const DEFAULT_ERAS = [
 const pickCase = () => {
   const rooms = (director?.houseCard?.eras?.length ? director.houseCard.eras : DEFAULT_ERAS)
     .filter(e => SUPPORTED_ERAS.includes(e.id))
-  showCaseSelect(rooms.map(e => ({
-    id: `web:${e.id}:${Math.random().toString(36).slice(2, 8)}`,
-    label: e.label ?? e.id,
-    title: e.title ?? '',
-    blurb: e.blurb ?? '',
-  })), (id) => freshStart(id))
+    .map(e => ({
+      id: `web:${e.id}:${Math.random().toString(36).slice(2, 8)}`,
+      label: e.label ?? e.id, title: e.title ?? '', blurb: e.blurb ?? '',
+    }))
+  // Delegated worlds: eras that arrived as data over the wire. The
+  // Notary gates their deal exactly as it gates the built-ins.
+  const worlds = (director?.houseCard?.worlds ?? []).map(w => ({
+    id: `world:${w.id}:${Math.random().toString(36).slice(2, 8)}`,
+    label: w.label ?? w.id, title: w.title ?? '', blurb: w.blurb ?? '',
+  }))
+  showCaseSelect([...rooms, ...worlds], (id) => freshStart(id))
 }
 applyEra(CASE.ERA)
 director = (await detectDirector()) ?? browserDirector()

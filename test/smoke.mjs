@@ -482,5 +482,38 @@ console.log('\n19. The house is a grant: the Director as delegated agent (nvoy)'
   check('a house lud16 (dedicated alias) overrides the profile', t2.lud16 === 'table@till.example' && t2.source === 'house scope')
 }
 
+console.log('\n20. Worlds by wire: a delegated era pack drives the whole engine (rung 1)')
+{
+  const { readFileSync } = await import('node:fs')
+  const payload = JSON.parse(readFileSync(new URL('../docs/worlds/new-albion-2040.json', import.meta.url), 'utf8'))
+  const pack = payload.world
+  const { validateWorldPack, generateWorldCase } = await import('../gm/caseweb.mjs')
+  const { verifyCase } = await import('../shared/verify.mjs')
+  check('the New Albion pack validates', validateWorldPack(pack).length === 0)
+  check('a broken pack is named, not played',
+    validateWorldPack({ ...pack, words: ['BRASS'] }).length > 0)   // repeated letter
+  const w1 = generateWorldCase('omega', pack)
+  check('a world case is deterministic per seed',
+    generateWorldCase('omega', pack).solutionCommitment.canonical() === w1.solutionCommitment.canonical())
+  check('the world case identifies itself', w1.CASE_ID === 'world:new-albion-2040:omega' && w1.LABEL === 'NEW ALBION 2040')
+  for (const seed of ['omega', 'sigma', 'kappa']) {
+    const v = await verifyCase(generateWorldCase(seed, pack))
+    check(`world seed "${seed}": the Notary passes the delegated era`, v.ok && v.failures.length === 0)
+  }
+  // The delegation: the master grants the world; a stranger's world is
+  // received, decrypted, and ignored — same trust rule as the notes.
+  const { publishHouse, publishWorld, resolveHouse } = await import('../shared/house.mjs')
+  const rW = new Relay()
+  const master = generateSecretKey(), dir = generateSecretKey(), stranger = generateSecretKey()
+  await publishHouse(rW, master, { name: 'The Fairweather Table', eras: [] }, getPublicKey(dir))
+  await publishWorld(rW, master, pack, getPublicKey(dir))
+  await publishWorld(rW, stranger, { ...pack, id: 'impostor-era', label: 'IMPOSTOR' }, getPublicKey(dir))
+  const res = await resolveHouse(rW, dir)
+  check('a granted world reaches the Director', res.worlds.length === 1 && res.worlds[0].id === pack.id)
+  check("a stranger's world never seats a table", !res.worlds.some(x => x.id === 'impostor-era'))
+  check("the world's voice folds into the house tuning under its own era id",
+    res.house.tuning['new-albion-2040']?.some(l => l.includes('Verne')))
+}
+
 console.log(`\n${passed} passed, ${failed} failed`)
 process.exit(failed ? 1 : 0)
