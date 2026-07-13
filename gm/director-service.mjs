@@ -443,9 +443,10 @@ async function tick() {
     document.getElementById('status').textContent = a.model
       ? 'live — ' + a.model + (a.images ? ' + FLUX' : '') : 'dry mode — scripted prose (no API key)'
     document.getElementById('ver').textContent = 'build ' + a.version + ' · up ' + Math.floor(a.uptime/60000) + 'm'
-    document.getElementById('agency').textContent = a.master
+    document.getElementById('agency').textContent = (a.master
       ? 'house: ' + a.house + ' — held by grant from ' + a.master.slice(0, 16) + '…' + (a.mandate ? ' · mandate: ' + a.mandate : '')
-      : 'house: ' + a.house + ' (' + a.houseSource + ') · agent ' + a.agent.slice(0, 16) + '…'
+      : 'house: ' + a.house + ' (' + a.houseSource + ') · agent ' + a.agent.slice(0, 16) + '…')
+      + (a.worlds && a.worlds.length ? ' · worlds: ' + a.worlds.join(', ') : '')
     document.getElementById('feed').innerHTML = a.log.slice().reverse()
       .map(e => '<li><time>' + fmt(e.t) + '</time>' + e.line.replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))
         + (e.still ? '<img class="still" loading="lazy" src="/still?k=' + encodeURIComponent(e.still) + '" onerror="this.remove()">' : '')
@@ -531,6 +532,7 @@ const server = createServer(async (req, res) => {
       .end(JSON.stringify({
         ok: true, director: !!KEY, model: KEY ? MODEL : null, images: !!REPLICATE,
         house: HOUSE.name, agent: DIRECTOR_NPUB, master: MASTER_NPUB, mandate: MANDATE, houseSource: HOUSE_SOURCE, till: TILL.lud16,
+        worlds: WORLDS.map(w => w.label),
       }))
   }
 
@@ -563,6 +565,7 @@ const server = createServer(async (req, res) => {
       ok: true, version: VERSION, model: KEY ? MODEL : null, images: !!REPLICATE,
       uptime: Date.now() - STARTED, log: ACTIVITY,
       house: HOUSE.name, agent: DIRECTOR_NPUB, master: MASTER_NPUB, mandate: MANDATE, houseSource: HOUSE_SOURCE,
+      worlds: WORLDS.map(w => w.label),
     }))
   }
 
