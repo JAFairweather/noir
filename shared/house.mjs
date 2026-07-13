@@ -90,7 +90,7 @@ export async function resolveHouse(relay, directorSk, nowSec = Math.floor(Date.n
   if (notes.length) {
     house = { ...house, tuning: { ...(house.tuning ?? {}), all: [...(house.tuning?.all ?? []), ...notes] } }
   }
-  return { house, master, terms }
+  return { house, master, terms, notesCount: notes.length }
 }
 
 /** The table's till: where zaps land. The house may carry a literal

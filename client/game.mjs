@@ -210,11 +210,20 @@ function wireNotes() {
   })
   $('#note-export').addEventListener('click', () => {
     const notes = getNotes()
+    // The clipboard gets a CONSOLE-READY scope payload: paste it into the
+    // nvoy console, grant it to the Director, and the house folds your
+    // notes into its voice within the next poll — NIP-DA as the courier.
+    // The download stays markdown: the human archive of the workshop.
+    const payload = JSON.stringify({
+      name: `House notes — ${CASE.TITLE ?? CASE.CASE_ID}, ${notes.length} entries`,
+      kind: 'house-notes',
+      notes: notes.map(n => `[${n.at}] ${n.note}`),
+    }, null, 2)
+    try { navigator.clipboard?.writeText(payload) } catch { /* download still happens */ }
     const md = [
       `# Margin notes — ${CASE.TITLE ?? CASE.CASE_ID} (${CASE.CASE_ID})`,
       '', ...notes.map(n => `- **[${n.at}]** ${n.note}`), '',
     ].join('\n')
-    try { navigator.clipboard?.writeText(md) } catch { /* download still happens */ }
     const a = document.createElement('a')
     a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown' }))
     a.download = `noir-notes-${CASE.CASE_ID.replace(/[^a-z0-9-]/gi, '_')}.md`

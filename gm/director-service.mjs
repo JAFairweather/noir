@@ -114,7 +114,7 @@ async function refreshGrantedHouse() {
       MASTER_NPUB = master
       MANDATE = r.terms?.purpose ?? null
       TILL = await resolveTill(HOUSE_RELAY, r.master, r.house)
-      if (changed) note(`the house arrived by grant — running it on behalf of ${master.slice(0, 12)}…${MANDATE ? ` (mandate: ${MANDATE})` : ''}${TILL.lud16 ? ` · till: ${TILL.lud16} (${TILL.source})` : ''}`)
+      if (changed) note(`the house arrived by grant — running it on behalf of ${master.slice(0, 12)}…${MANDATE ? ` (mandate: ${MANDATE})` : ''}${TILL.lud16 ? ` · till: ${TILL.lud16} (${TILL.source})` : ''}${r.notesCount ? ` · ${r.notesCount} margin notes folded into the house voice` : ''}`)
     } else if (HOUSE_SOURCE === 'granted') {
       HOUSE = FILE_HOUSE ?? UNMARKED
       HOUSE_SOURCE = FILE_HOUSE ? 'local file' : 'none'
