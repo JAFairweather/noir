@@ -178,5 +178,60 @@ Once the Director works, folding in the rest is small:
 4. `docker compose restart caddy` (or reload).
 
 That's the whole story: one box, one front door, every project under
-`nave.pub`. Send me the recon output and I'll tailor §1 and §4 to exactly
-what's on your box.
+`nave.pub`.
+
+---
+
+## 8. Expose Luke (the Claude bot) at `luke.nave.pub` — behind a lock
+
+Luke is the `openclaw` container (`ghcr.io/hostinger/hvps-openclaw`),
+listening on host port **57419**. **Read this whole section before
+exposing it.**
+
+### The one real caution
+
+Luke is an *agent that can act on your VPS*. A public URL to an
+unauthenticated agent is a remote-control panel for your whole box —
+the single most dangerous thing you can put on the open internet. So the
+rule here is absolute: **never expose Luke without a lock.** The kit
+defaults to keeping the door shut (the `luke.nave.pub` block in
+`Caddyfile` ships commented out) precisely so you can't do it by
+accident.
+
+Basic auth (below) is the *minimum* acceptable lock. Consider it the
+floor, not best-in-class:
+- It's a single shared password over TLS — fine for a personal tool,
+  weak for anything sensitive.
+- Stronger options, in ascending order: an IP allowlist in Caddy
+  (`@allowed remote_ip <your-ip>`), a bunker/SSO in front, or — most
+  on-brand for this stack — a nostr-signed auth check. Tell me how
+  locked-down you want Luke and I'll build the stronger version.
+
+### Enable it (basic auth floor)
+
+1. **Confirm Luke actually serves HTTP on 57419** and that public access
+   is intended. (`curl -s localhost:57419` on the box — do you get a web
+   UI or an API? If it's not HTTP, this proxy won't work and we pick a
+   different exposure.)
+2. **Generate a password hash:**
+   ```bash
+   docker run --rm caddy:2-alpine caddy hash-password --plaintext 'YOUR-STRONG-PASSWORD'
+   ```
+3. **Edit `deploy/Caddyfile`** — uncomment the `luke.nave.pub` block and
+   paste the hash after `luke `. (An incomplete `basic_auth` block will
+   stop Caddy and take `director.nave.pub` down with it, so only
+   uncomment once the hash is in.)
+4. **DNS:** add an A record at Hover — `luke` → `187.77.13.232`.
+5. **Reload Caddy:**
+   ```bash
+   cd deploy && docker compose up -d
+   ```
+6. Visit `https://luke.nave.pub` — you should get a browser auth prompt,
+   then Luke.
+
+The `caddy` service already carries `host.docker.internal:host-gateway`
+(added in the compose file), which is how it reaches Luke on the host
+port from inside its container.
+
+Send me the recon output and I'll tailor §1 and §4 to exactly what's on
+your box.

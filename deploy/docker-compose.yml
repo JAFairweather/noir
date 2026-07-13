@@ -41,6 +41,10 @@ services:
       - caddy_data:/data          # certificates persist here — do not delete
       - caddy_config:/config
     networks: [nave]
+    # Lets Caddy reach services published on the host (e.g. Luke/OpenClaw
+    # on host port 57419) via host.docker.internal. Harmless until used.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on: [director]
 
 networks:

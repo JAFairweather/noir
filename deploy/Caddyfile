@@ -12,12 +12,21 @@ director.nave.pub {
 	reverse_proxy director:8787
 }
 
-# --- Consolidate the rest of your dev under this same front door ---
-# Each addition is one block. The target container must share the `nave`
-# Docker network (so Caddy can resolve it by name), or use its host:port.
+# --- Luke — the Claude bot (OpenClaw), behind a lock -------------------
+# READ deploy/DEPLOY.md §8 before enabling this. Luke's container
+# (openclaw) can act on your VPS, so it must NEVER be exposed naked.
+# The block below keeps it behind HTTP basic auth and reaches the bot on
+# the host port the recon found (57419). Uncomment ONLY after you paste a
+# real password hash — an incomplete basic_auth block will stop Caddy
+# from starting (and take director.nave.pub down with it).
 #
-# bot.nave.pub {
-# 	reverse_proxy claudebot:PORT     # your Claude bot's container name + port
+# luke.nave.pub {
+# 	basic_auth {
+# 		# generate the hash, then paste "username hash" below:
+# 		#   docker run --rm caddy:2-alpine caddy hash-password --plaintext 'YOUR-STRONG-PASSWORD'
+# 		luke $2a$14$REPLACE_WITH_THE_HASH_YOU_GENERATED
+# 	}
+# 	reverse_proxy host.docker.internal:57419
 # }
 #
 # relay.nave.pub {
