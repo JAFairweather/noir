@@ -179,18 +179,41 @@ const notesKey = () => 'noir.notes.' + CASE.CASE_ID
 function getNotes() {
   try { return JSON.parse(localStorage.getItem(notesKey()) ?? '[]') } catch { return [] }
 }
+function setNotes(notes) {
+  try { localStorage.setItem(notesKey(), JSON.stringify(notes)) } catch { /* keep playing */ }
+}
 function renderNotes() {
   const on = localStorage.getItem('noir.notes.on') === '1'
   $('#margin').classList.toggle('hidden', !on)
   if (!on) return
   const list = $('#note-list')
   list.innerHTML = ''
-  for (const n of getNotes().slice(-6).reverse()) {
+  const notes = getNotes()
+  for (let i = notes.length - 1; i >= Math.max(0, notes.length - 6); i--) {
+    const n = notes[i]
     const li = document.createElement('li')
     const b = document.createElement('b')
     b.textContent = n.at
     li.appendChild(b)
     li.appendChild(document.createTextNode(n.note))
+    if (n.sent) {
+      const check = document.createElement('span')
+      check.className = 'note-sent'
+      check.textContent = '✓'
+      check.title = 'sent to house'
+      li.appendChild(check)
+    }
+    const del = document.createElement('button')
+    del.className = 'note-del'
+    del.textContent = '✕'
+    del.title = 'delete this note'
+    del.addEventListener('click', () => {
+      const all = getNotes()
+      all.splice(i, 1)
+      setNotes(all)
+      renderNotes()
+    })
+    li.appendChild(del)
     list.appendChild(li)
   }
   // SEND TO HOUSE appears only when both ends exist: an extension to
@@ -240,20 +263,25 @@ function wireNotes() {
   $('#note-send').addEventListener('click', async () => {
     const status = $('#note-status')
     const show = (msg) => { status.textContent = msg; status.classList.remove('hidden') }
-    const notes = getNotes()
-    if (!notes.length) return show('nothing pinned yet — the house wants your margins, not your silence')
+    // Only what has not gone yet: each send is its own granted scope,
+    // and the house folds them all — re-sending would double the voice.
+    const unsent = getNotes().filter(n => !n.sent)
+    if (!unsent.length) return show('nothing new — everything pinned has already gone to the house')
     const card = director?.houseCard
     if (!card?.agent) return show('no table in reach — engage a Director first')
     if (!card.relays?.length) return show('the table is not watching any relays — set NOIR_RELAYS on the Director and restart it')
     show('signing… your extension will ask')
     try {
       await sendNotesToHouse({
-        notes: notes.map(n => `[${n.at}] ${n.note}`),
-        name: `House notes — ${CASE.TITLE ?? CASE.CASE_ID}, ${notes.length} entries`,
+        notes: unsent.map(n => `[${n.at}] ${n.note}`),
+        name: `House notes — ${CASE.TITLE ?? CASE.CASE_ID}, ${unsent.length} entries`,
         directorNpub: card.agent,
         relays: card.relays,
       })
-      show(`sent — ${notes.length} note${notes.length > 1 ? 's' : ''} granted to the house. The Director folds them within two minutes.`)
+      const sentAt = new Set(unsent.map(n => n.when))
+      setNotes(getNotes().map(n => sentAt.has(n.when) ? { ...n, sent: true } : n))
+      renderNotes()
+      show(`sent — ${unsent.length} note${unsent.length > 1 ? 's' : ''} granted to the house. The Director folds them within two minutes.`)
     } catch (err) {
       show('the grant did not land: ' + String(err?.message ?? err).slice(0, 100))
     }

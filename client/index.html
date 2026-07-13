@@ -171,8 +171,12 @@
   #note-add:hover, #note-export:hover, #note-send:hover, #signin:hover { color: var(--accent); }
   #dir-status:empty { display: none; }
   #note-list { list-style: none; padding: 0; margin: 8px 0 0; font-size: 10px; }
-  #note-list li { padding: 4px 0; border-bottom: 1px solid color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent-dim); }
+  #note-list li { position: relative; padding: 4px 30px 4px 0; border-bottom: 1px solid color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent-dim); }
   #note-list li b { color: var(--accent); font-weight: normal; display: block; }
+  .note-del { position: absolute; top: 3px; right: 0; background: none; border: none;
+    color: var(--accent-dim); font: inherit; font-size: 11px; cursor: pointer; padding: 2px; }
+  .note-del:hover { color: #d0442c; }
+  .note-sent { position: absolute; top: 5px; right: 16px; color: #9fd08a; font-size: 11px; }
   #dir-box { margin: 14px 0 4px; }
   #dir-box .id-label { display: block; color: var(--accent-dim); letter-spacing: 0.2em; font-size: 10px; margin-bottom: 5px; }
   .dir-row { display: flex; gap: 6px; }
