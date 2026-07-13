@@ -381,8 +381,10 @@
     <span class="hint">ENTER send · SPACE next beat · ↑↓ rotate</span>
   </footer>
   <script>
-    // network-first worker: a plain reload always gets the current build
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(() => {})
+    // network-first worker: a plain reload always gets the current build.
+    // updateViaCache 'none' means the worker script itself is never
+    // served stale either.
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js', { updateViaCache: 'none' }).catch(() => {})
   </script>
   <script type="module" src="./game.mjs"></script>
 </body>
