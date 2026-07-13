@@ -200,6 +200,20 @@ async function refreshNotebook() {
 // to the document on screen, persist per case, EXPORT as markdown for
 // the workshop, and the freshest few ride along to the Director as
 // advisory style notes — the game improves mid-session and after it.
+// The workshop belongs to the master. The /house card names the
+// master's npub; SIGN IN proves who is sitting here. Everyone else
+// gets a clean GEAR panel. This is courtesy on top of cryptography,
+// not in place of it — the Director ignores strangers' note-grants
+// regardless (shared/house.mjs folds only the master's).
+function authorAllowed() {
+  const masterNpub = director?.houseCard?.master
+  if (!masterNpub) return true              // no delegated house: a local/dev table
+  try {
+    const me = localStorage.getItem('noir.master.pub')
+    return !!me && nip19.decode(masterNpub).data === me
+  } catch { return false }
+}
+
 const notesKey = () => 'noir.notes.' + CASE.CASE_ID
 function getNotes() {
   try { return JSON.parse(localStorage.getItem(notesKey()) ?? '[]') } catch { return [] }
@@ -208,7 +222,9 @@ function setNotes(notes) {
   try { localStorage.setItem(notesKey(), JSON.stringify(notes)) } catch { /* keep playing */ }
 }
 function renderNotes() {
-  const on = localStorage.getItem('noir.notes.on') === '1'
+  const author = authorAllowed()
+  $('#notes-row')?.classList.toggle('hidden', !author)
+  const on = author && localStorage.getItem('noir.notes.on') === '1'
   $('#margin').classList.toggle('hidden', !on)
   if (!on) return
   const list = $('#note-list')
@@ -499,10 +515,25 @@ $('#tc-toggle').addEventListener('change', (e) => {
   refreshNotebook()
 })
 
+// Sound is on by default: the room has a record playing when you walk
+// in. Autoplay rules mean it actually starts on the first gesture.
+const scoreOn = () => (localStorage.getItem('noir.score.on') ?? '1') === '1'
+let scoreLive = false
+$('#score-toggle').checked = scoreOn()
 $('#score-toggle').addEventListener('change', (e) => {
-  if (e.target.checked) score.start()   // user gesture — autoplay-safe
-  else score.stop()
+  localStorage.setItem('noir.score.on', e.target.checked ? '1' : '0')
+  if (e.target.checked) { score.start(); scoreLive = true }   // user gesture — autoplay-safe
+  else { score.stop(); scoreLive = false }
 })
+{
+  const once = () => {
+    window.removeEventListener('pointerdown', once, true)
+    window.removeEventListener('keydown', once, true)
+    if (scoreOn() && !scoreLive) { score.start(); scoreLive = true }
+  }
+  window.addEventListener('pointerdown', once, true)
+  window.addEventListener('keydown', once, true)
+}
 
 // ------------------------------------------------------------------- start
 

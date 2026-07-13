@@ -185,7 +185,9 @@
   #dir-engage { background: transparent; color: var(--accent-dim); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
     font: inherit; font-size: 10px; letter-spacing: 0.15em; padding: 5px 8px; cursor: pointer; }
   #dir-engage:hover { color: var(--accent); }
-  label.toggle { display: flex; gap: 6px; align-items: center; margin-top: 14px; color: var(--accent-dim); cursor: pointer; }
+  label.toggle { display: flex; gap: 6px; align-items: center; margin-top: 12px; color: var(--accent-dim); cursor: pointer; }
+  label.toggle:hover { color: var(--accent); }
+  .tg-ico { display: inline-block; width: 16px; text-align: center; color: var(--accent); }
 
   /* --------------------------------------------------- command line */
   footer {
@@ -328,9 +330,8 @@
           <input id="dir-key" type="password" placeholder="sk-ant… key, or a table address" autocomplete="off">
           <button id="dir-engage">ENGAGE</button>
         </div>
-        <p class="note">A key is stored only in this browser and calls Anthropic
-        directly on your account. A table address points at a sponsored
-        Director. Blank + ENGAGE forgets both.</p>
+        <p class="note">A key stays in this browser and calls Anthropic directly.
+        A table address joins a hosted Director. Blank + ENGAGE forgets.</p>
       </div>
       <div id="margin" class="hidden" aria-label="Margin notes">
         <h3>MARGIN NOTES</h3>
@@ -343,11 +344,11 @@
         <p class="note hidden" id="note-status" style="margin: 5px 0 0"></p>
         <ul id="note-list"></ul>
       </div>
-      <label class="toggle"><input type="checkbox" id="flat-toggle"> flat mode (no motion)</label>
-      <label class="toggle"><input type="checkbox" id="notes-toggle"> margin notes (author mode)</label>
-      <label class="toggle"><input type="checkbox" id="pen-toggle"> pen backdrop (the line)</label>
-      <label class="toggle"><input type="checkbox" id="score-toggle"> score (original 19-TET)</label>
-      <label class="toggle"><input type="checkbox" id="tc-toggle"> tradecraft view (protocol)</label>
+      <label class="toggle" title="Original soundtrack in 19-tone equal temperament. On by default — the room has a record playing."><input type="checkbox" id="score-toggle"> <span class="tg-ico">♪</span> score</label>
+      <label class="toggle" title="Procedural line art draws itself as the story types."><input type="checkbox" id="pen-toggle"> <span class="tg-ico">✒</span> pen backdrop</label>
+      <label class="toggle" title="No motion: plain scrolling text instead of the drum."><input type="checkbox" id="flat-toggle"> <span class="tg-ico">▤</span> flat mode</label>
+      <label class="toggle" id="notes-row" title="Author mode: pin critique to the text as it flows, and send it to the house over NIP-DA."><input type="checkbox" id="notes-toggle"> <span class="tg-ico">✎</span> margin notes</label>
+      <label class="toggle" title="See this session as a relay observer does: ciphertext, wraps, nothing else."><input type="checkbox" id="tc-toggle"> <span class="tg-ico">◈</span> tradecraft view</label>
       <div id="tc-panel" class="hidden"></div>
     </aside>
   </main>
