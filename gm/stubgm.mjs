@@ -326,10 +326,46 @@ export class StubGM {
 
     // No edge matched: the city notices people who ask the wrong questions.
     this.addHeat(this.case.heat.wrongAnswer)
+    // If the Director is listening, the desk answers the report in its
+    // own words — grounded in the FULL earned context (and nothing
+    // more), never granting, never inventing. Scripted line on any
+    // failure: the game must always play without AI.
+    if (this.converse) {
+      try {
+        const reply = await this.converse({ report: text, context: this.contextPack() })
+        if (reply) {
+          await this.dispatch(reply + ' (Heat rises.)', { noVoice: true })
+          return this.checkHeat()
+        }
+      } catch { /* scripted fallback below */ }
+    }
     await this.dispatch(this.case.missResponse ??
       'Nothing gives. A doorman remembers your face; somewhere a telephone is lifted and set down again. (Heat rises.)',
     )
     return this.checkHeat()
+  }
+
+  /** Everything the PLAYER has earned — and nothing else (spec §4.4).
+   *  This is the Director's whole world: held documents (burned ones
+   *  survive only as what was already read), open leads, public case
+   *  facts. The solution is not here, so it cannot leak. */
+  contextPack() {
+    const held = [...this.unlocked]
+      .filter(k => this.case.scopes[k])
+      .map(k => {
+        const p = this.case.scopes[k].payload
+        return { title: p.title ?? this.case.scopes[k].name, body: p.body ?? '' }
+      })
+    const leads = this.case.edges
+      .filter(e => !this.unlocked.has(e.to) && e.requires.every(r => this.unlocked.has(r)) && e.lead)
+      .map(e => e.lead)
+    return {
+      era: this.case.ERA,
+      title: this.case.TITLE ?? this.case.CASE_ID,
+      heat: this.heat,
+      burned: [...this.burned].map(k => this.case.scopes[k].name),
+      held, leads,
+    }
   }
 
   async accuse(t) {

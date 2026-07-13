@@ -141,3 +141,21 @@ epilogue at heat 0, whole web opens, wrong two-list accusations fail,
 determinism, and that the fairness invariants hold. Next: motif VARIETY
 (swap which trail carries which predicate, alternate lock types per
 seed), then the map-as-board, then the deduction notebook.
+
+## 9. Long form only; the desk converses (added 2026-07-13)
+
+Two decisions from the field:
+
+- **Every offered case is a LONG CASE.** The picker lists exactly four
+  webs, one per era — Berlin 1938 (Kerr with serial-adventure momentum),
+  Paris 1954 (Camus writing noir), New Orleans 1968 (Burke), the
+  Meridian 1849 (McCarthy). The short cases remain in the repo and CI
+  as engine proofs, not offerings. FLUX imagery is deprioritized (the
+  plate path stays, fail-soft) — the budget goes to words.
+- **Free-form reports get a conversational Director.** When no
+  mechanism matches a report, the engine hands it to /converse with the
+  FULL earned context — every held document, open leads, heat, burned
+  assets, transcript tail — and nothing unearned, so nothing can leak
+  (spec §4.4 holds by construction). The Director answers in era voice,
+  grounded in the file, never granting, never inventing; the scripted
+  miss line remains the no-AI fallback, and misses still cost heat.

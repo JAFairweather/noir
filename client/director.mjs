@@ -60,6 +60,25 @@ export function makeInterrogator({ url, era, getTail }) {
 }
 
 /** Build a judge: free-text attempt vs canonical answers → matched edge id or null. */
+/** Free-report conversation: the desk answers from the earned file. */
+export function makeConverse({ url, getTail }) {
+  return async ({ report, context }) => {
+    try {
+      const ctrl = new AbortController()
+      const timer = setTimeout(() => ctrl.abort(), 12000)
+      const res = await fetch(`${url}/converse`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ ...context, report, tail: getTail() }),
+        signal: ctrl.signal,
+      })
+      clearTimeout(timer)
+      const data = await res.json()
+      return data.text ?? null
+    } catch { return null }
+  }
+}
+
 export function makeJudge({ url }) {
   return async ({ attempt, answers }) => {
     const ctrl = new AbortController()

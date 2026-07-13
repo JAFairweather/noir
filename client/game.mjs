@@ -27,7 +27,7 @@ import { Score } from './audio.mjs'
 import { applyEra } from './art.mjs'
 import { setScene, enableDirectorScenes, getPenMode, setPenMode } from './scenes.mjs'
 import { CityMap } from './map.mjs'
-import { detectDirector, makeVoice, makeInterrogator, makeJudge } from './director.mjs'
+import { detectDirector, makeVoice, makeInterrogator, makeJudge, makeConverse } from './director.mjs'
 import { showBurnCard, showEndCard, showSaveCard, showCaseSelect } from './burn.mjs'
 import { getOrCreatePlayerKey, getFlatMode, setFlatMode, getCaseId, setCaseId, getTradecraft, setTradecraft } from './settings.mjs'
 
@@ -361,6 +361,7 @@ function attachVoice() {
     getTail,
   })
   gm.interrogator = makeInterrogator({ url: director.url, era: CASE.ERA, getTail })
+  gm.converse = makeConverse({ url: director.url, getTail })
   gm.judge = makeJudge({ url: director.url })
   $('#director-status').textContent = `DIRECTOR: ${director.model}`
   $('#director-status').classList.remove('hidden')
@@ -422,30 +423,32 @@ async function resumeSave(save) {
 }
 
 const pickCase = () => showCaseSelect([
-  ...CASE_LIST,
-  {
-    id: `gen:${Math.random().toString(36).slice(2, 8)}`,
-    label: 'BERLIN 1938 — FROM SEED',
-    title: 'A Courier Overdue',
-    blurb: 'Generated: new names, new cipher, new culprit. Committed before you play.',
-  },
-  {
-    id: `gen:neworleans-1968:${Math.random().toString(36).slice(2, 8)}`,
-    label: 'NEW ORLEANS 1968 — FROM SEED',
-    title: 'A Stringer Gone Quiet',
-    blurb: 'Generated: a fresh acrostic, a moved patrol, a new name on the order.',
-  },
+  // Long form only (decision, 2026-07-13): every case is a novel — four
+  // suspects, three trails, three lists. One per era. The short cases
+  // remain in the repo and the CI as engine proofs, not offerings.
   {
     id: `web:berlin-1938:${Math.random().toString(36).slice(2, 8)}`,
-    label: 'BERLIN 1938 — THE LONG CASE',
+    label: 'BERLIN 1938',
     title: 'The Canal Keeps Nothing',
-    blurb: 'A deduction web: four suspects, three trails, three lists. Only one name stands on all three.',
+    blurb: 'A courier comes back by canal. Four men had the evening side; three lists will cut them to one.',
+  },
+  {
+    id: `web:paris-1954:${Math.random().toString(36).slice(2, 8)}`,
+    label: 'PARIS 1954',
+    title: 'The Blue Hour',
+    blurb: 'The Seine returns an exact man. The winter light arrives late; so, in the end, does justice.',
   },
   {
     id: `web:neworleans-1968:${Math.random().toString(36).slice(2, 8)}`,
-    label: 'NEW ORLEANS 1968 — THE LONG CASE',
+    label: 'NEW ORLEANS 1968',
     title: 'What the River Returned',
-    blurb: 'A deduction web: four suspects, three trails, three lists. Accuse on two and you have a coin flip.',
+    blurb: 'The river gives back a photographer, minus his camera. The Quarter pretends not to notice.',
+  },
+  {
+    id: `web:meridian-1849:${Math.random().toString(36).slice(2, 8)}`,
+    label: 'THE MERIDIAN 1849',
+    title: 'The Dry Wash',
+    blurb: 'The buzzards rise over the survey line. The country is the witness, and it testifies slowly.',
   },
 ], (id) => freshStart(id))
 applyEra(CASE.ERA)

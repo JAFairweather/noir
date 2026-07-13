@@ -92,10 +92,92 @@ const WEB_NOLA = {
   nights: [['MON', 'MONDAY'], ['WED', 'WEDNESDAY'], ['FRI', 'FRIDAY']],
 }
 
+const WEB_PARIS = {
+  surnames: ['MERCIER', 'LAVAL', 'ROCHET', 'DUVAL', 'CARPENTIER', 'BLANCHARD', 'MOREL', 'GARNIER'],
+  victims: ['DALBAN', 'THIERRY', 'ROUX', 'LEBEL'],
+  worknames: ['MERLE', 'HERON', 'PIVERT', 'GRIVE'],
+  roles: ['section head', 'night clerk', 'liaison officer', 'archivist'],
+  offices: [
+    { name: 'the visa section', doc: 'laissez-passer blanks', room: 'the seal cabinet' },
+    { name: 'the accreditation office', doc: 'press cards', room: 'the plate drawer' },
+    { name: 'the freight bureau', doc: 'customs waybills', room: 'the stamp room' },
+  ],
+  drops: [
+    { plain: 'CLOAKROOM GARE DE LYON', tokens: ['CLOAKROOM', ['LYON', 'GARE']], place: 'the cloakroom at the Gare de Lyon' },
+    { plain: 'KIOSK PONT MARIE', tokens: ['KIOSK', ['PONT', 'MARIE']], place: 'the news kiosk by the Pont Marie' },
+    { plain: 'BATHS RUE OBERKAMPF', tokens: ['BATHS', 'OBERKAMPF'], place: 'the public baths on the rue Oberkampf' },
+  ],
+  informants: [
+    { name: 'ODETTE', role: 'hat-check girl', venue: 'the Blue Cellar', alias: 'ODETTE' },
+    { name: 'MARCEL', role: 'barman', venue: 'Chez Iris', alias: 'MARCEL' },
+    { name: 'MME VIGNE', role: 'concierge', venue: 'the Hôtel Corvisart', alias: 'VIGNE' },
+  ],
+  herrings: [
+    { name: 'SARTENE', trade: 'sells army-surplus maps and better rumors', clears: 'spent that whole week in a cell at the Santé, over rumors he had already sold' },
+    { name: 'KOVACS', trade: 'moves currency through a bookshop on the quai', clears: 'moved nothing but Balzac all month; his ledgers bored even the examiner' },
+  ],
+  details: [
+    { phrase: 'signed the chit with his left hand', column: 'writes left-handed',
+      counter: 'initials the night book right-handed; the book holds years of him' },
+    { phrase: 'kept his gloves on indoors', column: 'wears gloves indoors (burned hands)',
+      counter: 'shook hands bare down a whole July reception line; there is a photograph' },
+    { phrase: 'wore a mourning band on the left sleeve', column: 'wears a mourning band',
+      counter: 'his family is intact and his sleeve is plain; concierges notice sleeves' },
+  ],
+  nights: [['TUE', 'TUESDAY'], ['THU', 'THURSDAY'], ['SAT', 'SATURDAY']],
+}
+
+const WEB_MERIDIAN = {
+  surnames: ['QUINN', 'MASTERS', 'BOONE', 'CREEL', 'HOLT', 'GRISSOM', 'PARR', 'SLOAN'],
+  victims: ['CULLEN', 'TATE', 'HOLLIS', 'VANCE'],
+  roles: ['the wagonmaster', 'the claims clerk', 'the powder man', "the captain's scout"],
+  room: 'the strongbox tent',
+  doc: 'assay certificates',
+  words: ['FORGE', 'BLUFF', 'SWALE'],       // unique letters — clean acrostics
+  ledger: {
+    A: 'Ames & Sons — forfeited. The pan showed color and the man showed nothing.',
+    B: 'Burdett claim — abandoned. The wife took fever at the wells.',
+    D: 'Dawson stake — sold for a mule, and glad of the mule.',
+    E: 'Eastlake survey — crossed out. The line ran through a burying ground.',
+    F: 'Fenn brothers — quit. Gone back to preaching.',
+    G: 'Garrett dig — drowned when the wash ran in October.',
+    L: 'Loring claim — jumped twice and worth neither jumping.',
+    O: 'Ordway & Pryor — dissolved over a horse.',
+    R: 'Redmond stake — played out. The seam pinched to nothing.',
+    S: 'Slocum diggings — burned. None say by whom.',
+    U: 'Upshaw claim — forfeit, for taxes no man else ever paid.',
+    W: 'Weaver & Kin — gone to California on the strength of a rumor.',
+  },
+  informants: [
+    { name: 'SERENA', role: 'cook', venue: 'the wells kitchen', alias: 'SERENA' },
+    { name: 'IRONS', role: 'farrier', venue: 'the farrier line', alias: 'IRONS' },
+    { name: 'BROTHER DILL', role: 'circuit preacher', venue: 'the tent meeting', alias: 'DILL' },
+  ],
+  herrings: [
+    { name: 'MCGREW', trade: 'sells whiskey off a freight wagon', clears: 'was three days gone to Socorro with the mule train, and the train agrees' },
+    { name: 'LUNA', trade: 'trades in horses of uncertain provenance', clears: "sat those nights in the alcalde's jail over a gray mare" },
+  ],
+  details: [
+    { phrase: 'roped left-handed', column: 'ropes left-handed',
+      counter: 'branded all spring right-handed before forty head and forty men' },
+    { phrase: 'wore a Mexican spur on the off boot', column: 'wears a single Mexican spur',
+      counter: 'sold his spurs at Socorro; the sutler keeps them in the window yet' },
+    { phrase: 'was short two fingers on the bridle hand', column: 'missing fingers, bridle hand',
+      counter: 'counts coin with all ten, and men watch him do it and grieve' },
+  ],
+  nights: [['MON', 'MONDAY'], ['THU', 'THURSDAY'], ['SAT', 'SATURDAY']],
+}
+
 // ---------------------------------------------------------------- builder
 
 export function generateWebCase(seed, era = 'berlin-1938') {
-  return era === 'neworleans-1968' ? webNola(seed) : webBerlin(seed)
+  const make = {
+    'berlin-1938': webBerlin,
+    'neworleans-1968': webNola,
+    'paris-1954': webParis,
+    'meridian-1849': webMeridian,
+  }[era] ?? webBerlin
+  return make(seed)
 }
 
 function webBerlin(seed) {
@@ -1368,6 +1450,1226 @@ function webNola(seed) {
     solutionCommitment: {
       salt: `caseweb-nola-${seed}`,
       canonical: () => JSON.stringify({ case: CASE_ID, culprit: S.culprit, salt: `caseweb-nola-${seed}` }),
+    },
+  }
+}
+
+// ------------------------------------------------------------ Paris 1954
+// The voice: lucid, unhurried, a little pitiless — a man describing his
+// own city as though he had just been acquitted of it.
+
+function webParis(seed) {
+  const rand = mulberry32(hash('webparis|' + String(seed)))
+  const ERA = 'paris-1954'
+  const CASE_ID = `web:${ERA}:${seed}`
+
+  const S = dealSuspects(rand, WEB_PARIS.surnames, WEB_PARIS.roles)
+  const victim = pick(rand, WEB_PARIS.victims)
+  const workname = pick(rand, WEB_PARIS.worknames)
+  const drop = pick(rand, WEB_PARIS.drops)
+  const office = pick(rand, WEB_PARIS.offices)
+  const room = office.room
+  const informant = pick(rand, WEB_PARIS.informants)
+  const [herring, herring2] = pickN(rand, WEB_PARIS.herrings, 2)
+  const detail = pick(rand, WEB_PARIS.details)
+  const [nightAbbr, nightWord] = pick(rand, WEB_PARIS.nights)
+  const cipherPlain = drop.plain.replace(/[^A-Z]/g, '')
+  const cipherText = vigenere(cipherPlain, workname)
+  const T = dealTimeline(rand, [
+    { time: '23:20', label: `Subject ${victim} leaves the Blue Cellar, satchel carried like a thought` },
+    { time: '23:55', label: `Subject is met under the viaduct arches by a man who came from ${office.name}` },
+    { time: '00:40', label: 'One man walks back toward the lights. The river does not remark on it' },
+  ])
+
+  const scopes = {
+    briefing: {
+      name: `Case Briefing — ${victim}`,
+      burnable: false,
+      payload: {
+        kind: 'dossier', scene: 'office',
+        title: `BRIEFING — ${victim}, RECOVERED AT THE PONT DE BERCY`,
+        body: [
+          'Paris, winter. The light comes late and leaves early, as if it',
+          `too were owed money. The river returned ${victim} at the Pont de`,
+          `Bercy on ${nightWord.toLowerCase()} morning, and the Seine was neither cruel`,
+          'nor kind about it. Rivers are honest that way. It is one of the',
+          'few honest things left in this arrondissement.',
+          '',
+          `${victim} had spent the autumn inside ${office.name}, quietly`,
+          `counting which of its ${office.doc} were sold after hours and by`,
+          'whom. He was not a brave man. He was something rarer — an exact',
+          'one. The exactness is what they could not forgive.',
+          '',
+          'Four men kept the evening side that season. Ask the desk for',
+          'the suspect board when you are ready to look at them without',
+          'blinking.',
+          '',
+          'His last intercept is keyed under his workname, the old way — a',
+          'keyword walked beneath the text. Find the word and report',
+          '"decode <word>"; the desk runs the tables without an opinion.',
+          '',
+          `    INTERCEPT:  ${cipherText}`,
+          '',
+          'He kept a room at the Hôtel Corvisart; nobody has been in. The',
+          'DST kept a watch on the viaduct arches that night — their log',
+          `exists, whatever they say at lunch. And mind ${herring.name} —`,
+          `${herring.trade}. He appears in this story the way a stain`,
+          'appears on a good coat: noticed, resented, probably innocent.',
+          '',
+          `— The desk. (Registry: ${victim}, workname ${workname}.)`,
+        ].join('\n'),
+      },
+    },
+    board: {
+      name: 'The Suspect Board',
+      burnable: false,
+      payload: {
+        kind: 'dossier', scene: 'office',
+        title: `FOUR MEN — ${office.name.toUpperCase()}, EVENING SIDE`,
+        body: [
+          'Four names on a card, in no order. Order would be a verdict,',
+          'and verdicts are cheap here; the city hands them out at every',
+          'café table by ten in the morning:',
+          '',
+          ...S.suspects.map(n => `  ${n} — ${S.role[n]}`),
+          '',
+          'Each of them held the evening side. Each of them is, in the',
+          'usual sense, a decent man — which is to say the question has',
+          'never before been put to him with the lights on.',
+          '',
+          'Three things will put it plainly: the nights, the keys, and',
+          'what a witness saw. Bring back a list for each. One name will',
+          'remain when the others have finished excusing themselves.',
+        ].join('\n'),
+      },
+    },
+    room: {
+      name: 'The Room — Hôtel Corvisart',
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'street',
+        title: `THE ROOM AT THE CORVISART — WHAT ${victim} KEPT`,
+        body: [
+          'A hotel room in winter, rented by the month: a bed, a basin, a',
+          'window giving onto a courtyard where the light arrives secondhand.',
+          'The concierge accepts the folded note the way the river accepts',
+          'the rain — without comment, without memory.',
+          '',
+          'He owned almost nothing, and what he owned was clean. Nothing in',
+          'writing anywhere, except once, in pencil, inside the wardrobe door:',
+          '',
+          `  "Paid in person. Always a ${nightWord.toLowerCase()}. If I stop coming`,
+          `   back, the money knows the way. — ${workname}"`,
+          '',
+          'If I stop coming back. A man writes that, closes the wardrobe,',
+          'and goes out to keep his appointments anyway. There is a word',
+          'for that. It is not courage and it is not despair. It is',
+          'lucidity, and it does not save anyone.',
+          '',
+          'The workname is still the key to his intercept.',
+        ].join('\n'),
+      },
+    },
+    stash: {
+      name: `The Fallback — ${drop.place}`,
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'station',
+        title: `THE FALLBACK — ${drop.plain}`,
+        body: [
+          `${drop.place}: a numbered ticket, a shelf, the smell of other`,
+          "people's luggage. A dead man's fallback is a letter addressed",
+          'to whoever proves patient enough to deserve it. Inside:',
+          '',
+          '- A tally in his exact hand: payments taken in person, in the',
+          `  building, always ${nightAbbr} evenings, after the doors were`,
+          '  locked. A season of entries, dated like small verdicts.',
+          `- Beneath, one line: "The seller stays late. The duty roster`,
+          '  would say who. I have not managed the roster."',
+          '',
+          'He had not managed the roster. You can manage it: the desk',
+          'knows a clerk in that building who prefers arithmetic to',
+          'loyalty. Tell the desk to check the roster.',
+        ].join('\n'),
+      },
+    },
+    rota: {
+      name: `${office.name} — Duty Roster`,
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'office',
+        title: `DUTY ROSTER — ${office.name.toUpperCase()}, ${nightAbbr} EVENINGS`,
+        body: [
+          'Copied in a stairwell in the time it takes to smoke half a',
+          'cigarette and regret the other half. The evening column:',
+          '',
+          `  Present after close, ${nightAbbr} evenings, this season:`,
+          ...S.nightSet.map(n => `    ${n} — ${S.role[n]}`),
+          '',
+          `  ${S.nightCleared}: the Lyon train, every ${nightAbbr} without`,
+          '  exception — conductor stamps on file. Whatever he is guilty',
+          '  of, and no one here is guilty of nothing, it happened in',
+          '  another city.',
+          '',
+          `THE FIRST LIST. The money moved on ${nightAbbr} nights; these`,
+          'three were in the building. Do not decide anything yet. The',
+          'temptation to decide early is how this city stays crowded',
+          'with wrong verdicts.',
+        ].join('\n'),
+      },
+    },
+    watcherlog: {
+      name: 'DST Watch Log',
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'street',
+        title: 'WATCH LOG — VIADUCT ARCHES, THREE ENTRIES, ORDER LOST',
+        body: [
+          'The DST watcher wrote three entries in the rain and then went',
+          'somewhere drier to be discreet about them. The order is lost;',
+          'the night is not. A man leaves a cellar before he is met under',
+          'an arch. He is met before one of the two walks away.',
+          '',
+          'Put the entries back in the order the night spent them, and',
+          'when you can hear it run straight — "timeline A B C" — say so.',
+          '',
+          ...T.cards,
+          '',
+          'Read the last one again. The river does not remark on it.',
+          'Somebody must.',
+        ].join('\n'),
+      },
+    },
+    site: {
+      name: 'The Arches',
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'yard',
+        title: 'UNDER THE VIADUCT — WHAT THE NIGHT LEFT',
+        body: [
+          'The arches at the hour the log names. Wet stone, the smell of',
+          'trains, the particular silence of a place where the city has',
+          'agreed not to look. You stand where he stood. The lights across',
+          'the river go on being beautiful, which feels, tonight, like a',
+          'lack of tact.',
+          '',
+          'Between the meeting and the walking-away, the stones kept what',
+          `fell: a torn corner of ${office.doc} stock — unissued, the`,
+          'serial margin still attached, whiter than anything the arches',
+          'grow on their own.',
+          '',
+          `Unissued stock does not go for walks. It lives locked in ${room},`,
+          `and ${office.name} keeps a key register older than the Republic`,
+          'and considerably more stable. Ask who holds keys.',
+        ].join('\n'),
+      },
+    },
+    keybook: {
+      name: `${office.name} — Key Register`,
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'office',
+        title: `KEY REGISTER — ${room.toUpperCase()}`,
+        body: [
+          'Every institution keeps one honest book, and it is always the',
+          'one nobody thought worth corrupting. The key register, copied',
+          'entire by a clerk who asked no questions because he preferred',
+          'not to own the answers:',
+          '',
+          `  Keys to ${room}, issued and live:`,
+          ...S.accessSet.map(n => `    ${n} — ${S.role[n]}`),
+          '',
+          `  ${S.accessCleared}: surrendered his key in March; the receipt`,
+          '  is initialed, dated, filed. He kept the receipt\'s carbon in',
+          '  his wallet — a man who knows what cities do to the unproven.',
+          '',
+          `THE SECOND LIST. The stock under the arches came out of ${room}`,
+          'behind one of three live keys. Lay this beside the roster and',
+          'watch the four begin to be fewer.',
+        ].join('\n'),
+      },
+    },
+    herring: {
+      name: `Inquiry — ${herring.name}`,
+      burnable: false,
+      payload: {
+        kind: 'dossier', scene: 'street',
+        title: `INQUIRY — ${herring.name}`,
+        body: [
+          `${herring.name} receives you above a shuttered shop, among`,
+          `maps of countries that have changed their names. ${herring.trade}`,
+          '— that is his trade, and he practices innocence the way other',
+          'men practice the violin: daily, badly, with feeling.',
+          '',
+          `An hour settles the question you brought: he ${herring.clears}.`,
+          'Not your man. The wrong shape of guilt entirely.',
+          '',
+          `But he knew ${victim}, and he pays for the hour with the one`,
+          `true thing he has: "Your exact friend drank at ${informant.venue},`,
+          `always facing the door. The ${informant.role} there has eyes`,
+          'that do not forgive and do not forget, which in this city',
+          'makes her a kind of saint."',
+        ].join('\n'),
+      },
+    },
+    herring2: {
+      name: `Inquiry — ${herring2.name}`,
+      burnable: false,
+      payload: {
+        kind: 'dossier', scene: 'street',
+        title: `INQUIRY — ${herring2.name}`,
+        body: [
+          `${herring2.name}: ${herring2.trade}. He answers every question`,
+          'a beat too quickly, the way innocent men do when they have',
+          'been innocent before and found it insufficient. Even so, half',
+          `an evening closes it: he ${herring2.clears}.`,
+          '',
+          'A door that opens on a wall. The city is full of them, and',
+          'the city does not apologize. It has never once apologized.',
+        ].join('\n'),
+      },
+    },
+    informant: {
+      name: `Informant — ${informant.name}`,
+      burnable: true,
+      payload: {
+        kind: 'npc', scene: 'cafe',
+        title: `CONTACT — ${informant.name}, ${informant.role.toUpperCase()}, ${informant.venue.toUpperCase()}`,
+        body: [
+          `${informant.venue} in the dead hour, when the saxophone has`,
+          'gone home and the chairs are up and the room admits what it',
+          `is. The ${informant.role} works while she talks, eyes making`,
+          'their circuit of the room without hope and without rest.',
+          '',
+          `"${victim}? He sat where he could see the door. He tipped like`,
+          'a man settling accounts before a journey. Some evenings',
+          'another man came in after him — never with him, never far.',
+          'Two men pretending not to share a secret look exactly like',
+          'two men sharing one. It is the first thing this job teaches.',
+          '',
+          `Ask me about ${victim}'s man and I will tell you what I saw.`,
+          'I have no reason to lie. Having no reason to lie is the only',
+          'luxury this cloakroom affords."',
+          '',
+          'Handle her gently. There is no second pair of eyes like these.',
+        ].join('\n'),
+      },
+    },
+    statement: {
+      name: 'Statement — What the Eyes Took Down',
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'cafe',
+        title: `STATEMENT — THE MAN WHO CAME AFTER ${victim}`,
+        body: [
+          'Given at the counter, in the voice of someone laying down a',
+          'small burden she has carried longer than she meant to:',
+          '',
+          '"A gray coat, a careful face — the kind of face that has',
+          'practiced being no one and nearly graduated. He never gave a',
+          'name. But twice I watched him settle his bill, and both times',
+          `he ${detail.phrase}. Faces are compositions, monsieur. Hands`,
+          'are confessions."',
+          '',
+          `${office.name} keeps personnel particulars — hands, habits,`,
+          'the small clauses of a body in a government suit. Pull the',
+          'particulars and see whose file confesses along with him.',
+        ].join('\n'),
+      },
+    },
+    personnel: {
+      name: `${office.name} — Personnel Particulars`,
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'office',
+        title: 'PERSONNEL PARTICULARS — EVENING SIDE',
+        body: [
+          'The Republic files its servants in triplicate and forgets',
+          'where it put them. Four cards, borrowed and returned between',
+          'rounds of the corridor clock, the column that matters copied',
+          'exact:',
+          '',
+          `  ${detail.column}:`,
+          ...S.detailSet.map(n => `    ${n} — yes, per file`),
+          `    ${S.detailCleared} — no: ${detail.counter}.`,
+          '',
+          'THE THIRD LIST. Lay it beside the roster and the register.',
+          'Three lists, four names, one name on all three — and it was',
+          'on all three before you ever came to this city. All you have',
+          'done is refuse to look away, which is more than most manage.',
+          '',
+          'When you are certain, file it: "accuse <name>". Once. Be',
+          'exact. Exactness is what the dead man paid for; spend it well.',
+        ].join('\n'),
+      },
+    },
+    motive: {
+      name: 'The Registry — Old Counterfoils',
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'office',
+        title: 'REGISTRY PULL — WHY THE EXACT MAN STOPPED COMING BACK',
+        body: [
+          `The registry clerk finds ${victim}'s requisition slips exactly`,
+          'where he filed them, because he filed everything; exactness',
+          'was his whole rebellion. Two days before the river, he called',
+          'up the old counterfoils — years of evening issues, initialed,',
+          'the long sediment of a sale that believed itself invisible.',
+          '',
+          'Whoever sold understood what the counterfoils would show once',
+          'an exact man laid them side by side under a good lamp. Two',
+          'days is roughly what it costs, in this city, to arrange a',
+          'river.',
+          '',
+          'That is the entire motive. Not passion. Not politics, though',
+          'politics will be blamed. Merely a sum, approaching, in a gray',
+          'coat. You are the sum now. Approach faster than he did.',
+        ].join('\n'),
+      },
+    },
+    resolution: {
+      name: 'Resolution — Case Closed',
+      burnable: false,
+      payload: {
+        kind: 'epilogue', scene: 'epilogue',
+        title: 'RESOLUTION',
+        body: [
+          'They take him at his desk in the gray of the morning, between',
+          'the first coffee and the second, which is when men of habit',
+          `are most easily led away. ${S.culprit}, ${S.role[S.culprit]},`,
+          `${office.name}. On the roster for the ${nightAbbr} evenings.`,
+          `Holding a live key to ${room}. His file card agreeing, in the`,
+          `Republic's own patient ink, with what a ${informant.role}'s`,
+          'unforgiving eyes watched his hands confess.',
+          '',
+          'He does not protest. Men like him have spent so long not being',
+          'asked that when the question finally arrives they greet it',
+          'almost with relief, like a train that is merely late.',
+          '',
+          `${victim}'s tally holds. His exactness convicts where outrage`,
+          'could not have. The desk notes your handling in the file, and',
+          'the file, as always, says nothing further.',
+          '',
+          'Outside, the lights along the river go on being beautiful.',
+          'The Seine remains neither cruel nor kind. One goes home. One',
+          'imagines, with some effort, that justice and the winter light',
+          'are enough. Some mornings they very nearly are.',
+        ].join('\n'),
+      },
+    },
+  }
+
+  const edges = [
+    {
+      to: 'board', requires: ['briefing'],
+      lead: 'The desk will lay out the suspect board when asked.',
+      match: (t) => t.includes('SUSPECT') || t.includes('BOARD') || (t.includes('FOUR') && t.includes('MEN')),
+      response: 'The desk lays the card flat and turns it toward you.',
+    },
+    {
+      to: 'room', requires: ['briefing'],
+      lead: `${victim} kept a room at the Hôtel Corvisart. Nobody has been in.`,
+      match: (t) => t.includes('CORVISART') || t.includes('HOTEL') || t.includes('LODGING'),
+      response: 'The concierge accepts the note and develops a sudden interest in her ledger.',
+    },
+    {
+      to: 'stash', requires: ['briefing'],
+      lead: 'The intercept waits on a key word: "decode <word>" and the desk runs the tables.',
+      answerKey: `The decoded intercept reads ${drop.plain} — ${drop.place}.`,
+      match: tokenMatch(drop.tokens),
+      response: 'The ticket is honored without a glance. Some machinery in this city still works.',
+    },
+    {
+      to: 'rota', requires: ['stash'],
+      lead: `The tally pays ${nightAbbr} evenings; nobody has managed the duty roster.`,
+      match: (t) => t.includes('ROSTER') || t.includes('ROTA') || t.includes('DUTY'),
+      response: 'The clerk who prefers arithmetic to loyalty copies the page between rounds.',
+    },
+    {
+      to: 'watcherlog', requires: ['briefing'],
+      lead: 'The DST watched the viaduct arches that night. Their log exists.',
+      match: (t) => t.includes('DST') || t.includes('WATCH') || t.includes('ARCHES'),
+      response: 'The log arrives by a route it would be indelicate to describe.',
+    },
+    timelineEdge(T.answer, {
+      to: 'site', requires: ['watcherlog'],
+      lead: 'Three watch entries wait to be put in order: "timeline A B C".',
+      answerKey: `The correct order of the watch entries is ${T.answer.split('').join(' ')}.`,
+      response: 'Leaves, is met, and one man walking back toward the lights — the night runs straight, and the arches will show you where.',
+      failResponse: 'Ordered so, the night contradicts itself: a man cannot be met before he arrives. (Heat rises.)',
+    }),
+    {
+      to: 'keybook', requires: ['site'],
+      lead: `Unissued stock lives locked in ${room}. Nobody has asked who holds keys.`,
+      match: (t) => t.includes('KEY'),
+      response: 'The register is produced with the pride of the one honest book in the building.',
+    },
+    {
+      to: 'herring', requires: ['briefing'],
+      lead: `The desk flagged ${herring.name} — ${herring.trade}. Worth an hour, possibly.`,
+      match: (t) => t.includes(herring.name),
+      response: `${herring.name} receives you with the composure of a man who has rehearsed this visit.`,
+    },
+    {
+      to: 'herring2', requires: ['briefing'],
+      lead: `A second name circles this: ${herring2.name}, ${herring2.trade}.`,
+      match: (t) => t.includes(herring2.name),
+      response: `${herring2.name} answers everything a beat too quickly, which answers most of it.`,
+    },
+    {
+      to: 'informant', requires: ['herring'],
+      lead: `${herring.name} pointed at ${informant.venue}: the ${informant.role} there forgets nothing.`,
+      match: (t) => t.includes(informant.alias) || venueMatch(informant.venue)(t),
+      response: `${informant.venue}, the dead hour. The chairs are up, and the eyes ${victim} trusted are waiting.`,
+    },
+    {
+      to: 'statement', requires: ['informant'],
+      lead: `The ${informant.role} is waiting to be asked about ${victim}'s man.`,
+      match: (t) => t.includes(victim),
+      response: 'She sets down what she is holding, and the statement comes out level and exact.',
+    },
+    {
+      to: 'personnel', requires: ['statement'],
+      lead: `A witness detail wants checking: pull ${office.name}'s personnel particulars.`,
+      match: (t) => t.includes('PERSONNEL') || t.includes('PARTICULARS') || t.includes('STAFF'),
+      response: 'Four cards, copied between rounds of the corridor clock, returned unmissed.',
+    },
+    {
+      to: 'motive', requires: ['rota', 'keybook'],
+      lead: 'Two lists in hand. The registry can still say why the exact man stopped coming back.',
+      match: (t) => t.includes('REGISTRY') || t.includes('COUNTERFOIL') || t.includes('MOTIVE') || t.includes('WHY'),
+      response: 'The registry clerk finds the slips exactly where a dead man filed them.',
+    },
+  ]
+
+  const accusation = {
+    culprit: S.culprit,
+    wrong: [...S.suspects.slice(1), herring.name, herring2.name, informant.alias],
+    unlocks: 'resolution',
+    correctResponse: 'The desk moves before the second coffee.',
+    wrongResponse: (name) =>
+      `They take ${name} in the gray of the morning, and by noon he has ` +
+      'proven what you could have proven: one list is not three. The seller ' +
+      'reads about it over lunch, pays exactly, and leaves no tip. The file ' +
+      'closes unresolved.',
+  }
+
+  const burnTriggers = {
+    press: {
+      scope: 'informant',
+      match: (t) => (t.includes('PRESS') || t.includes('THREATEN') || t.includes('FORCE')) && t.includes(informant.alias),
+      reason: 'Contact compromised: subject pressed at her place of work. Do not approach again.',
+      response: 'You lean, and the room goes quiet in the particular way of rooms that have decided about you. By closing time the arrangement is over.',
+    },
+    heatThreshold: 80,
+    heatReason: 'Contact compromised: attention exceeded what the quarter tolerates. Severed.',
+  }
+
+  const npcs = {
+    informant: {
+      aliases: [informant.alias],
+      fallback: `The ${informant.role} continues her work and waits, without hope and without impatience, for a better question.`,
+      lines: [
+        {
+          match: (t) => t.includes(victim),
+          disposition: 1,
+          response: `"${victim} once asked whether I was happy. Nobody asks the cloakroom. I have thought about him since more than the question deserved."`,
+        },
+        {
+          match: (t) => t.includes('BRIBE') || t.includes('PAY') || t.includes('MONEY'),
+          heat: 5,
+          response: 'She looks at the money the way one looks at weather through glass, and leaves it on the counter. (Heat rises.)',
+        },
+      ],
+    },
+  }
+
+  const hints = [
+    {
+      match: (t) => t.includes(workname),
+      response: `${workname} is the key, not the message. Lay it under the intercept, letter by letter: "decode ${workname.toLowerCase()}".`,
+    },
+    {
+      match: (t) => t.includes('CIPHER') || t.includes('INTERCEPT') || t.includes('VIGENERE'),
+      response: `${victim} keyed the old way — a running keyword beneath the text. His workname is in the briefing's last line.`,
+    },
+    {
+      match: (t) => t.includes('LIST') || t.includes('INTERSECT') || t.includes('CROSS'),
+      response: 'Three lists: the roster, the register, the particulars. Four names. Your man is the one name that remains on all three.',
+    },
+  ]
+
+  const walkthrough = [
+    'show me the suspect board',
+    'go to the hotel corvisart',
+    `decode ${workname.toLowerCase()}`,
+    `check the duty roster for ${nightWord.toLowerCase()} evenings`,
+    'pull the dst watch log',
+    `timeline ${T.answer.split('').join(' ').toLowerCase()}`,
+    `who holds keys to ${room}`,
+    `ask about ${herring.name.toLowerCase()}`,
+    `ask about ${herring2.name.toLowerCase()}`,
+    `go to ${informant.venue.toLowerCase()} and find ${informant.alias.toLowerCase()}`,
+    `ask about ${victim.toLowerCase()}'s man`,
+    'pull the personnel particulars',
+    'registry: why did he stop coming back',
+    `accuse ${S.culprit.toLowerCase()}`,
+  ]
+
+  return {
+    CASE_ID, ERA, TITLE: 'The Blue Hour', scopes, edges, accusation, burnTriggers, npcs, hints,
+    cipher: { ciphertext: cipherPlain, key: workname, to: 'stash' },
+    heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, max: 100, tail: 60 },
+    missResponse: undefined,
+    helpText: [
+      'PROCEDURE — what little of it survives the winter:',
+      '',
+      'Write your reports plainly: go somewhere, ask someone, check a',
+      'thing. The desk is literal-minded. The city is not, and never',
+      'claimed to be.',
+      '',
+      'A cipher wants its key word — "decode <word>" — and the tables',
+      'do the arithmetic. A night in pieces wants an order: "timeline',
+      'A B C". This case is a web: three trails, three lists, and your',
+      'man is the one name standing on all three. When you are certain,',
+      '"accuse <name>" — certainty is spent exactly once. On the gray',
+      'afternoons, "review" makes the desk read the case back to you',
+      'without reproach.',
+      '',
+      'Your notebook, on the right, keeps every page you have earned.',
+      'Burned contacts stay burned. Mind the heat; this city notices',
+      'everything and forgives at its own rates.',
+    ].join('\n'),
+    opening: [
+      'PARIS — WINTER 1954',
+      '',
+      'The light comes late and leaves early, and between those hours',
+      'the city conducts its real business. The river returned an exact',
+      'man at the Pont de Bercy this week, and the Seine was neither',
+      'cruel nor kind about it — rivers are honest; it is one of the',
+      'few honest things left here.',
+      '',
+      'Four names kept the evening side. Three trails will reduce them',
+      'to one: the money, the paper, and a pair of eyes in a cloakroom',
+      'that do not forgive and do not forget.',
+    ].join('\n'),
+    preamble: [
+      'Your notebook keeps what you earn; the rest belongs to the city,',
+      'which keeps its own books and audits no one. Speak plainly.',
+      '"help" buys you procedure — the clarity you must bring yourself.',
+    ].join('\n'),
+    openingScene: 'street',
+    board: {
+      suspects: sortNames(S.suspects),
+      columns: ['nights', 'keys', 'witness'],
+    },
+    walkthrough,
+    solutionCommitment: {
+      salt: `caseweb-paris-${seed}`,
+      canonical: () => JSON.stringify({ case: CASE_ID, culprit: S.culprit, salt: `caseweb-paris-${seed}` }),
+    },
+  }
+}
+
+// --------------------------------------------------------- Meridian 1849
+// The voice: spare and geologic. The country itself is the witness and
+// it testifies slowly and it has never once been cross-examined.
+
+function webMeridian(seed) {
+  const rand = mulberry32(hash('webmeridian|' + String(seed)))
+  const ERA = 'meridian-1849'
+  const CASE_ID = `web:${ERA}:${seed}`
+
+  const S = dealSuspects(rand, WEB_MERIDIAN.surnames, WEB_MERIDIAN.roles)
+  const victim = pick(rand, WEB_MERIDIAN.victims)
+  const word = pick(rand, WEB_MERIDIAN.words)
+  const room = WEB_MERIDIAN.room
+  const informant = pick(rand, WEB_MERIDIAN.informants)
+  const [herring, herring2] = pickN(rand, WEB_MERIDIAN.herrings, 2)
+  const detail = pick(rand, WEB_MERIDIAN.details)
+  const [nightAbbr, nightWord] = pick(rand, WEB_MERIDIAN.nights)
+  const ledgerLines = word.split('').map(L => `  ${WEB_MERIDIAN.ledger[L]}`)
+  const T = dealTimeline(rand, [
+    { time: '21:00', label: `Subject ${victim} passes the pickets outbound, assay pouch on the belt` },
+    { time: '22:10', label: 'Subject is met at the dry wash by a man come down from the company tents' },
+    { time: '23:30', label: 'One man comes back through the pickets. The pouch does not' },
+  ])
+
+  const scopes = {
+    briefing: {
+      name: `Company Letter — ${victim}`,
+      burnable: false,
+      payload: {
+        kind: 'dossier', scene: 'office',
+        title: `COMPANY LETTER — ${victim}, ASSAYER. FOUND IN THE DRY WASH.`,
+        body: [
+          'The buzzards told it first, wheeling over the wash below the',
+          `survey stakes, and the men who rode out found ${victim} face`,
+          'down in the country he had spent a year measuring. The desert',
+          'had already begun its bookkeeping. It keeps the only honest',
+          'ledger out here and it balances every night.',
+          '',
+          `${victim} assayed for the company and signed what he weighed.`,
+          `Someone in the company tents has been selling ${WEB_MERIDIAN.doc}`,
+          'against ore that never was, and the assayer had taken to',
+          'weighing more than ore. A man who counts what other men would',
+          'rather not have counted is a man walking out his string.',
+          '',
+          'Four men held the company side this season. Ask for the',
+          'suspect board and look at them in the light there is.',
+          '',
+          'His claims ledger sits with this letter. He crossed out dead',
+          'claims all season and beneath the crossings he wrote: first',
+          'letters, first. The ledger reads so:',
+          '',
+          ...ledgerLines,
+          '',
+          `He bunked in the survey tent, rent owed to no man. And mind`,
+          `${herring.name} — ${herring.trade}. He rides the edge of this`,
+          'the way coyotes ride the edge of a fire.',
+        ].join('\n'),
+      },
+    },
+    board: {
+      name: 'The Suspect Board',
+      burnable: false,
+      payload: {
+        kind: 'dossier', scene: 'office',
+        title: 'FOUR MEN — THE COMPANY SIDE',
+        body: [
+          'Charcoal on the back of a survey sheet. Four names and no',
+          'order to them, for the country confers no order on men, it',
+          'only receives them:',
+          '',
+          ...S.suspects.map(n => `  ${n} — ${S.role[n]}`),
+          '',
+          'All four held the company side while the certificates moved.',
+          'All four have eaten at the same fire as the dead man. Out',
+          'here that means less than it would anywhere else and it never',
+          'meant much anywhere.',
+          '',
+          'Three things will name a man: the nights, the strongbox, and',
+          'what a witness saw. Bring back a list for each. One name will',
+          'stand when the wind has taken the others.',
+        ].join('\n'),
+      },
+    },
+    room: {
+      name: 'The Survey Tent',
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'street',
+        title: `THE SURVEY TENT — WHAT ${victim} KEPT`,
+        body: [
+          'A cot, a transit, a bible unread and a ledger read to pieces.',
+          'The tent smells of tallow and iron gall ink. Whatever a man',
+          'owns out here he owns against the wind\'s opinion, and the',
+          'wind had been through before you.',
+          '',
+          'Sewn inside the cot canvas, in his surveyor\'s hand:',
+          '',
+          `  "Paid in coin, in camp, always a ${nightWord.toLowerCase()}. If I`,
+          '   do not come back the ledger knows the way. First letters,',
+          '   first."',
+          '',
+          'If I do not come back. He sewed that into his bed and lay',
+          'down on it every night thereafter and rose every morning and',
+          'went out to his stakes. Call that what you will. The country',
+          'does not call it anything.',
+        ].join('\n'),
+      },
+    },
+    stash: {
+      name: `The Cairn — the ${word} claim`,
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'yard',
+        title: `THE CAIRN ON THE ${word} CLAIM — WHAT HE BURIED`,
+        body: [
+          `The ${word.toLowerCase()} claim, dead since the ledger says so, and on`,
+          'its high corner a cairn no prospector built — the stones too',
+          'neat, the packrat gone from under them. Beneath:',
+          '',
+          '- A tally in the assayer\'s hand. Coin taken in camp, in',
+          `  person, always ${nightAbbr} nights, the season long. Entered`,
+          '  like weights: date, amount, the same one initial he would',
+          '  not commit to a name.',
+          '- One line beneath: "Seller keeps the night watch. The work',
+          '  rolls would show it. The clerk keeps the rolls from me."',
+          '',
+          'The clerk cannot keep the rolls from you. Ask the company',
+          'for the work rolls and see who held the watch.',
+        ].join('\n'),
+      },
+    },
+    rota: {
+      name: 'The Company — Work Rolls',
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'office',
+        title: `WORK ROLLS — ${nightAbbr} NIGHTS, THE SEASON`,
+        body: [
+          'The rolls, copied by lantern while the copyist\'s conscience',
+          'and his fear of God fought to a draw. The night-watch column:',
+          '',
+          `  Holding the camp watch, ${nightAbbr} nights, this season:`,
+          ...S.nightSet.map(n => `    ${n} — ${S.role[n]}`),
+          '',
+          `  ${S.nightCleared}: rode escort to Socorro every ${nightAbbr}`,
+          '  since the spring muster — the manifests carry his name in',
+          '  three hands. Whatever he owes God it was not owed here on',
+          '  those nights.',
+          '',
+          `THE FIRST LIST. The coin moved on ${nightAbbr} nights and these`,
+          'three kept the camp while it moved. Fold the page against',
+          'the dust. Two lists more and the name is no longer yours to',
+          'choose.',
+        ].join('\n'),
+      },
+    },
+    watcherlog: {
+      name: 'The Picket Log',
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'street',
+        title: 'PICKET LOG — HIS LAST NIGHT. THE PAGES LOOSE.',
+        body: [
+          'The pickets keep a log because the captain requires it and',
+          'they keep it badly because the desert requires nothing. Three',
+          'entries survive from the assayer\'s last night, the pages',
+          'loose and the order gone with whatever wind took it.',
+          '',
+          'A man goes out before he is met. He is met before one of the',
+          'two comes back. Set the entries in the order the night spent',
+          'them — "timeline A B C" — and say it plain.',
+          '',
+          ...T.cards,
+          '',
+          'Read the last entry twice. The pouch does not come back.',
+          'Neither does the man who carried it. Only one thing returns',
+          'and it walks on two legs through your pickets.',
+        ].join('\n'),
+      },
+    },
+    site: {
+      name: 'The Dry Wash',
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'yard',
+        title: 'THE DRY WASH — WHAT THE COUNTRY KEPT',
+        body: [
+          'The wash at the hour the log names, the light gone red along',
+          'the survey line and the stakes standing their small crooked',
+          'watch. The country keeps what falls on it. It has kept bones',
+          'older than any flag men have carried across it and it will',
+          'keep this too.',
+          '',
+          'In the sand where the meeting stood: a certificate blank,',
+          `torn at the corner — company stock, unissued, the seal margin`,
+          'still on it. Paper that white has no business in that wash.',
+          `Unissued certificates live in ${room} under lock, and the`,
+          'company logs every key in the strongbox ledger.',
+          '',
+          'Ask who holds keys. The ledger has no reason to lie. Nothing',
+          'out here has a reason to lie except men.',
+        ].join('\n'),
+      },
+    },
+    keybook: {
+      name: 'The Strongbox Ledger',
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'office',
+        title: `STRONGBOX LEDGER — ${room.toUpperCase()}`,
+        body: [
+          'The one book in camp no man ever thought to fear, copied',
+          'entire:',
+          '',
+          `  Keys to ${room}, issued and carried:`,
+          ...S.accessSet.map(n => `    ${n} — ${S.role[n]}`),
+          '',
+          `  ${S.accessCleared}: gave up his key at the spring audit;`,
+          '  the surrender is entered and witnessed. He has not been',
+          '  inside the tent since and has said so often enough that',
+          '  men have begun to believe him, which out here is evidence',
+          '  of a kind.',
+          '',
+          'THE SECOND LIST. The blank in the wash came out of that tent',
+          'behind one of three keys. Set this beside the rolls. Watch',
+          'the four names weather down.',
+        ].join('\n'),
+      },
+    },
+    herring: {
+      name: `Inquiry — ${herring.name}`,
+      burnable: false,
+      payload: {
+        kind: 'dossier', scene: 'street',
+        title: `INQUIRY — ${herring.name}`,
+        body: [
+          `${herring.name} does his trade off the tail of a freight`,
+          `wagon in the shade the wagon makes. ${herring.trade} — and he`,
+          'greets you the way men of his calling greet all questions,',
+          'with a jug and an alibi in the same hand.',
+          '',
+          `An afternoon settles it: he ${herring.clears}. Not your man.`,
+          '',
+          `But he knew ${victim} and he pays what such men pay, which is`,
+          `the one true thing they carry: "Your assayer ate at ${informant.venue}`,
+          `whenever the watch changed. ${informant.name} sees every man`,
+          'in this camp twice a day and has buried opinions of all of',
+          'them. Nobody asks the cook. That is the cook\'s whole power."',
+        ].join('\n'),
+      },
+    },
+    herring2: {
+      name: `Inquiry — ${herring2.name}`,
+      burnable: false,
+      payload: {
+        kind: 'dossier', scene: 'street',
+        title: `INQUIRY — ${herring2.name}`,
+        body: [
+          `${herring2.name}: ${herring2.trade}. He keeps his hands in`,
+          'plain sight the whole time you talk, which is the habit of a',
+          'man whose hands have been discussed at law. Even so, half a',
+          `day closes it: he ${herring2.clears}.`,
+          '',
+          'A door that opens on rimrock. The country is made of them.',
+          'It apologizes for nothing and it is not going to start with',
+          'you.',
+        ].join('\n'),
+      },
+    },
+    informant: {
+      name: `Informant — ${informant.name}`,
+      burnable: true,
+      payload: {
+        kind: 'npc', scene: 'cafe',
+        title: `CONTACT — ${informant.name}, ${informant.role.toUpperCase()}, ${informant.venue.toUpperCase()}`,
+        body: [
+          `${informant.venue} between meals, the fires banked, the`,
+          `coffee thickening toward tar. ${informant.name} works while`,
+          'talking, eyes on the flap of the tent, on the line, on',
+          'everything, out of a habit older than the company.',
+          '',
+          `"${victim}? Ate quiet. Thanked me. Nobody thanks the cook.`,
+          'Some nights another man came through after him — never with',
+          'him. Never far behind him neither. Like a dog that does not',
+          'want the man to know whose dog it is.',
+          '',
+          `Ask me about ${victim}'s man and I will tell you what these`,
+          'eyes took down. They are the only pair in this camp that',
+          'nobody has ever thought to buy."',
+          '',
+          'Go gentle. There is no second pair of eyes between here and',
+          'Socorro.',
+        ].join('\n'),
+      },
+    },
+    statement: {
+      name: 'Statement — What the Eyes Took Down',
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'cafe',
+        title: `STATEMENT — THE MAN WHO CAME AFTER ${victim}`,
+        body: [
+          'Given over the coffee, low, in the voice of somebody setting',
+          'down a sack they have carried uphill:',
+          '',
+          '"Company clothes. A face that gave nothing, and I have fed',
+          'faces that gave nothing since before this camp had a name.',
+          `But twice I watched him take his plate and his coin, and both`,
+          `times he ${detail.phrase}. Faces are for other men. Hands are`,
+          'for work, and work tells."',
+          '',
+          'The company keeps a book on its men — hands, marks, what the',
+          'war and the trail left of them. Open the company book to the',
+          'particulars and see whose flesh agrees with the record.',
+        ].join('\n'),
+      },
+    },
+    personnel: {
+      name: 'The Company Book — Particulars',
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'office',
+        title: 'THE COMPANY BOOK — PARTICULARS OF THE MEN',
+        body: [
+          'The company writes its men down when it hires them and reads',
+          'the writing only when it buries them. Four entries, the',
+          'column that matters copied whole:',
+          '',
+          `  ${detail.column}:`,
+          ...S.detailSet.map(n => `    ${n} — yes, per the book`),
+          `    ${S.detailCleared} — no: ${detail.counter}.`,
+          '',
+          'THE THIRD LIST. Lay it by the rolls and the strongbox ledger',
+          'and weight the pages with stones. Three lists. Four names.',
+          'One name on all three, and it was on all three before the',
+          'buzzards rose. The country knew. The country is a slow',
+          'witness but it does not recant.',
+          '',
+          'When you are certain, say it: "accuse <name>". Once. Out',
+          'here a thing said twice is a thing doubted.',
+        ].join('\n'),
+      },
+    },
+    motive: {
+      name: 'The Assay Returns',
+      burnable: false,
+      payload: {
+        kind: 'evidence', scene: 'office',
+        title: 'THE ASSAY RETURNS — WHY THE ASSAYER WENT TO THE WASH',
+        body: [
+          `${victim} had called for the season's assay returns two days`,
+          'before the wash — every certificate the company issued set',
+          'against every sample he had weighed. Paper against rock.',
+          'The rock does not negotiate.',
+          '',
+          'Whoever sold certificates against ore that never was',
+          'understood what that comparison would show a man who signed',
+          'only what he weighed. Two days is what it takes out here to',
+          'arrange a meeting nobody walks back from.',
+          '',
+          'That is the whole of the motive. Not hatred. Not a woman.',
+          'A sum, riding toward him at a walk, in company clothes. You',
+          'are the sum now. Ride faster.',
+        ].join('\n'),
+      },
+    },
+    resolution: {
+      name: 'Resolution — Case Closed',
+      burnable: false,
+      payload: {
+        kind: 'epilogue', scene: 'epilogue',
+        title: 'RESOLUTION',
+        body: [
+          'They take him at morning muster, in front of the men, because',
+          `the captain understands what examples are for. ${S.culprit},`,
+          `${S.role[S.culprit]}. On the rolls for the ${nightAbbr} watch.`,
+          `Carrying a live key to ${room}. And the company book agreeing,`,
+          'in the company\'s own dry hand, with what the cook\'s unbought',
+          'eyes watched his hands do twice.',
+          '',
+          'He says nothing on the ride to Socorro. The country says',
+          'nothing back. They understand one another at last.',
+          '',
+          `The assayer's tally goes into the record, and the record for`,
+          'once holds, because he weighed it before he wrote it. The',
+          'company notes your service in a letter you will never see.',
+          '',
+          'The stakes stand their crooked watch along the survey line.',
+          'The wash fills with red light in the evening and empties',
+          'again by dark, the way it has since before there were men to',
+          'name it, and will after. The country keeps what it is given.',
+          'It was the witness the whole time. You were only the voice.',
+        ].join('\n'),
+      },
+    },
+  }
+
+  const edges = [
+    {
+      to: 'board', requires: ['briefing'],
+      lead: 'The company will lay out the suspect board when asked.',
+      match: (t) => t.includes('SUSPECT') || t.includes('BOARD') || (t.includes('FOUR') && t.includes('MEN')),
+      response: 'The survey sheet is turned over and the charcoal names look back at you.',
+    },
+    {
+      to: 'room', requires: ['briefing'],
+      lead: `${victim} bunked in the survey tent. Nobody has gone through it.`,
+      match: (t) => t.includes('SURVEY') && (t.includes('TENT') || t.includes('BUNK')),
+      response: 'The tent flap gives. The wind has been through before you, but the wind cannot read.',
+    },
+    {
+      to: 'stash', requires: ['briefing'],
+      lead: 'His crossed-out claims are a message: first letters, first.',
+      answerKey: `The first letters of the crossed-out claims spell ${word} — the cairn on the ${word} claim.`,
+      match: (t) => t.includes(word),
+      response: 'The stones come away neat as they were laid. He built it to be found by a reader.',
+    },
+    {
+      to: 'rota', requires: ['stash'],
+      lead: `The coin moved ${nightAbbr} nights; nobody has pulled the company work rolls.`,
+      match: (t) => t.includes('ROLLS') || t.includes('ROSTER') || t.includes('DUTY') || t.includes('WATCH BILL'),
+      response: 'The copyist copies by lantern and asks his God to call it honest work.',
+    },
+    {
+      to: 'watcherlog', requires: ['briefing'],
+      lead: 'The pickets kept a log on his last night. The pages are loose but they exist.',
+      match: (t) => t.includes('PICKET') || t.includes('GUARD') || (t.includes('NIGHT') && t.includes('LOG')),
+      response: 'The corporal hands over the loose pages like a man glad to be rid of scripture.',
+    },
+    timelineEdge(T.answer, {
+      to: 'site', requires: ['watcherlog'],
+      lead: 'Three picket entries wait on their order: "timeline A B C".',
+      answerKey: `The correct order of the picket entries is ${T.answer.split('').join(' ')}.`,
+      response: 'Out, met, and one man walking back — the night sets true, and the wash will show you where.',
+      failResponse: 'Set so, the night breaks its own spine: a man cannot return before he has gone out. (Heat rises.)',
+    }),
+    {
+      to: 'keybook', requires: ['site'],
+      lead: `Unissued certificates live in ${room}. Nobody has asked who carries keys.`,
+      match: (t) => t.includes('KEY') || t.includes('STRONGBOX'),
+      response: 'The strongbox ledger opens. The one book in camp no man thought to fear.',
+    },
+    {
+      to: 'herring', requires: ['briefing'],
+      lead: `The company flagged ${herring.name} — ${herring.trade}. Worth an afternoon, maybe.`,
+      match: (t) => t.includes(herring.name),
+      response: `${herring.name} greets you with a jug and an alibi in the same hand.`,
+    },
+    {
+      to: 'herring2', requires: ['briefing'],
+      lead: `A second name rides the edge of this: ${herring2.name}, ${herring2.trade}.`,
+      match: (t) => t.includes(herring2.name),
+      response: `${herring2.name} keeps his hands where the sun can find them, which tells most of it.`,
+    },
+    {
+      to: 'informant', requires: ['herring'],
+      lead: `${herring.name} pointed at ${informant.venue}: nobody asks the cook, and that is the cook's whole power.`,
+      match: (t) => t.includes(informant.alias) || venueMatch(informant.venue)(t),
+      response: `${informant.venue} between meals. The eyes nobody thought to buy look up from the work.`,
+    },
+    {
+      to: 'statement', requires: ['informant'],
+      lead: `${informant.name} is waiting to be asked about ${victim}'s man.`,
+      match: (t) => t.includes(victim),
+      response: 'The coffee is poured unasked, and the statement comes out slow and level as a survey line.',
+    },
+    {
+      to: 'personnel', requires: ['statement'],
+      lead: 'A witness mark wants checking: open the company book to the particulars.',
+      match: (t) => t.includes('PARTICULARS') || t.includes('PERSONNEL') || (t.includes('COMPANY') && t.includes('BOOK')),
+      response: 'The book opens where books like it always open: at what the trail left of the men.',
+    },
+    {
+      to: 'motive', requires: ['rota', 'keybook'],
+      lead: 'Two lists in hand. The assay returns can still say why the assayer went to the wash.',
+      match: (t) => t.includes('ASSAY') || t.includes('RETURNS') || t.includes('MOTIVE') || t.includes('WHY'),
+      response: 'The returns come out of the chest in their season order, exactly as a careful man left them.',
+    },
+  ]
+
+  const accusation = {
+    culprit: S.culprit,
+    wrong: [...S.suspects.slice(1), herring.name, herring2.name, informant.alias],
+    unlocks: 'resolution',
+    correctResponse: 'The captain moves at morning muster, in front of the men.',
+    wrongResponse: (name) =>
+      `They put ${name} on a horse for Socorro and the country watches him ` +
+      'go and offers no opinion, for it knows what you did not: one list is ' +
+      'not three. By the time the error rides back, the seller and the season ' +
+      'are gone. The letter closes unresolved.',
+  }
+
+  const burnTriggers = {
+    press: {
+      scope: 'informant',
+      match: (t) => (t.includes('PRESS') || t.includes('THREATEN') || t.includes('FORCE')) && t.includes(informant.alias),
+      reason: 'Contact compromised: pressed before the camp. The kitchen is closed to you.',
+      response: 'You lean, and the camp sees you lean, and by supper the coffee is poured for every man but one.',
+    },
+    heatThreshold: 80,
+    heatReason: 'Contact compromised: the camp has taken notice past bearing. Severed.',
+  }
+
+  const npcs = {
+    informant: {
+      aliases: [informant.alias],
+      fallback: `${informant.name} goes on working and lets the silence ask your question better than you did.`,
+      lines: [
+        {
+          match: (t) => t.includes(victim),
+          disposition: 1,
+          response: `"${victim} thanked me every meal of the season. Nobody thanks the cook. I have thought on that more than a man's thanks deserves."`,
+        },
+        {
+          match: (t) => t.includes('BRIBE') || t.includes('PAY') || t.includes('MONEY') || t.includes('COIN'),
+          heat: 5,
+          response: 'The coin sits on the board between you like something that crawled there to die. It is not taken. (Heat rises.)',
+        },
+      ],
+    },
+  }
+
+  const hints = [
+    {
+      match: (t) => t.includes('ACROSTIC') || t.includes('LEDGER') || t.includes('LETTERS') || t.includes('CLAIMS'),
+      response: 'His own instruction, sewn into his bed: first letters, first. Read the crossed-out claims down their left edge.',
+    },
+    {
+      match: (t) => t.includes('LIST') || t.includes('INTERSECT') || t.includes('CROSS'),
+      response: 'Three lists: the work rolls, the strongbox ledger, the company book. Four names. Your man is the one name standing on all three.',
+    },
+  ]
+
+  const walkthrough = [
+    'show me the suspect board',
+    'go through the survey tent',
+    `the claims spell ${word.toLowerCase()} — open the cairn on the ${word.toLowerCase()} claim`,
+    `pull the company work rolls for ${nightWord.toLowerCase()} nights`,
+    'get the picket log from the corporal',
+    `timeline ${T.answer.split('').join(' ').toLowerCase()}`,
+    'who carries keys to the strongbox tent',
+    `ask about ${herring.name.toLowerCase()}`,
+    `ask about ${herring2.name.toLowerCase()}`,
+    `go to ${informant.venue.toLowerCase()} and find ${informant.alias.toLowerCase()}`,
+    `ask about ${victim.toLowerCase()}'s man`,
+    'open the company book to the particulars',
+    'the assay returns: why did he go to the wash',
+    `accuse ${S.culprit.toLowerCase()}`,
+  ]
+
+  return {
+    CASE_ID, ERA, TITLE: 'The Dry Wash', scopes, edges, accusation, burnTriggers, npcs, hints,
+    heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, max: 100, tail: 60 },
+    missResponse: undefined,
+    helpText: [
+      'PROCEDURE — what the company asks of a report:',
+      '',
+      'Say it plain: go somewhere, ask someone, check a thing. The',
+      'desk is literal. The country is not anything at all; it merely',
+      'waits.',
+      '',
+      'His ledger is a message: first letters, first. A night in',
+      'pieces wants an order — "timeline A B C". This letter is a web:',
+      'three trails, three lists, and your man is the one name on all',
+      'three. Certain? "accuse <name>" — a thing said twice out here',
+      'is a thing doubted, so you say it once. Lost? "review" and the',
+      'desk reads it back without judgment, which is more than the',
+      'country will do.',
+      '',
+      'Your notebook keeps every page you have earned. A burned',
+      'contact stays burned. Mind the heat. The camp is small and',
+      'the desert is not.',
+    ].join('\n'),
+    opening: [
+      'THE MERIDIAN — 1849',
+      '',
+      'The country runs west in lines no man drew and the company is',
+      'drawing them anyway. The buzzards rose over the dry wash this',
+      'week and what they rose from was the assayer, the one man in',
+      'camp who signed only what he weighed.',
+      '',
+      'Four names held the company side. Three trails will bring them',
+      'down to one: the coin, the paper, and a pair of eyes in the',
+      'cook tent that nobody ever thought to buy.',
+    ].join('\n'),
+    preamble: [
+      'Your notebook keeps what you earn. Past sundown that is the',
+      'only law that holds out here. Speak plainly. "help" buys the',
+      'company rules — nerve you carry in with you.',
+    ].join('\n'),
+    openingScene: 'street',
+    board: {
+      suspects: sortNames(S.suspects),
+      columns: ['nights', 'strongbox', 'witness'],
+    },
+    walkthrough,
+    solutionCommitment: {
+      salt: `caseweb-meridian-${seed}`,
+      canonical: () => JSON.stringify({ case: CASE_ID, culprit: S.culprit, salt: `caseweb-meridian-${seed}` }),
     },
   }
 }

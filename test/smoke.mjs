@@ -321,7 +321,7 @@ console.log('\n16. Review: the desk reads the case back')
 console.log('\n17. Deep cases: the deduction web (caseweb)')
 {
   // Structure: 15 scopes, three list scopes, fair intersection.
-  for (const era of ['berlin-1938', 'neworleans-1968']) {
+  for (const era of ['berlin-1938', 'neworleans-1968', 'paris-1954', 'meridian-1849']) {
     const w = generateWebCase('omega', era)
     check(`${era} web: 15+ scopes (spec §4.2)`, Object.keys(w.scopes).length >= 15)
     check(`${era} web: deterministic per seed`,
@@ -341,7 +341,9 @@ console.log('\n17. Deep cases: the deduction web (caseweb)')
   // Solvability: replay the walkthrough through the real engine, both eras,
   // several seeds — epilogue reached, heat zero, everything granted honestly.
   for (const [seed, era] of [['omega', 'berlin-1938'], ['sigma', 'berlin-1938'], ['kappa', 'berlin-1938'],
-                             ['omega', 'neworleans-1968'], ['sigma', 'neworleans-1968'], ['kappa', 'neworleans-1968']]) {
+                             ['omega', 'neworleans-1968'], ['sigma', 'neworleans-1968'], ['kappa', 'neworleans-1968'],
+                             ['omega', 'paris-1954'], ['sigma', 'paris-1954'], ['kappa', 'paris-1954'],
+                             ['omega', 'meridian-1849'], ['sigma', 'meridian-1849'], ['kappa', 'meridian-1849']]) {
     const mod = generateWebCase(seed, era)
     const rW = new Relay()
     const pW = generateSecretKey()
@@ -360,7 +362,7 @@ console.log('\n17. Deep cases: the deduction web (caseweb)')
   }
   // "Go to the Acme" must work — every solid word of an informant's venue
   // opens the door, not just the last one (field report, 2026-07-12).
-  for (const era of ['berlin-1938', 'neworleans-1968']) {
+  for (const era of ['berlin-1938', 'neworleans-1968', 'paris-1954', 'meridian-1849']) {
     const w = generateWebCase('omega', era)
     const edge = w.edges.find(e => e.to === 'informant')
     const venue = w.scopes.informant.payload.title.split(',').pop().trim()
@@ -378,6 +380,34 @@ console.log('\n17. Deep cases: the deduction web (caseweb)')
   await gm2w.poll()
   check('web: accusing a two-list suspect fails and ends the case',
     gm2w.over && !gm2w.unlocked.has('resolution'))
+}
+
+console.log('\n18. The desk converses (context pack + seam)')
+{
+  const mod = generateWebCase('omega', 'berlin-1938')
+  const rC = new Relay(); const pC = generateSecretKey(); const gmC = new StubGM(rC, mod)
+  await gmC.start(getPublicKey(pC))
+  const pack = gmC.contextPack()
+  check('context pack holds exactly the earned documents', pack.held.length === 1 && pack.held[0].title.includes('BRIEFING'))
+  check('context pack never contains unearned content', !JSON.stringify(pack).includes('KEY BOOK'))
+  check('context pack lists the open leads', pack.leads.length >= 3)
+  let saw = null
+  gmC.converse = async ({ report, context }) => {
+    saw = { report, held: context.held.length, leads: context.leads.length }
+    return 'The desk turns your question over like a coin it does not recognize.'
+  }
+  await sendFieldReport(rC, pC, gmC.pub, 'what do we truly have on the dead man so far', mod.CASE_ID)
+  await gmC.poll()
+  const d1 = await receiveRumors(rC, pC, [KIND_GM_DISPATCH])
+  check('free reports route through the Director with earned context',
+    saw?.held === 1 && JSON.parse(d1[d1.length - 1].content).text.includes('turns your question over'))
+  check('conversational replies still cost heat', gmC.heat === mod.heat.wrongAnswer)
+  gmC.converse = async () => { throw new Error('director down') }
+  await sendFieldReport(rC, pC, gmC.pub, 'utterly unmatched gibberish here', mod.CASE_ID)
+  await gmC.poll()
+  const d2 = await receiveRumors(rC, pC, [KIND_GM_DISPATCH])
+  check('a dead Director falls back to the scripted line',
+    JSON.parse(d2[d2.length - 1].content).text.includes('Nothing gives'))
 }
 
 console.log(`\n${passed} passed, ${failed} failed`)
