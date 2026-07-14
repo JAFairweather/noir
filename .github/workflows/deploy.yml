@@ -1,0 +1,45 @@
+name: Deploy to VPS
+
+# Two ways to fire this:
+#  • the "Run workflow" button (GitHub mobile app → Actions → Deploy) — a
+#    deploy button you can tap from anywhere;
+#  • automatically on every push to main.
+# It SSHes to the box and syncs everything: the Noir repo (hub + client +
+# Director/Luke), then each app site (sites.sh), validating the Caddyfile
+# before any reload so a bad config can never take the front door down.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            cd /root/noir
+            git pull --ff-only
+            cd deploy
+            # pull each app's latest site onto the box
+            bash sites.sh
+            # validate the Caddyfile in a throwaway container BEFORE any reload,
+            # so an invalid config aborts here instead of crash-looping Caddy
+            docker run --rm -e ACME_EMAIL=deploy@nave.pub \
+              -v "$PWD/Caddyfile":/etc/caddy/Caddyfile:ro \
+              caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
+            # static sites are live-mounted (served instantly); this reloads
+            # Caddy + rebuilds the Director/Luke images only if they changed
+            docker compose up -d --build
+            echo "deploy complete"
