@@ -20,6 +20,7 @@ apps=(
   "nvoy:nvoy"
   "nherit:nherit"
   "nscope:nostr-scoped-data-grants"
+  "luke:luke"                     # a service (built + proxied), not file-served
 )
 
 for pair in "${apps[@]}"; do

@@ -187,7 +187,8 @@ That's the whole story: one box, one front door, every project under
 
 ## 8. Expose Luke at `luke.nave.pub` — as a delegated agent
 
-**Full guide: [`docs/LUKE.md`](../docs/LUKE.md).** The short version:
+**Full guide: [`LUKE.md`](https://github.com/JAFairweather/luke/blob/main/LUKE.md)
+in the `luke` repo** (Luke is its own service repo now). The short version:
 
 Luke is your OpenClaw instance — an agent that can act on your box. We do
 **not** proxy its Control UI straight onto a public address. Instead Luke
@@ -195,7 +196,8 @@ is split into two planes on `luke.nave.pub`:
 
 - **Public plane** (`/`) — Luke's *card*: his npub, his mandate, and his
   delegation status (a revocable grant from you), plus `/health`. Read-only,
-  safe to index. Served by the `luke` container (`luke/luke-service.mjs`).
+  safe to index. Served by the `luke` container, built from its own repo
+  (synced to `deploy/sites/luke` by `sites.sh`).
 - **Control plane** (`/cockpit*`) — the real OpenClaw Control UI on host
   `:57419`, reachable **only past a nostr-signed gate**: Caddy `forward_auth`
   asks `luke-service` `/gate/verify`, which opens only for a NIP-98 signature
@@ -208,9 +210,10 @@ WebSocket natively.
 
 ### Enable it
 
-1. **Config:** `cp luke/.env.example luke/.env`, then set `LUKE_NSEC`
-   (Luke's key), `LUKE_MASTER_NPUB` (**your** npub — the only key the gate
-   admits), and `LUKE_MANDATE`.
+1. **Config:** the box syncs the luke repo with `bash sites.sh`; put its env
+   at `luke/.env` (from `deploy/`: `cp sites/luke/.env.example ../luke/.env`),
+   then set `LUKE_NSEC` (Luke's key), `LUKE_MASTER_NPUB` (**your** npub — the
+   only key the gate admits), and `LUKE_MANDATE`.
 2. **OpenClaw:** set `gateway.controlUi.allowedOrigins` to include
    `https://luke.nave.pub`, and keep its own gateway auth on.
 3. **DNS:** the `luke` A record already points at the box (Phase 1).
