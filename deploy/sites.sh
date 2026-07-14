@@ -35,6 +35,23 @@ for pair in "${apps[@]}"; do
   fi
 done
 
+# --- Luke's secrets: decrypt SOPS ciphertext → the env the compose reads --
+# The committed sites/luke/secrets.enc.env is decrypted with the box's age
+# key into ../luke/.env (gitignored, root-only). Guarded: if SOPS or the
+# encrypted file isn't set up yet, this is a no-op and the stack still
+# comes up (compose's luke env_file is required:false). See luke/SECRETS.md.
+if [ -f sites/luke/secrets.enc.env ] && command -v sops >/dev/null 2>&1; then
+  mkdir -p ../luke
+  if sops --input-type dotenv --output-type dotenv -d sites/luke/secrets.enc.env > ../luke/.env; then
+    chmod 600 ../luke/.env
+    echo "🔓 luke secrets decrypted → ../luke/.env"
+  else
+    echo "⚠ luke secrets present but decrypt FAILED (age key missing?) — luke will run without env"
+  fi
+else
+  echo "· luke secrets: SOPS/enc file not set up yet — skipping (see luke/SECRETS.md)"
+fi
+
 echo
 echo "done. served roots are in deploy/sites/. now reload Caddy:"
 echo "  docker compose up -d caddy"
