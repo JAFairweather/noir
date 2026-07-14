@@ -56,13 +56,27 @@ director.nave.pub {
 	file_server
 }
 
-nvelope.nave.pub  { import app nvelope }
-nontact.nave.pub  { import app nontact }
-notegate.nave.pub { import app notegate }
-ntrigue.nave.pub  { import app ntrigue }
-nvoy.nave.pub     { import app nvoy }
-nherit.nave.pub   { import app nherit }
-nscope.nave.pub   { import app nscope }
+nvelope.nave.pub {
+	import app nvelope
+}
+nontact.nave.pub {
+	import app nontact
+}
+notegate.nave.pub {
+	import app notegate
+}
+ntrigue.nave.pub {
+	import app ntrigue
+}
+nvoy.nave.pub {
+	import app nvoy
+}
+nherit.nave.pub {
+	import app nherit
+}
+nscope.nave.pub {
+	import app nscope
+}
 
 # --- Luke — a delegated agent, cockpit behind a nostr-signed gate ------
 # READ docs/LUKE.md before enabling. Two planes on one host:
