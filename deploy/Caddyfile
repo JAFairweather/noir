@@ -16,6 +16,12 @@
 nave.pub {
 	root * /srv/apps/nave
 	encode gzip zstd
+	# NIP-05: clients resolve luke@nave.pub / nave@nave.pub by fetching
+	# /.well-known/nostr.json cross-origin, so it needs permissive CORS
+	# and a JSON content-type.
+	@nip05 path /.well-known/nostr.json
+	header @nip05 Access-Control-Allow-Origin "*"
+	header @nip05 Content-Type "application/json"
 	file_server
 }
 
