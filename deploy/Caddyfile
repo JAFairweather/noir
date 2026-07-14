@@ -72,25 +72,24 @@ nscope.nave.pub   { import app nscope }
 #                  opens for exactly one key: your NIP-98-signed master npub.
 # OpenClaw's own gateway auth stays on as the inner lock (defense in depth);
 # set its gateway.controlUi.allowedOrigins to include https://luke.nave.pub.
-# Requires the `luke` compose service up (docker compose --profile luke up -d).
-#
-# luke.nave.pub {
-# 	encode gzip zstd
-#
-# 	# The cockpit: OpenClaw, gated by the nostr-signed session.
-# 	@cockpit path /cockpit /cockpit/*
-# 	handle @cockpit {
-# 		forward_auth luke:8790 {
-# 			uri /gate/verify
-# 		}
-# 		reverse_proxy host.docker.internal:57419
-# 	}
-#
-# 	# Everything else: Luke's public card + the /gate/* login flow.
-# 	handle {
-# 		reverse_proxy luke:8790
-# 	}
-# }
+# The `luke` service comes up with the normal `docker compose up -d`.
+luke.nave.pub {
+	encode gzip zstd
+
+	# The cockpit: OpenClaw, gated by the nostr-signed session.
+	@cockpit path /cockpit /cockpit/*
+	handle @cockpit {
+		forward_auth luke:8790 {
+			uri /gate/verify
+		}
+		reverse_proxy host.docker.internal:57419
+	}
+
+	# Everything else: Luke's public card + the /gate/* login flow.
+	handle {
+		reverse_proxy luke:8790
+	}
+}
 #
 # relay.nave.pub {
 # 	reverse_proxy relay:PORT         # the nostr relay (Phase 5)

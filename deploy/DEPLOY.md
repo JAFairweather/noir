@@ -216,7 +216,7 @@ WebSocket natively.
 3. **DNS:** the `luke` A record already points at the box (Phase 1).
 4. **Bring Luke up** and enable the vhost:
    ```bash
-   cd deploy && docker compose --profile luke up -d --build luke
+   cd deploy && docker compose up -d --build luke
    # then uncomment the luke.nave.pub block in Caddyfile:
    docker compose up -d caddy
    ```

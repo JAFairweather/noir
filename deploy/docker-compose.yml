@@ -36,7 +36,6 @@ services:
   # `docker compose up -d luke` (and uncomment the luke.nave.pub Caddy
   # block). See docs/LUKE.md.
   luke:
-    profiles: ["luke"]          # opt-in: `docker compose --profile luke up -d`
     build:
       context: ..
       dockerfile: deploy/Dockerfile
@@ -87,7 +86,7 @@ services:
     # on host port 57419) via host.docker.internal. Harmless until used.
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    depends_on: [director]
+    depends_on: [director, luke]
 
 networks:
   nave:
