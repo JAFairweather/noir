@@ -6,14 +6,15 @@
 	email {$ACME_EMAIL}
 }
 
-# The hub — the ecosystem front door. Static, served straight off the box
-# from ../nave (mounted read-only into this container at /srv/nave).
+# The hub — the ecosystem front door. Its own repo (nave.pub, the Nave
+# system) is synced by deploy/sites.sh into deploy/sites/nave and served
+# from /srv/apps/nave (the same read-only mount as every app site).
 # The apex gets its OWN cert block: bundling www in here would make Caddy
 # order ONE cert for both names, and if www fails to validate (it has no
 # explicit A record — only the wildcard) the whole order fails and the
 # apex goes down with it. Keep them independent.
 nave.pub {
-	root * /srv/nave
+	root * /srv/apps/nave
 	encode gzip zstd
 	file_server
 }

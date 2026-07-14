@@ -72,7 +72,6 @@ services:
       # ONLY public dirs are mounted. deploy/ (which holds .env with your
       # ANTHROPIC_API_KEY + director nsec) is deliberately NOT here — the
       # secrets never enter the web-serving container.
-      - ../nave:/srv/nave:ro                 # the hub  → nave.pub
       - ../client:/srv/site/client:ro        # the game client → noir.nave.pub
       - ../lib:/srv/site/lib:ro              # sibling modules the client imports
       - ../gm:/srv/site/gm:ro

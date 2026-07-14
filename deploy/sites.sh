@@ -12,6 +12,7 @@ mkdir -p sites
 
 # subdomain : github repo (default branch = main for all)
 apps=(
+  "nave:nave.pub"                 # the apex hub — the Nave system repo
   "nvelope:nvelope"
   "nontact:nontact"
   "notegate:notegate"
