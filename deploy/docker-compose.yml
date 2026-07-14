@@ -80,6 +80,8 @@ services:
       - ../shared:/srv/site/shared:ro
       - ../eras:/srv/site/eras:ro
       - ../sw.js:/srv/site/sw.js:ro          # the service-worker kill switch
+      # Each app's site (synced by deploy/sites.sh) → served at <app>.nave.pub
+      - ./sites:/srv/apps:ro
     networks: [nave]
     # Lets Caddy reach services published on the host (e.g. Luke/OpenClaw
     # on host port 57419) via host.docker.internal. Harmless until used.

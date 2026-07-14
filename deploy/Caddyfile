@@ -42,6 +42,28 @@ director.nave.pub {
 	reverse_proxy director:8787
 }
 
+# --- The apps, each served off the box at its own subdomain -----------
+# deploy/sites.sh syncs each app's repo into deploy/sites/<name>, mounted
+# read-only at /srv/apps/<name>. We serve each REPO ROOT (not a subdir) so
+# the apps' sibling imports (../lib, ../shared, ../vendor) resolve. Caddy
+# issues a Let's Encrypt cert per subdomain automatically. Adding the next
+# app is one line here + one line in sites.sh.
+(app) {
+	root * /srv/apps/{args[0]}
+	encode gzip zstd
+	@mjs path *.mjs
+	header @mjs Content-Type "text/javascript; charset=utf-8"
+	file_server
+}
+
+nvelope.nave.pub  { import app nvelope }
+nontact.nave.pub  { import app nontact }
+notegate.nave.pub { import app notegate }
+ntrigue.nave.pub  { import app ntrigue }
+nvoy.nave.pub     { import app nvoy }
+nherit.nave.pub   { import app nherit }
+nscope.nave.pub   { import app nscope }
+
 # --- Luke — a delegated agent, cockpit behind a nostr-signed gate ------
 # READ docs/LUKE.md before enabling. Two planes on one host:
 #   /            → Luke's public card + gate endpoints (luke-service)

@@ -87,6 +87,39 @@ so the game's cross-origin calls to `director.nave.pub` pass.)*
 
 ---
 
+## Phase 2b — The apps, each at its own `<app>.nave.pub`
+
+The N-apps ship as static clients. To serve them from the box (so every app
+lives under your own domain, not `github.io`), `deploy/sites.sh` syncs each
+app's repo into `deploy/sites/<name>`, Caddy mounts that read-only at
+`/srv/apps`, and one vhost per subdomain serves it (repo root, so each app's
+sibling imports resolve). Caddy issues a cert per subdomain automatically.
+
+On the box:
+
+```bash
+cd /root/noir && git pull
+cd deploy && bash sites.sh          # clones nvelope, nontact, notegate,
+                                    # ntrigue, nvoy, nherit, nscope
+docker compose up -d --build caddy  # picks up the mounts + new vhosts
+```
+
+**Done when:** `https://nvelope.nave.pub`, `https://nontact.nave.pub`,
+`https://notegate.nave.pub`, `https://ntrigue.nave.pub`,
+`https://nvoy.nave.pub`, `https://nherit.nave.pub`, and
+`https://nscope.nave.pub` (the protocol page) all load — and the hub's app
+cards, which now point at these subdomains, open them.
+
+**To update an app later:** re-run `bash sites.sh` (it fast-forwards each to
+its latest `main`), then `docker compose up -d caddy`. The `github.io`
+deployments still exist and keep working as a fallback.
+
+*(Certs mint on first request. With 7 new names at once you may briefly hit
+Let's Encrypt's rate limit; Caddy retries and the ZeroSSL fallback covers
+the rest — they all come up within a few minutes.)*
+
+---
+
 ## Phase 3 — Confirm the Director accepts the client origin
 
 On the VPS, `deploy/.env` already has:

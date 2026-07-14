@@ -8,3 +8,6 @@ house.grant.jsonl
 deploy/.env
 luke/.env
 luke/.luke-key
+
+# app sites synced onto the box by deploy/sites.sh (not part of this repo)
+deploy/sites/
