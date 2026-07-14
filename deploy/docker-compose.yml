@@ -42,7 +42,9 @@ services:
       dockerfile: deploy/Dockerfile
     image: noir-director:latest
     restart: unless-stopped
-    env_file: ../luke/.env
+    env_file:
+      - path: ../luke/.env      # optional — a missing file must never break
+        required: false         # the main stack (director/caddy/static)
     environment:
       - LUKE_PORT=8790
     command: ["node", "luke/luke-service.mjs"]
