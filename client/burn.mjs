@@ -41,8 +41,10 @@ export function showEndCard({ ended }, onDismiss) {
 export function showCaseSelect(cases, onPick) {
   const overlay = document.createElement('div')
   overlay.className = 'card-overlay'
-  const buttons = cases.map(c =>
-    `<button class="save-btn case-btn" data-id="${c.id}">
+  // The case-file box stays gold; each scenario wears its own colour.
+  const CASE_HUES = ['#6fa8a0', '#c07a9a', '#8fae6a', '#9a83c0', '#c0705a', '#7f95ad', '#d9a648', '#b98a5a']
+  const buttons = cases.map((c, i) =>
+    `<button class="save-btn case-btn" data-id="${c.id}" style="--case-accent:${CASE_HUES[i % CASE_HUES.length]}">
        <span class="case-era">${c.label}</span>
        <span class="case-title">${c.title}</span>
        <span class="case-blurb">${c.blurb}</span>
