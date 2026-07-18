@@ -17,8 +17,17 @@ const raw = (process.env.NOIR_DIRECTOR_NSEC || '').trim()
 if (!raw) { console.error('NOIR_DIRECTOR_NSEC not set in this process'); process.exit(1) }
 const sk = raw.startsWith('nsec') ? nip19.decode(raw).data : Uint8Array.from(raw.match(/.{2}/g).map(h => parseInt(h, 16)))
 
-const RELAYS = (process.env.NOIR_RELAYS || process.env.LUKE_RELAYS || 'wss://relay.damus.io,wss://nos.lol,wss://relay.primal.net')
-  .split(',').map(s => s.trim()).filter(Boolean)
+// Publish to the relays the nvoy console + the other Nave identities live on —
+// union in NOIR_RELAYS if set, but always include the standard set so the
+// profile lands where clients actually look.
+const BASE = 'wss://relay.damus.io,wss://nos.lol,wss://relay.primal.net'
+const RELAYS = [...new Set(
+  ((process.env.NOIR_RELAYS || '') + ',' + (process.env.LUKE_RELAYS || BASE) + ',' + BASE)
+    .split(',').map(s => s.trim()).filter(Boolean))]
+
+// Never hang the caller: SimplePool can keep the event loop alive after publish,
+// so force a clean exit, with a hard guard if a relay socket stalls.
+setTimeout(() => { console.log('  (forced exit after timeout)'); process.exit(0) }, 25000)
 
 const profile = {
   name: 'Noir',
@@ -43,5 +52,6 @@ try {
     const r = await relay.publish(evt)
     console.log(`  kind ${evt.kind}: published to ${r.acks}/${r.of} relays`)
   }
-} finally { relay.close() }
+} finally { try { relay.close() } catch {} }
 console.log('  done.')
+process.exit(0)
