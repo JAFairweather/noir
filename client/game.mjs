@@ -31,7 +31,7 @@ import { detectDirector, makeVoice, makeInterrogator, makeJudge, makeConverse } 
 import { browserDirector } from './browser-director.mjs'
 import { showBurnCard, showEndCard, showSaveCard, showCaseSelect } from './burn.mjs'
 import { getOrCreatePlayerKey, getFlatMode, setFlatMode, getCaseId, setCaseId, getTradecraft, setTradecraft } from './settings.mjs'
-import { hasNip07, signIn, sendNotesToHouse } from './master.mjs'
+import { canSignAsMaster, masterKind, signIn, signOut, sendNotesToHouse } from './master.mjs'
 import { verifyCase } from '../shared/verify.mjs'
 
 const $ = (sel) => document.querySelector(sel)
@@ -259,9 +259,10 @@ function renderNotes() {
     li.appendChild(del)
     list.appendChild(li)
   }
-  // SEND TO HOUSE appears only when both ends exist: an extension to
-  // sign as the master, and a table that told us its agent npub.
-  $('#note-send').classList.toggle('hidden', !(hasNip07() && director?.houseCard?.agent))
+  // SEND TO HOUSE appears only when both ends exist: a master signer
+  // (extension, or a remembered bunker pairing) and a table that told
+  // us its agent npub.
+  $('#note-send').classList.toggle('hidden', !(canSignAsMaster() && director?.houseCard?.agent))
 }
 function wireNotes() {
   $('#notes-toggle').checked = localStorage.getItem('noir.notes.on') === '1'
@@ -313,7 +314,7 @@ function wireNotes() {
     const card = director?.houseCard
     if (!card?.agent) return show('no table in reach — engage a Director first')
     if (!card.relays?.length) return show('the table is not watching any relays — set NOIR_RELAYS on the Director and restart it')
-    show('signing… your extension will ask')
+    show(masterKind() === 'nip46' ? 'signing… your bunker will ask' : 'signing… your extension will ask')
     try {
       await sendNotesToHouse({
         notes: unsent.map(n => `[${n.at}] ${n.note}`),
@@ -767,16 +768,19 @@ if (!director) {
 }
 
 // Two identities, honestly labeled: the per-browser field key plays the
-// case; SIGN IN (NIP-07) shows the master's real npub — the key that can
-// grant house notes. The nsec never enters this page either way.
+// case; SIGN IN (nave-connect: NIP-07 extension or NIP-46 bunker) shows
+// the master's real npub — the key that can grant house notes. The nsec
+// never enters this page either way.
 function renderIdentity() {
   const fieldNpub = nip19.npubEncode(playerPub)
   const m = localStorage.getItem('noir.master.pub')
   if (m) {
+    const bunker = masterKind() === 'nip46'
     const npub = nip19.npubEncode(m)
-    $('#npub-label').textContent = 'MASTER IDENTITY (NIP-07)'
+    $('#npub-label').textContent = bunker ? 'MASTER IDENTITY (NIP-46 BUNKER)' : 'MASTER IDENTITY (NIP-07)'
     $('#npub').textContent = npub.slice(0, 20) + '…' + npub.slice(-6)
-    $('#npub').title = npub + '\n\nYour real key, held by your extension. The field key ' +
+    $('#npub').title = npub + '\n\nYour real key, held by your ' +
+      (bunker ? 'remote bunker' : 'extension') + '. The field key ' +
       fieldNpub.slice(0, 12) + '… still plays the case; yours signs what only a master may — house notes.'
     $('#signin').classList.add('hidden')
     $('#signout').classList.remove('hidden')
@@ -785,23 +789,23 @@ function renderIdentity() {
     $('#npub').textContent = fieldNpub.slice(0, 20) + '…' + fieldNpub.slice(-6)
     $('#npub').title = fieldNpub +
       '\n\nA per-browser field identity for the demo. Sign in with a NIP-07 extension' +
-      ' (Alby/nos2x) to act as yourself — your notebook following your real npub arrives with live relays.'
-    $('#signin').classList.toggle('hidden', !hasNip07())
+      ' (Alby/nos2x) or a NIP-46 bunker to act as yourself — your notebook following' +
+      ' your real npub arrives with live relays.'
+    $('#signin').classList.remove('hidden')   // a bunker needs no extension; the card offers both
     $('#signout').classList.add('hidden')
   }
 }
 $('#signin').addEventListener('click', async () => {
-  try { await signIn() } catch { /* the extension declined; stay a field agent */ }
+  try { await signIn() } catch { /* the signer declined; stay a field agent */ }
   renderIdentity()
   renderNotes()
 })
 $('#signout').addEventListener('click', () => {
-  localStorage.removeItem('noir.master.pub')   // the extension keeps the keys; we only forget the label
+  signOut()          // the extension/bunker keeps the keys; we forget the label and drop a live pairing
   renderIdentity()
-  renderNotes()                                // the author gate re-evaluates
+  renderNotes()      // the author gate re-evaluates
 })
 renderIdentity()
-if (!hasNip07()) setTimeout(renderIdentity, 2500)   // extensions can inject late
 const save = loadSave()
 if (save && !save.gameOver) {
   showSaveCard({ onLoad: () => resumeSave(save), onNew: pickCase })
