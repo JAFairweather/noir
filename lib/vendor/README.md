@@ -6,6 +6,7 @@ Regenerate after bumping nostr-tools:
 ```bash
 npx esbuild node_modules/nostr-tools/lib/esm/index.js --bundle --format=esm --minify --outfile=lib/vendor/nostr-tools.mjs
 npx esbuild node_modules/nostr-tools/lib/esm/pool.js  --bundle --format=esm --minify --outfile=lib/vendor/nostr-tools-pool.mjs
+npx esbuild node_modules/nostr-tools/lib/esm/nip46.js --bundle --format=esm --minify --outfile=lib/vendor/nostr-tools-nip46.mjs
 ```
 
 The browser importmap in `client/index.html` maps the bare `nostr-tools`
