@@ -474,8 +474,22 @@ async function syncFromGM() {
       score.burn()              // the theme stops mid-phrase
       showBurnCard({ scopeName, reason })
     } else {
-      const { text, ended } = JSON.parse(r.content)
+      const { text, ended, reopen } = JSON.parse(r.content)
       put(text, 'gm')
+      // The desk offered a re-read (#5): put the named document back on
+      // the drum so "reread the briefing" actually rereads it.
+      if (reopen && gm.scopes?.get?.(reopen)) {
+        const scopeId = gm.scopes.get(reopen).scopeId
+        const g = latestGrants(await receiveGrants(relay, playerSk)).find(x => x.scopeId === scopeId)
+        if (g) {
+          const res = await fetchScope(relay, g)
+          if (res.status === 'ok') {
+            if (res.data.scene) { setScene(res.data.scene, CASE.ERA, g.scopeId); cityMap.travelTo(g.scopeId) }
+            put(`— ${res.data.title ?? g.scopeName} —`, 'doc-title')
+            put(res.data.body ?? '', 'doc')
+          }
+        }
+      }
       if (ended) {
         gameOver = true
         if (ended !== 'solved') showEndCard({ ended })
