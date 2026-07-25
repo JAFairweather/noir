@@ -12,6 +12,7 @@ import { receiveGrants, latestGrants, fetchScope } from '../lib/nipxx.mjs'
 import { sendFieldReport, receiveRumors, KIND_GM_DISPATCH, KIND_BURN_NOTICE } from '../shared/wrap.mjs'
 import { StubGM } from '../gm/stubgm.mjs'
 import * as berlin from '../gm/cases/berlin-minicase.mjs'
+import * as nola from '../gm/cases/neworleans-wetnegative.mjs'
 import { CASES } from '../gm/cases/registry.mjs'
 import { generateCase } from '../gm/casegen.mjs'
 import { generateWebCase } from '../gm/caseweb.mjs'
@@ -708,6 +709,75 @@ console.log('\n21. Playability: exploration is free, tradecraft cools, plain phr
     await s2('go to the freight sidings')
     check('naming a puzzle scope does not spring its gate (timeline)', !g2.unlocked.has('freight') && g2.heat === 0)
   }
+}
+
+console.log('\n22. Photo analysis (§5.5): the image is the puzzle')
+{
+  // Structure: the case keys the photo gate to an edge, the carrying
+  // scope ships the client overlay spec, and no document a player can
+  // hold BEFORE solving spells the detail out — the print is the only
+  // witness that says it.
+  check('the case keys a photo puzzle to an edge',
+    nola.photo?.scope === 'levee' && nola.photo?.to === 'blowup')
+  const overlay = nola.scopes.levee.payload.photo
+  check('the carrying scope ships an overlay spec with alt text',
+    overlay?.id === 'frame-15' && overlay.mark === 'chevrons' && (overlay.alt ?? '').length > 0)
+  const gate = nola.edges.find(e => e.to === 'blowup')
+  check('the photo edge is a puzzle gate with an answer key',
+    gate?.puzzle === 'photo' && /stripes|chevron/i.test(gate.answerKey))
+  check('the detail lives in the image only — no pre-solve document spells it',
+    !Object.entries(nola.scopes).some(([k, s]) =>
+      !['blowup', 'resolution'].includes(k) && /STRIPE|CHEVRON/i.test(s.payload.body)))
+
+  // The overlay lands deterministically: same (photo, seed) → the same
+  // print in the same corner. Pure math, provable without a canvas.
+  const { photoLayout } = await import('../client/art.mjs')
+  const L1 = photoLayout(overlay, 'scope-abc')
+  const L2 = photoLayout(overlay, 'scope-abc')
+  const L3 = photoLayout(overlay, 'scope-xyz')
+  check('overlay layout is deterministic per (photo, seed)', JSON.stringify(L1) === JSON.stringify(L2))
+  check('a different seed hangs the print elsewhere', JSON.stringify(L1) !== JSON.stringify(L3))
+  check('the print stays inside the scene at any seed',
+    ['scope-abc', 'scope-xyz', nola.CASE_ID].every(s => {
+      const L = photoLayout(overlay, s)
+      return L.x >= 0 && L.y >= 0 && L.x + L.w <= 960 && L.y + L.h <= 540
+    }))
+
+  // Engine: studying the print is free guidance, naming it never
+  // springs the gate, reading the composited detail does — heat zero.
+  const rP = new Relay(); const pP = generateSecretKey(); const gmP = new StubGM(rP, nola)
+  await gmP.start(getPublicKey(pP))
+  const sayP = async (text) => {
+    await sendFieldReport(rP, pP, gmP.pub, text, nola.CASE_ID)
+    await gmP.poll()
+    const d = await receiveRumors(rP, pP, [KIND_GM_DISPATCH])
+    return JSON.parse(d[d.length - 1].content).text
+  }
+  for (const cmd of ['the ad spells dauphine', 'ask remy about unit 12', 'check the dispatch log', 'timeline b a c'])
+    await sayP(cmd)
+  check('the wet negative reaches the drum on the happy path', gmP.unlocked.has('levee'))
+  const study = await sayP('study the photograph')
+  check('studying the print is free and points at the image, never the answer',
+    study.includes('Report what the sleeve wears') && !/(STRIPE|CHEVRON)/i.test(study) && gmP.heat === 0)
+  await sayP('check the blow-up')
+  check('naming the print does not spring the photo gate', !gmP.unlocked.has('blowup') && gmP.heat === 0)
+  await sayP('the near sleeve in frame 15 wears desk sergeant stripes')
+  check('reporting the composited detail opens the gate at heat zero',
+    gmP.unlocked.has('blowup') && gmP.heat === 0)
+  const after = await sayP('study the photograph')
+  check('a solved print stops intercepting study commands', !after.includes('Report what the sleeve wears'))
+
+  // The judge seam reads the same answer key — a paraphrase of what the
+  // player SAW in the image still lands (§5.5 via the §5 verdict path).
+  const rQ = new Relay(); const pQ = generateSecretKey(); const gmQ = new StubGM(rQ, nola)
+  await gmQ.start(getPublicKey(pQ))
+  const sayQ = async (text) => { await sendFieldReport(rQ, pQ, gmQ.pub, text, nola.CASE_ID); await gmQ.poll() }
+  for (const cmd of ['the ad spells dauphine', 'ask remy about unit 12', 'check the dispatch log', 'timeline b a c'])
+    await sayQ(cmd)
+  gmQ.judge = async ({ answers }) => answers.find(a => /chevron/i.test(a.canonical))?.id ?? null
+  await sayQ('the second man carries three v-shaped marks on his arm')
+  check('the judge matches a paraphrase against the photo answer key',
+    gmQ.unlocked.has('blowup') && gmQ.heat === 0)
 }
 
 console.log(`\n${passed} passed, ${failed} failed`)

@@ -11,7 +11,7 @@
 // night. When a FLUX-capable Director is present, its still crossfades in
 // over the painting — same duotone, same era law.
 
-import { ERAS, duotone } from './art.mjs'
+import { ERAS, duotone, compositePhoto } from './art.mjs'
 import { buildLineScene, renderDrawOn, planMorph, renderMorph } from './linework.mjs'
 
 const W = 960, H = 540           // painter coordinate space
@@ -1010,13 +1010,16 @@ const eraPainters = {
   },
 }
 
-export function renderSceneCanvas(kind, eraId, seed = '') {
+export function renderSceneCanvas(kind, eraId, seed = '', photo = null) {
   const paint = eraPainters[eraId]?.[kind] ?? painters[kind] ?? painters.street
   const canvas = document.createElement('canvas')
   canvas.width = W * DPR; canvas.height = H * DPR
   const ctx = canvas.getContext('2d')
   ctx.scale(DPR, DPR)
   paint(ctx, mulberry32(hash(kind + '|' + seed)))
+  // §5.5: a puzzle detail rides the scene as a code-drawn print,
+  // composited before the duotone pass so it wears the era too.
+  if (photo) compositePhoto(ctx, photo, seed, W, H)
   return duotone(canvas, eraId, { grain: 0.035, gain: 1.45, lift: 0.07, vignette: 0.38 })
 }
 
@@ -1030,8 +1033,10 @@ export function enableDirectorScenes(url) { directorScenes = { url } }
 
 /** Ask the Director for a FLUX still; hand back a duotoned canvas.
  *  A failed development retries twice (billing hiccups, cold GPUs) —
- *  the server caches successes, so retries are cheap and idempotent. */
-function fetchStill(kind, eraId, seed, onReady, attempt = 0) {
+ *  the server caches successes, so retries are cheap and idempotent.
+ *  A puzzle print (§5.5) is composited over the still IN CODE before
+ *  the duotone — the model is asked for no lettering, ever. */
+function fetchStill(kind, eraId, seed, photo, onReady, attempt = 0) {
   if (!directorScenes) return
   const wanted = currentKind
   fetch(`${directorScenes.url}/scene`, {
@@ -1042,43 +1047,77 @@ function fetchStill(kind, eraId, seed, onReady, attempt = 0) {
     if (currentKind !== wanted) return
     if (!image) {
       if (attempt < 2) setTimeout(() => {
-        if (currentKind === wanted) fetchStill(kind, eraId, seed, onReady, attempt + 1)
+        if (currentKind === wanted) fetchStill(kind, eraId, seed, photo, onReady, attempt + 1)
       }, 20000)
       return
     }
     const img = new Image()
     img.onload = () => {
       if (currentKind !== wanted) return
-      onReady(duotone(img, eraId, { grain: 0.04, vignette: 0.45 }))
+      let source = img
+      if (photo) {
+        const c = document.createElement('canvas')
+        c.width = W * DPR; c.height = H * DPR
+        const cx = c.getContext('2d')
+        cx.scale(DPR, DPR)
+        cx.drawImage(img, 0, 0, W, H)
+        compositePhoto(cx, photo, seed, W, H)
+        source = c
+      }
+      onReady(duotone(source, eraId, { grain: 0.04, vignette: 0.45 }))
     }
     img.src = image
   }).catch(() => {})
 }
 
-/** Crossfade the backdrop to a scene. Deterministic per (kind, seed). */
-export function setScene(kind, eraId, seed = '') {
+/** Imagery carries alt text (spec §6) — a photo puzzle doubly so: the
+ *  flat-mode player must be able to read the detail the print holds. */
+function describeBackdrop(photo) {
+  const holder = document.getElementById('backdrop')
+  if (!holder) return
+  if (photo?.alt) {
+    holder.setAttribute('role', 'img')
+    holder.setAttribute('aria-label', photo.alt)
+  } else {
+    holder.removeAttribute('role')
+    holder.removeAttribute('aria-label')
+  }
+}
+
+let currentPhoto = null   // the §5.5 print riding the current scene, if any
+
+/** Crossfade the backdrop to a scene. Deterministic per (kind, seed).
+ *  `photo` is the scope's §5.5 overlay spec (payload.photo) — the puzzle
+ *  print composited into whatever image the scene ends up wearing. */
+export function setScene(kind, eraId, seed = '', photo = null) {
   if (currentKind === kind + seed) {
-    if (penEnabled && !pen.plate) fetchStill(kind, eraId, seed, (p) => pen.setPlate(p))
+    if (penEnabled && !pen.plate) fetchStill(kind, eraId, seed, currentPhoto, (p) => pen.setPlate(p))
     return
   }
   currentKind = kind + seed
+  currentPhoto = photo ?? null
+  describeBackdrop(photo)
 
   if (penEnabled) {
     pen.show(kind, eraId, seed)
+    // §5.5: a puzzle print must be readable even before (or without) a
+    // still — the procedural painting, detail composited, lies under
+    // the ink at once; the developed still replaces it on arrival.
+    if (photo) pen.setPlate(renderSceneCanvas(kind, eraId, seed, photo))
     // The stills-as-keyframes stepping stone (DECISIONS §2): the
     // Director's still slides in UNDER the ink as a dim duotoned plate —
     // the drawing stays the voice; the photograph becomes the memory
     // it is drawn from. The real stroke-extraction spike comes later.
-    fetchStill(kind, eraId, seed, (plate) => pen.setPlate(plate))
+    fetchStill(kind, eraId, seed, photo, (plate) => pen.setPlate(plate))
     return
   }
 
-  swapIn(renderSceneCanvas(kind, eraId, seed), kind, seed)
+  swapIn(renderSceneCanvas(kind, eraId, seed, photo), kind, seed)
 
   // FLUX upgrade: procedural paints instantly; the model still replaces
   // it when it lands — duotoned by the same pass, so the era look is
   // identical either way. Never blocks, never errors the game.
-  fetchStill(kind, eraId, seed, (canvas) => swapIn(canvas, kind, seed))
+  fetchStill(kind, eraId, seed, photo, (canvas) => swapIn(canvas, kind, seed))
 }
 
 // ------------------------------------------------------------ the pen
@@ -1096,10 +1135,13 @@ export function setPenMode(on) {
   penEnabled = on
   localStorage.setItem('noir.pen', on ? '1' : '0')
   if (on) {
-    if (pen.last) pen.show(pen.last.kind, pen.last.era, pen.last.seed, true)
+    if (pen.last) {
+      pen.show(pen.last.kind, pen.last.era, pen.last.seed, true)
+      if (currentPhoto) pen.setPlate(renderSceneCanvas(pen.last.kind, pen.last.era, pen.last.seed, currentPhoto))
+    }
   } else {
     pen.hide()
-    if (pen.last) swapIn(renderSceneCanvas(pen.last.kind, pen.last.era, pen.last.seed), pen.last.kind, pen.last.seed)
+    if (pen.last) swapIn(renderSceneCanvas(pen.last.kind, pen.last.era, pen.last.seed, currentPhoto), pen.last.kind, pen.last.seed)
   }
 }
 

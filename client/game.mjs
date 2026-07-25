@@ -206,7 +206,7 @@ async function refreshNotebook() {
     if (res.status === 'ok') {
       li.title = 'Read on the drum'
       li.addEventListener('click', () => {
-        if (res.data.scene) { setScene(res.data.scene, CASE.ERA, g.scopeId); cityMap.travelTo(g.scopeId) }
+        if (res.data.scene) { setScene(res.data.scene, CASE.ERA, g.scopeId, res.data.photo); cityMap.travelTo(g.scopeId) }
         put(`— ${res.data.title ?? g.scopeName} —`, 'doc-title')
         put(res.data.body ?? '', 'doc')
         saveGame()
@@ -485,7 +485,7 @@ async function syncFromGM() {
           for (const g of grants) {
             const res = await fetchScope(relay, g)
             if (res.status === 'ok' && res.data.kind === 'epilogue') {
-              if (res.data.scene) { setScene(res.data.scene, CASE.ERA, g.scopeId); cityMap.travelTo(g.scopeId) }
+              if (res.data.scene) { setScene(res.data.scene, CASE.ERA, g.scopeId, res.data.photo); cityMap.travelTo(g.scopeId) }
               put(`— ${res.data.title} —`, 'doc-title')
               put(res.data.body, 'doc')
             }
@@ -503,7 +503,7 @@ async function syncFromGM() {
     knownScopes.add(g.scopeId)
     const res = await fetchScope(relay, g)
     if (res.status !== 'ok') continue
-    if (res.data.scene) { setScene(res.data.scene, CASE.ERA, g.scopeId); cityMap.travelTo(g.scopeId) }
+    if (res.data.scene) { setScene(res.data.scene, CASE.ERA, g.scopeId, res.data.photo); cityMap.travelTo(g.scopeId) }
     put('', 'dim')   // let the finished text breathe before the intel lands
     put(`▸ NEW INTEL — ${g.scopeName}`, 'grant-line')
     put(`— ${res.data.title ?? g.scopeName} —`, 'doc-title')

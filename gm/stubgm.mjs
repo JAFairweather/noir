@@ -299,6 +299,18 @@ export class StubGM {
         'The right word turns it into language.')
     }
 
+    // Photo analysis (§5.5): the answer lives in the IMAGE — the client
+    // composites the detail over the scene; no document spells it out.
+    // The desk can only put the loupe in the player's hand; the reading
+    // itself goes through the gate edge's answer key like any verdict.
+    const photo = this.case.photo
+    if (photo && this.unlocked.has(photo.scope) && !this.unlocked.has(photo.to) &&
+        /\b(STUDY|EXAMINE|INSPECT|ENLARGE|LOOK|READ|CHECK|SEE)\b/.test(t) &&
+        /\b(PHOTO|PHOTOGRAPH|PICTURE|IMAGE|FRAME|PRINT|NEGATIVE|SHOT|LOUPE)\b/.test(t) &&
+        !this.case.edges.find(e => e.to === photo.to)?.match(t)) {
+      return this.dispatch(photo.study)
+    }
+
     // The accusation endgame (§5.8).
     if (t.startsWith('ACCUSE')) return this.accuse(t)
 
@@ -401,8 +413,11 @@ export class StubGM {
     }
 
     // Contextual hints: a near-miss earns a nudge, not the cold shoulder.
+    // `requires` opens a hint; `unless` retires it once later scopes have
+    // made its advice stale.
     for (const hint of this.case.hints ?? []) {
       if (hint.requires && !hint.requires.every(r => this.unlocked.has(r))) continue
+      if (hint.unless && hint.unless.some(r => this.unlocked.has(r))) continue
       if (hint.match(t)) return this.dispatch(hint.response)
     }
 

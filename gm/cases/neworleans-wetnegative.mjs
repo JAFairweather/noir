@@ -2,8 +2,9 @@
 // New Orleans, 1968, per eras/neworleans-1968.md: corruption as climate,
 // implication over spectacle, the river keeping what it's given.
 //
-// Eight scopes, one red herring, one burnable informant, a classified-ad
-// acrostic, a dispatch-log timeline, and an accusation endgame.
+// Nine scopes, one red herring, one burnable informant, a classified-ad
+// acrostic, a dispatch-log timeline, a photo-analysis gate (§5.5 — the
+// wet negative itself), and an accusation endgame.
 // Skeleton fixed; prose becomes the Director's job in M3.
 
 export const CASE_ID = 'neworleans-wet-negative'
@@ -183,10 +184,51 @@ export const scopes = {
         'One frame, water-spotted at the corner — the wet negative — is',
         'frame 15. The one after the envelope.',
         '',
-        'It shows the second man\'s face, quarter-turned into the patrol',
-        'car\'s dome light. Desk sergeant\'s stripes. Broussard.',
+        'The print is behind these words now, hanging on the dark: the',
+        'second man, quarter-turned into the patrol car\'s dome light,',
+        'his face gone to the water spot. The frame kept one thing the',
+        'parish can\'t talk its way around. Study the print. Report what',
+        'the near sleeve wears.',
         '',
         'Of Thibodeaux himself the river says nothing. It never does.',
+      ].join('\n'),
+      // §5.5: the puzzle detail — composited into the scene image by the
+      // client, deterministically, in code. It appears in NO document
+      // body: the photograph is the only witness that says it.
+      photo: {
+        id: 'frame-15',
+        caption: 'FRAME 15 — ESPLANADE WHARF, NIGHT',
+        mark: 'chevrons',
+        text: '1ST DIST',
+        style: 'stencil',
+        spot: true,
+        alt: 'A water-spotted photographic print: a man quarter-turned into a patrol car\'s ' +
+          'dome light, his face lost under the water damage. On his near sleeve, three ' +
+          'sergeant\'s chevrons. A door panel behind him is stenciled 1ST DIST.',
+      },
+    },
+  },
+
+  blowup: {
+    name: 'The Blow-Up — Frame 15',
+    burnable: false,
+    payload: {
+      kind: 'evidence',
+      scene: 'office',
+      title: 'THE ENLARGEMENT — FRAME 15, NEAR SLEEVE, DETAIL',
+      body: [
+        'A portrait man on Chartres owes you a favor and asks no',
+        'questions, which in this town is the whole favor. Under the',
+        'enlarger the sleeve comes up like a confession: three chevrons.',
+        'Desk sergeant\'s stripes.',
+        '',
+        'Not vice. Not the street. The desk — the rank that signs route',
+        'orders, holds evidence-room keys, and never gets its shoes wet.',
+        'Set the enlargement beside route order 44-C and the parish runs',
+        'out of coincidences: the signature line hands you the name, if',
+        'it hasn\'t already.',
+        '',
+        'When you are certain, file it: "accuse <name>". Once.',
       ].join('\n'),
     },
   },
@@ -274,7 +316,35 @@ export const edges = [
     match: (t) => t.includes('SIGNED') || t.includes('ROUTE ORDER') || t.includes('44') || (t.includes('WHO') && t.includes('ORDER')),
     response: 'Route order 44-C, pulled from a file that sticks. The signature line is very neat. Careful men are neat.',
   },
+  {
+    // Photo analysis (§5.5): the answer is IN the image. The client
+    // composites the chevrons into frame 15 (levee payload.photo); no
+    // document names them until the player has read the print and said
+    // so. Naming the scope never springs the gate — answerKey rules.
+    to: 'blowup',
+    requires: ['levee'],
+    puzzle: 'photo',
+    lead: 'Frame 15 hangs behind the words. Study the print and report what the near sleeve wears.',
+    answerKey: 'Frame 15 shows the second man wearing desk sergeant\'s stripes — three chevrons on the near sleeve.',
+    match: (t) => t.includes('STRIPE') || t.includes('CHEVRON') ||
+      ((t.includes('SERGEANT') || t.includes('DESK')) &&
+        (t.includes('FRAME') || t.includes('PHOTO') || t.includes('PRINT') || t.includes('NEGATIVE') || t.includes('SLEEVE'))),
+    response: 'You take the frame to a portrait man on Chartres, and under the enlarger the sleeve gives it up.',
+  },
 ]
+
+// Photo analysis (§5.5): the wet negative IS the puzzle. The detail —
+// three chevrons on the second man's sleeve — is composited into the
+// scene image by the client (levee payload.photo), never printed in a
+// document body. The desk can only point the loupe; the reading itself
+// is verified through the blowup edge's answer key above.
+export const photo = {
+  scope: 'levee',
+  to: 'blowup',
+  study: 'You put the loupe on frame 15. The face stays lost to the water spot — the river kept ' +
+    'that much for itself. But the dome light holds the near sleeve plain enough to count. ' +
+    'Report what the sleeve wears.',
+}
 
 export const accusation = {
   culprit: 'BROUSSARD',
@@ -350,8 +420,15 @@ export const hints = [
   },
   {
     requires: ['darkroom'],
+    unless: ['levee'],
     match: (t) => t.includes('FRAME') || t.includes('CONTACT SHEET') || t.includes('NEGATIVE'),
     response: 'Frame 14 is the handoff. The frame AFTER the handoff left town in a mail sack. Find where the negatives went — or who they show.',
+  },
+  {
+    requires: ['levee'],
+    unless: ['blowup'],
+    match: (t) => t.includes('FRAME') || t.includes('NEGATIVE') || t.includes('PRINT') || t.includes('PHOTO'),
+    response: 'The frame hangs behind the words on the drum. The face is gone to the water spot; the near sleeve is not. Count what the dome light holds, and report it.',
   },
   {
     requires: ['patrol'],
@@ -382,6 +459,8 @@ export const helpText = [
   '  Say it plain. GO somewhere, ASK someone, CHECK a thing.',
   '  Worked out the ad? Say where it points.',
   '  Reconstructing a night? "timeline A B C" in the order you believe.',
+  '  Handed a photograph? The frame keeps what paper won\'t — study',
+  '  the print on the drum, then report the detail you read.',
   '  Sure? "accuse <name>" — one accusation to a customer.',
   '  Town too warm? "lay low" — lose a few days, lose the tail.',
   '',
@@ -428,5 +507,6 @@ export const walkthrough = [
   'check the dispatch log',
   'timeline b a c',
   'who signed the route order',
+  'the near sleeve in frame 15 wears desk sergeant stripes',
   'accuse broussard',
 ]
