@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "smoke": "node test/smoke.mjs",
+    "test": "node test/smoke.mjs",
     "serve": "npx http-server -c-1 . -o /client/",
     "gm": "node gm/director-service.mjs",
     "director": "node scripts/director.mjs",

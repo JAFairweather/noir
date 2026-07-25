@@ -360,7 +360,7 @@ export const hints = [
   },
 ]
 
-export const missResponse = 'Nothing moves. A screen door claps somewhere, and a man on a gallery marks you without looking up. (Heat rises.)'
+export const missResponse = 'Nothing moves. A screen door claps somewhere, and a man on a gallery marks you without looking up.'
 
 export const burnTriggers = {
   press: {
@@ -374,7 +374,7 @@ export const burnTriggers = {
   heatReason: 'Source severed: District attention exceeded tolerance. Contact lost.',
 }
 
-export const heat = { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, max: 100, tail: 60 }
+export const heat = { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, layLow: 25, max: 100, tail: 60 }
 
 export const helpText = [
   'HOW THIS WORKS — for the record, once:',
@@ -383,6 +383,7 @@ export const helpText = [
   '  Worked out the ad? Say where it points.',
   '  Reconstructing a night? "timeline A B C" in the order you believe.',
   '  Sure? "accuse <name>" — one accusation to a customer.',
+  '  Town too warm? "lay low" — lose a few days, lose the tail.',
   '',
   'Your notebook (right) keeps every document you\'ve been handed.',
   'Click one to reread it. A burned source is burned for good — you keep',

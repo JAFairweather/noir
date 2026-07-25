@@ -14,6 +14,7 @@ import { newScopeKey, publishScope, grant, rotateScope } from '../lib/nipxx.mjs'
 import {
   KIND_FIELD_REPORT, receiveRumors, sendDispatch, sendBurnNotice,
 } from '../shared/wrap.mjs'
+import { buildEntityIndex, mentions, isAction, isSurvey } from './entities.mjs'
 
 const normalize = (text) => text.toUpperCase().replace(/[^A-Z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim()
 
@@ -53,6 +54,8 @@ export class StubGM {
     this.heat = 0
     this.over = false
     this.seenReports = new Set()
+    // the case's noun index (§5): entity fallback for plain phrasing
+    this.entities = buildEntityIndex(caseModule)
     // interrogation state per NPC (§5.3): disposition + which lines are spent
     this.npcState = {}
     for (const key of Object.keys(caseModule.npcs ?? {}))
@@ -161,6 +164,10 @@ export class StubGM {
     this.heat = Math.min(this.case.heat.max, this.heat + n)
   }
 
+  coolHeat(n) {
+    this.heat = Math.max(0, this.heat - n)
+  }
+
   /** Read new field reports off the relay and play the case forward. */
   async poll() {
     if (this.over) return
@@ -207,7 +214,11 @@ export class StubGM {
       }
       lines.push('', 'Standing instruction: when you are certain of your man,')
       lines.push('file it — "accuse <name>". You file it once, and you live with it.')
-      if (this.heat >= this.case.heat.tail) lines.push('', `Heat stands at ${this.heat}. You are being watched.`)
+      if (this.heat > 0) {
+        lines.push('', `Heat stands at ${this.heat}` +
+          (this.heat >= this.case.heat.tail ? '. You are being watched.' : '.') +
+          ' Laying low costs days and cools the city.')
+      }
       return this.dispatch(lines.join('\n'))
     }
 
@@ -217,6 +228,20 @@ export class StubGM {
     }
     if (t === 'WEST' && this.unlocked.size === 1) {
       return this.dispatch('West of here the boulevard runs toward the Tiergarten, black branches over black water. Station did not send you here to admire it.')
+    }
+
+    // Tradecraft lowers heat (§5.4) — the other half of the economy.
+    // Loud moves warm the city; laying low spends days and cools it.
+    if (/\b(LAY LOW|LIE LOW|LAY DOWN LOW|SAFE HOUSE|SAFEHOUSE|GO TO GROUND|GO DARK|COOL OFF)\b/.test(t)) {
+      if (this.heat === 0) {
+        return this.dispatch('The city has no eyes on you worth dodging. Save the tradecraft for when it is warm.')
+      }
+      const n = this.case.heat.layLow ?? 25
+      this.coolHeat(n)
+      return this.dispatch(this.case.layLowResponse ??
+        'You go to ground: a rented room, cash, no letters, meals carried up cold. Two days pass on ' +
+        'other people\'s footsteps. When you surface, the city has half forgotten your face. (Heat falls.)',
+      { cooled: n })
     }
 
     // The desk runs the cipher tables (§5.1): "decode <key>". The puzzle is
@@ -335,8 +360,43 @@ export class StubGM {
       if (hint.match(t)) return this.dispatch(hint.response)
     }
 
-    // No edge matched: the city notices people who ask the wrong questions.
-    this.addHeat(this.case.heat.wrongAnswer)
+    // Intent fallback (§5): the authored matchers had their turn; now
+    // resolve the command against the case's own nouns. Acting on a
+    // reachable node unlocks it; acting on a held document re-reads it —
+    // both by meaning, not by the author's exact spelling.
+    if (isAction(t)) {
+      for (const edge of this.case.edges) {
+        if (this.unlocked.has(edge.to)) continue
+        if (!edge.requires.every(r => this.unlocked.has(r))) continue
+        // Puzzle gates keep their answers: an edge with a canonical
+        // answer or a recognizable-wrong path must be SOLVED, not named.
+        if (edge.answerKey || edge.failMatch) continue
+        if (mentions(this.entities, edge.to, t)) {
+          await this.grantScope(edge.to)
+          return this.dispatch(edge.response, { granted: edge.to })
+        }
+      }
+      for (const key of this.unlocked) {
+        if (this.case.scopes[key] && mentions(this.entities, key, t)) {
+          return this.dispatch(
+            `${this.case.scopes[key].name} is already in your notebook — the drum will read it back.`,
+            { reopen: key })
+        }
+      }
+    }
+
+    // Bare looking around is free and answers with the state of the case.
+    if (isSurvey(t)) {
+      const open = this.case.edges.filter(e =>
+        !this.unlocked.has(e.to) && e.requires.every(r => this.unlocked.has(r)) && e.lead)
+      const lines = [`You take stock. ${this.unlocked.size} document${this.unlocked.size === 1 ? '' : 's'} in the notebook; the city gives nothing away for free.`]
+      if (open.length) lines.push(`The nearest loose thread: ${open[0].lead}`)
+      return this.dispatch(lines.join('\n'))
+    }
+
+    // No edge matched. Being lost is free (§5.4): heat is a price for
+    // loud moves — pressed sources, failed bribes, bad deductions —
+    // never for a question the parser didn't recognize.
     // If the Director is listening, the desk answers the report in its
     // own words — grounded in the FULL earned context (and nothing
     // more), never granting, never inventing. Scripted line on any
@@ -344,16 +404,12 @@ export class StubGM {
     if (this.converse) {
       try {
         const reply = await this.converse({ report: text, context: this.contextPack() })
-        if (reply) {
-          await this.dispatch(reply + ' (Heat rises.)', { noVoice: true })
-          return this.checkHeat()
-        }
+        if (reply) return this.dispatch(reply, { noVoice: true })
       } catch { /* scripted fallback below */ }
     }
-    await this.dispatch(this.case.missResponse ??
-      'Nothing gives. A doorman remembers your face; somewhere a telephone is lifted and set down again. (Heat rises.)',
+    return this.dispatch(this.case.missResponse ??
+      'Nothing gives. A doorman remembers your face; somewhere a telephone is lifted and set down again.',
     )
-    return this.checkHeat()
   }
 
   /** Everything the PLAYER has earned — and nothing else (spec §4.4).

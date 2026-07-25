@@ -358,7 +358,7 @@ export const burnTriggers = {
 }
 
 // Heat deltas (§5.4, mini version).
-export const heat = { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, max: 100, tail: 60 }
+export const heat = { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, layLow: 25, max: 100, tail: 60 }
 
 // The intercept: the desk runs any key the player names ("decode silber").
 export const cipher = { ciphertext: 'RWZMSTCMCOMEW', key: 'SILBER', to: 'locker' }
@@ -372,6 +372,7 @@ export const helpText = [
   '  Reconstructing an evening? "timeline A B C" in the order you believe.',
   '  Certain? "accuse <name>" — you file that once, and you live with it.',
   '  Lost the thread? "review" — the desk reads the case back.',
+  '  City too warm? "lay low" — days pass, and the heat comes down.',
   '',
   'Your notebook (right) holds every document you have been handed.',
   'Click an entry to reread it on the drum. A burned contact is gone for',

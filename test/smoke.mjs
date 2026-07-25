@@ -66,7 +66,7 @@ check('help costs nothing', gm.heat === 0 && (await notebook()).length === 1)
 await say('The intercept decodes to zoo locker nine. Going there now.')
 check('cipher answer grants the locker scope', (await notebook()).length === 2)
 await say('completely wrong nonsense answer')
-check('wrong answer raises heat, grants nothing', gm.heat === berlin.heat.wrongAnswer && (await notebook()).length === 2)
+check('a fumbled command costs no heat and grants nothing (§5.4)', gm.heat === 0 && (await notebook()).length === 2)
 await say('Pay a visit to Voss at the travel office')
 check('red herring (Reisebüro Voss) is reachable', (await notebook()).length === 3)
 await say('Take the cloakroom ticket to Josty and ask Adler about Weiss')
@@ -232,7 +232,7 @@ console.log('\n13. Structured verdicts (judge seam)')
   const heatBefore = gmK.heat
   await sendFieldReport(r7, p7, gmK.pub, 'random flailing about nothing', berlin.CASE_ID)
   await gmK.poll()
-  check('null verdict falls through to the normal miss', gmK.heat === heatBefore + berlin.heat.wrongAnswer)
+  check('null verdict falls through to the miss path without heat', gmK.heat === heatBefore)
 }
 
 console.log('\n14. Casegen: deterministic, solvable, committed')
@@ -418,7 +418,9 @@ console.log('\n18. The desk converses (context pack + seam)')
   const d1 = await receiveRumors(rC, pC, [KIND_GM_DISPATCH])
   check('free reports route through the Director with earned context',
     saw?.held === 1 && JSON.parse(d1[d1.length - 1].content).text.includes('turns your question over'))
-  check('conversational replies still cost heat', gmC.heat === mod.heat.wrongAnswer)
+  check('conversational replies cost no heat', gmC.heat === 0)
+  check('no "(Heat rises.)" appended to a Director reply',
+    !JSON.parse(d1[d1.length - 1].content).text.includes('Heat rises'))
   gmC.converse = async () => { throw new Error('director down') }
   await sendFieldReport(rC, pC, gmC.pub, 'utterly unmatched gibberish here', mod.CASE_ID)
   await gmC.poll()
@@ -513,6 +515,93 @@ console.log('\n20. Worlds by wire: a delegated era pack drives the whole engine 
   check("a stranger's world never seats a table", !res.worlds.some(x => x.id === 'impostor-era'))
   check("the world's voice folds into the house tuning under its own era id",
     res.house.tuning['new-albion-2040']?.some(l => l.includes('Verne')))
+}
+
+console.log('\n21. Playability: exploration is free, tradecraft cools, plain phrasing lands (#5, #6)')
+{
+  const mk = async (prefix = []) => {
+    const r = new Relay()
+    const p = generateSecretKey()
+    const g = new StubGM(r, berlin)
+    await g.start(getPublicKey(p))
+    const s = async (text) => {
+      await sendFieldReport(r, p, g.pub, text, berlin.CASE_ID)
+      await g.poll()
+      const d = await receiveRumors(r, p, [KIND_GM_DISPATCH])
+      return JSON.parse(d[d.length - 1].content).text
+    }
+    for (const cmd of prefix) await s(cmd)
+    return { g, s }
+  }
+
+  // The #4 repro: six natural-language commands, no mistakes — heat must
+  // stay at zero and every one of them must get an answer.
+  {
+    const { g, s } = await mk()
+    const replies = []
+    for (const cmd of ['look around', 'examine the room', 'who is weiss',
+                       'ask about the courier', 'go to the station', 'search the satchel'])
+      replies.push(await s(cmd))
+    check('the #4 repro sequence ends at heat 0', g.heat === 0, `heat ${g.heat}`)
+    check('every off-path command gets an in-world answer', replies.every(x => x && x.length > 0))
+    check('bare looking around takes stock instead of the cold shoulder', replies[0].includes('take stock'))
+    check('no off-path reply claims heat rose', replies.every(x => !x.includes('Heat rises')))
+  }
+
+  // Tradecraft: heat earned by a bad deduction can be walked off.
+  {
+    const { g, s } = await mk(['decode silber', 'ask adler at josty about weiss', 'ask station for the watcher log'])
+    await s('timeline a b c')
+    await s('timeline c a b')
+    check('a recognizably wrong deduction still costs heat', g.heat === 2 * berlin.heat.wrongAnswer)
+    const rev = await s('review')
+    check('review surfaces standing heat and the way down', rev.includes('Heat stands at 20') && rev.includes('Laying low'))
+    const cooled = await s('lay low')
+    check('lay low reduces heat', g.heat === 0 && cooled.includes('Heat falls'))
+    const dry = await s('lay low')
+    check('laying low when clean is a dry no-op', g.heat === 0 && dry.includes('no eyes on you'))
+  }
+
+  // Loud moves still cost: press and bribe are unchanged.
+  {
+    const { g, s } = await mk(['decode silber', 'ask adler at josty about weiss'])
+    await s('offer adler money')
+    check('a failed bribe still warms the city', g.heat === 5)
+    await s('press adler for the name')
+    check('pressing the informant still burns and heats', g.burned.has('adler') && g.heat === 5 + berlin.heat.pressedInterrogation)
+  }
+
+  // Intent, not spelling: ≥3 phrasings per entity reach the same node,
+  // including ones no authored matcher anticipates.
+  const synonyms = [
+    ['kasse', [], ['pay a visit to voss', 'call at the travel office on kantstrasse', 'go to the reiseburo']],
+    ['adler', ['decode silber'],
+      ['ask adler at josty about weiss', 'talk to the coat check woman', 'go find the informant at josty']],
+    ['watcher', ['decode silber', 'ask adler at josty about weiss'],
+      ['ask station for the watcher log', 'pull the streetwork detail', 'go see what station kept']],
+    ['roster', ['decode silber', 'ask adler at josty about weiss'],
+      ['check who held the tuesday duty window', 'get the embassy duty roster', 'go to the embassy visa section']],
+  ]
+  for (const [target, prefix, phrasings] of synonyms) {
+    for (const phrase of phrasings) {
+      const { g, s } = await mk(prefix)
+      await s(phrase)
+      check(`"${phrase}" reaches ${target} at no heat`, g.unlocked.has(target) && g.heat === 0)
+    }
+  }
+
+  // A held document re-reads instead of charging; puzzle gates stay shut.
+  {
+    const { g, s } = await mk(['decode silber'])
+    const reread = await s('reread the briefing')
+    check('acting on a held document re-reads it, free', reread.includes('notebook') && g.heat === 0)
+    const { g: g0, s: s0 } = await mk()
+    await s0('check the locker at the zoo bahnhof')
+    check('naming a puzzle scope does not spring its gate (cipher)', !g0.unlocked.has('locker') && g0.heat === 0)
+    const { g: g2, s: s2 } = await mk(['decode silber', 'ask adler at josty about weiss', 'ask station for the watcher log'])
+    await s2('go to the freight sidings')
+    check('naming a puzzle scope does not spring its gate (timeline)', !g2.unlocked.has('freight') && g2.heat === 0)
+  }
 }
 
 console.log(`\n${passed} passed, ${failed} failed`)

@@ -773,7 +773,7 @@ function webBerlin(seed) {
   return {
     CASE_ID, ERA, TITLE: 'The Canal Keeps Nothing', scopes, edges, accusation, burnTriggers, npcs, hints,
     cipher: { ciphertext: cipherPlain, key: workname, to: 'stash' },
-    heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, max: 100, tail: 60 },
+    heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, layLow: 25, max: 100, tail: 60 },
     missResponse: undefined,
     helpText: [
       'FIELD PROCEDURE — such as it is:',
@@ -1423,7 +1423,7 @@ function webNola(seed) {
 
   return {
     CASE_ID, ERA, TITLE: 'What the River Returned', scopes, edges, accusation, burnTriggers, npcs, hints,
-    heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, max: 100, tail: 60 },
+    heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, layLow: 25, max: 100, tail: 60 },
     missResponse: undefined,
     helpText: [
       'PROCEDURE — as much of it as survives the humidity:',
@@ -2053,7 +2053,7 @@ function webParis(seed) {
   return {
     CASE_ID, ERA, TITLE: 'The Blue Hour', scopes, edges, accusation, burnTriggers, npcs, hints,
     cipher: { ciphertext: cipherPlain, key: workname, to: 'stash' },
-    heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, max: 100, tail: 60 },
+    heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, layLow: 25, max: 100, tail: 60 },
     missResponse: undefined,
     helpText: [
       'PROCEDURE — what little of it survives the winter:',
@@ -2670,7 +2670,7 @@ function webMeridian(seed) {
 
   return {
     CASE_ID, ERA, TITLE: 'The Dry Wash', scopes, edges, accusation, burnTriggers, npcs, hints,
-    heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, max: 100, tail: 60 },
+    heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, layLow: 25, max: 100, tail: 60 },
     missResponse: undefined,
     helpText: [
       'PROCEDURE — the rules of this country:',
@@ -3298,7 +3298,7 @@ export function generateWorldCase(seed, pack) {
   return {
     CASE_ID, ERA, TITLE: pack.title, LABEL: pack.label, STYLE: pack.style ?? null,
     scopes, edges, accusation, burnTriggers, npcs, hints,
-    heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, max: 100, tail: 60 },
+    heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, layLow: 25, max: 100, tail: 60 },
     missResponse: undefined,
     helpText: [
       'PROCEDURE — the rules of the engagement:',

@@ -397,7 +397,7 @@ function buildBerlin(seed) {
   return {
     CASE_ID, ERA, TITLE: 'A Courier Overdue', scopes, edges, accusation, burnTriggers, npcs, hints,
     cipher: { ciphertext: drop.plain.replace(/[^A-Z]/g, ''), key: workname, to: 'drop' },
-    heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, max: 100, tail: 60 },
+    heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, layLow: 25, max: 100, tail: 60 },
     missResponse: undefined,
     helpText: [
       'FIELD PROCEDURE — what Station expects of a report:',
@@ -760,8 +760,8 @@ function buildNola(seed) {
 
   return {
     CASE_ID, ERA, TITLE: 'A Stringer Gone Quiet', scopes, edges, accusation, burnTriggers, npcs, hints,
-    heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, max: 100, tail: 60 },
-    missResponse: 'Nothing moves. A screen door claps somewhere, and a man on a gallery marks you without looking up. (Heat rises.)',
+    heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, layLow: 25, max: 100, tail: 60 },
+    missResponse: 'Nothing moves. A screen door claps somewhere, and a man on a gallery marks you without looking up.',
     helpText: [
       'HOW THIS WORKS — for the record, once:',
       '',
