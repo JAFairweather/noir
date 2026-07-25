@@ -590,6 +590,25 @@ console.log('\n21. Playability: exploration is free, tradecraft cools, plain phr
     }
   }
 
+  // The miss path is a guide, not a wall (#8): escalating, rotating,
+  // relevant — and progress resets the escalation.
+  {
+    const { g, s } = await mk()
+    const m1 = await s('mumble something opaque')
+    const m2 = await s('mutter something else entirely')
+    const m3 = await s('grumble a third time to the rain')
+    check('first miss stays atmosphere', !m1.includes('A thread still hangs'))
+    check('second miss names an open thread', m2.includes('A thread still hangs:'))
+    check('third miss points at the page to reread', m3.includes('read it again'))
+    check('the three nudges are all different', m1 !== m2 && m2 !== m3 && m1 !== m3)
+    const near = await s('go to the zoo locker')
+    check('a near-miss on a puzzle names its thread at once', near.includes('decode <word>'))
+    check('misses never cost heat', g.heat === 0)
+    await s('decode silber')
+    const m4 = await s('mumble again opaquely')
+    check('progress resets the escalation', !m4.includes('A thread still hangs'))
+  }
+
   // A held document re-reads instead of charging; puzzle gates stay shut.
   {
     const { g, s } = await mk(['decode silber'])

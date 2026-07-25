@@ -53,6 +53,7 @@ export class StubGM {
     this.burned = new Set()
     this.heat = 0
     this.heatExplained = false
+    this.missStreak = 0
     this.over = false
     this.seenReports = new Set()
     // the case's noun index (§5): entity fallback for plain phrasing
@@ -74,6 +75,7 @@ export class StubGM {
       burned: [...this.burned],
       heat: this.heat,
       heatExplained: this.heatExplained ?? false,
+      missStreak: this.missStreak ?? 0,
       over: this.over,
       seenReports: [...this.seenReports],
       npcState: this.npcState,
@@ -90,6 +92,7 @@ export class StubGM {
     gm.burned = new Set(state.burned)
     gm.heat = state.heat
     gm.heatExplained = state.heatExplained ?? false
+    gm.missStreak = state.missStreak ?? 0
     gm.over = state.over
     gm.seenReports = new Set(state.seenReports)
     gm.npcState = state.npcState ?? gm.npcState
@@ -128,6 +131,7 @@ export class StubGM {
     const wire = this.scopes.get(name)
     const def = this.case.scopes[name]
     this.unlocked.add(name)
+    this.missStreak = 0            // progress resets the escalating nudge (#8)
     await grant(this.relay, this.secret, this.playerPub, { ...wire, scopeName: def.name })
   }
 
@@ -411,15 +415,30 @@ export class StubGM {
     // own words — grounded in the FULL earned context (and nothing
     // more), never granting, never inventing. Scripted line on any
     // failure: the game must always play without AI.
+    this.missStreak = (this.missStreak ?? 0) + 1
     if (this.converse) {
       try {
         const reply = await this.converse({ report: text, context: this.contextPack() })
         if (reply) return this.dispatch(reply, { noVoice: true })
       } catch { /* scripted fallback below */ }
     }
-    return this.dispatch(this.case.missResponse ??
-      'Nothing gives. A doorman remembers your face; somewhere a telephone is lifted and set down again.',
-    )
+    // The miss is a guide, not a wall (#8): a near-miss that names a
+    // known entity gets its thread at once; otherwise the nudge
+    // escalates — atmosphere, then a thread, then the page to reread —
+    // rotating threads so repeated misses never repeat themselves.
+    const base = this.case.missResponse ??
+      'Nothing gives. A doorman remembers your face; somewhere a telephone is lifted and set down again.'
+    const open = this.case.edges.filter(e =>
+      !this.unlocked.has(e.to) && e.requires.every(r => this.unlocked.has(r)) && e.lead)
+    const relevant = open.find(e => mentions(this.entities, e.to, t))
+    const pick = relevant ?? (open.length ? open[(this.missStreak - 1) % open.length] : null)
+    if (!pick || (!relevant && this.missStreak < 2)) return this.dispatch(base)
+    let line = `${base}\n\nA thread still hangs: ${pick.lead}`
+    if (this.missStreak >= 3) {
+      const doc = pick.requires.filter(r => this.case.scopes[r]).pop()
+      if (doc) line += `\nStart from ${this.case.scopes[doc].name} — read it again; it names the door.`
+    }
+    return this.dispatch(line)
   }
 
   /** Everything the PLAYER has earned — and nothing else (spec §4.4).
