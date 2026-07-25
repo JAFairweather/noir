@@ -38,9 +38,11 @@ that runs identically in Node (tests) and the browser (demo mode).
 ## Invariants (tested; do not regress)
 
 - **Heat (spec §5.4)**: only loud moves cost — press, failed bribe,
-  `failMatch` deductions. Misses, questions, exploration are FREE.
-  `lay low` cools (`heat.layLow`); the tail beat at `heat.tail` cools
-  30 when flagged. Never append "(Heat rises.)" unless heat rose.
+  `failMatch` deductions, and loitering (3rd+ action-verb probe of the
+  SAME guarded drop; the 2nd warns first — `heat.loiter`). Ordinary
+  misses, questions, and exploration are FREE. `lay low` cools
+  (`heat.layLow`); the tail beat at `heat.tail` cools 30 when flagged.
+  Never append "(Heat rises.)" unless heat rose.
 - **Fair play**: solution committed (sha256 in kind-0) before the deal;
   the Director context (`contextPack()`) contains only earned material;
   puzzle gates must be solved, not named.

@@ -611,6 +611,27 @@ console.log('\n21. Playability: exploration is free, tradecraft cools, plain phr
     check('progress resets the escalation', !m4.includes('A thread still hangs'))
   }
 
+  // Dead drops, last clause (§5 type 4): casing a guarded drop is loud.
+  // Two looks free (the second warns); systematic rattling loiters.
+  {
+    const { g, s } = await mk()
+    await s('check locker three at the zoo')
+    check('the first case of a guarded drop is a free nudge', g.heat === 0)
+    const warn = await s('go through locker five at the zoo')
+    check('the second look buys an in-world warning, still free',
+      g.heat === 0 && warn.includes('remember your face'))
+    const hot = await s('try locker seven at the zoo bahnhof')
+    check('systematic rattling is loitering — heat.loiter charged',
+      g.heat === berlin.heat.loiter && hot.includes('Heat rises'))
+    check('the loiter line still points at the thread', hot.includes('decode <word>'))
+    await s('decode silber')
+    check('solving the drop ends the loitering', g.unlocked.has('locker') && g.heat === berlin.heat.loiter)
+    check('probe counts survive serialize/restore', (() => {
+      const g2 = StubGM.restore(new Relay(), berlin, g.serialize())
+      return g2.probes.locker >= 3
+    })())
+  }
+
   // The cold game breathes (#11): tiers open with patience, spent
   // scenes rotate in character, known names get the room's deflection.
   {
