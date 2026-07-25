@@ -52,6 +52,7 @@ export class StubGM {
     this.unlocked = new Set()
     this.burned = new Set()
     this.heat = 0
+    this.heatExplained = false
     this.over = false
     this.seenReports = new Set()
     // the case's noun index (§5): entity fallback for plain phrasing
@@ -72,6 +73,7 @@ export class StubGM {
       unlocked: [...this.unlocked],
       burned: [...this.burned],
       heat: this.heat,
+      heatExplained: this.heatExplained ?? false,
       over: this.over,
       seenReports: [...this.seenReports],
       npcState: this.npcState,
@@ -87,6 +89,7 @@ export class StubGM {
     gm.unlocked = new Set(state.unlocked)
     gm.burned = new Set(state.burned)
     gm.heat = state.heat
+    gm.heatExplained = state.heatExplained ?? false
     gm.over = state.over
     gm.seenReports = new Set(state.seenReports)
     gm.npcState = state.npcState ?? gm.npcState
@@ -138,6 +141,13 @@ export class StubGM {
       try {
         out = (await this.voice({ canned: text, extra, heat: this.heat })) || text
       } catch { out = text }
+    }
+    // The first time heat ever rises, say the rule once, in-world (§5.4):
+    // a legible price beats a silent threat.
+    if (this.heat > 0 && !this.heatExplained) {
+      this.heatExplained = true
+      out += '\n\n(The city noticed that. Heat rises on loud moves — pressing a source, ' +
+        'flashing money, filing a bad deduction — never on looking around. "lay low" cools it.)'
     }
     return sendDispatch(this.relay, this.secret, this.playerPub, {
       caseId: this.case.CASE_ID, text: out, extra: { heat: this.heat, ...extra },

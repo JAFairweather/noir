@@ -169,6 +169,27 @@
   .scope-status { color: #d0442c; font-size: 11px; }
   #notebook .note, #rig .note { color: var(--accent-dim); font-size: 11px; margin-top: 14px; line-height: 1.5; }
   .tc-meta { display: block; width: 100%; color: var(--accent-dim); font-size: 10px; letter-spacing: 0.04em; margin-top: 4px; word-break: break-all; }
+  /* ------------------------------------- the threads rail (§5, #9) */
+  #threads { margin: 12px 0 8px; }
+  #threads h3 { font-size: 10px; letter-spacing: 0.3em; color: var(--accent-dim); margin-bottom: 6px; }
+  #thread-list { list-style: none; padding: 0; margin: 0; }
+  #thread-list li { list-style: none; padding: 0; margin: 0; border: none; display: block; }
+  #thread-list li.none { color: var(--accent-dim); font-size: 11px; padding: 2px 0; cursor: default; }
+  .thread-btn {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    background: transparent; color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+    border-left: 3px solid var(--accent-dim);
+    font: inherit; font-size: 12px; line-height: 1.45;
+    padding: 6px 8px; margin-bottom: 4px;
+  }
+  .thread-btn:hover, .thread-btn:focus-visible { border-color: var(--accent); color: #f4efe4; }
+  .thread-btn.fresh { animation: thread-fresh 2.6s ease; }
+  @keyframes thread-fresh {
+    0% { border-left-color: #9fd08a; color: #9fd08a; }
+    70% { border-left-color: #9fd08a; }
+  }
+
   #deduce { margin: 12px 0 4px; }
   #deduce h3 { font-size: 10px; letter-spacing: 0.3em; color: var(--accent-dim); margin-bottom: 6px; }
   #deduce-grid { border-collapse: collapse; width: 100%; font-size: 11px; }
@@ -355,6 +376,10 @@
     <aside id="notebook">
       <h2>CASE NOTEBOOK</h2>
       <canvas id="citymap" aria-label="Case map: places visited and known"></canvas>
+      <div id="threads" aria-label="Threads still hanging">
+        <h3>THREADS STILL HANGING</h3>
+        <ul id="thread-list"></ul>
+      </div>
       <div id="deduce" class="hidden" aria-label="Deduction board">
         <h3>DEDUCTIONS</h3>
         <table id="deduce-grid"></table>

@@ -410,5 +410,13 @@ export const opening = [
 
 export const preamble = [
   'Your notebook holds what you have earned. Nothing else is yours.',
-  'Speak plainly. "help" buys you field procedure.',
+  'Speak plainly — GO somewhere, ASK someone, CHECK a thing, OPEN what',
+  'is closed. Curiosity is free; heat comes only from loud moves —',
+  'pressing a source, flashing money, a bad accusation — and "lay low"',
+  'cools it. Your open threads hang in the notebook on the right.',
+  '',
+  'A first move, if you want one: the intercept wants a key word —',
+  '"decode <word>" — and everything you need is on the briefing page.',
+  '',
+  '"help" buys you the full field procedure.',
 ].join('\n')

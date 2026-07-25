@@ -134,6 +134,59 @@ function clearSave() { localStorage.removeItem(SAVE_KEY) }
 
 // ---------------------------------------------------------------- notebook
 
+// The one computation of "what could I do next" (the desk's REVIEW runs
+// the same predicate): open leads are edges whose requirements are met,
+// whose scope is still sealed, and that carry a lead line.
+const openLeadEdges = () => gm.case.edges.filter(e =>
+  !gm.unlocked.has(e.to) && e.requires.every(r => gm.unlocked.has(r)) && e.lead)
+
+const shortScopeName = (key) =>
+  (gm.case.scopes[key]?.name ?? key).split('—').pop().trim() || key
+
+// The threads rail (#9): every open lead, always on screen, tappable.
+// Pulling a plain thread submits the action; a puzzle-gated thread
+// restates its lead — the desk never solves a puzzle for you.
+const seenThreads = new Set()
+function renderThreads() {
+  const list = $('#thread-list')
+  if (!list) return
+  list.innerHTML = ''
+  const open = gameOver ? [] : openLeadEdges()
+  if (!open.length) {
+    const li = document.createElement('li')
+    li.className = 'none'
+    li.textContent = gameOver
+      ? 'the file is closed.'
+      : 'no threads hanging — you hold everything this city will hand you.'
+    list.appendChild(li)
+    return
+  }
+  for (const e of open) {
+    const li = document.createElement('li')
+    const btn = document.createElement('button')
+    btn.className = 'thread-btn'
+    if (!seenThreads.has(e.to)) btn.classList.add('fresh')
+    btn.textContent = e.lead
+    const puzzle = !!(e.answerKey || e.failMatch)
+    btn.title = puzzle
+      ? 'A puzzle holds this door — the desk will read the lead back'
+      : 'Pull this thread'
+    btn.addEventListener('click', () => {
+      if (window.innerWidth <= 720) $('#notebook').classList.remove('open')
+      if (puzzle) {
+        put(`▸ ${e.lead}`, 'gm dim')
+        input.focus()
+        saveGame()
+      } else {
+        submit(`pull the thread on ${shortScopeName(e.to)}`)
+      }
+    })
+    li.appendChild(btn)
+    list.appendChild(li)
+  }
+  for (const e of open) seenThreads.add(e.to)
+}
+
 async function refreshNotebook() {
   const grants = latestGrants(await receiveGrants(relay, playerSk))
   const list = $('#notebook-list')
@@ -178,11 +231,11 @@ async function refreshNotebook() {
         type: res.data?.kind === 'npc' ? 'person' : 'venue',
       })
     }
-    const known = gm.case.edges
-      .filter(e => !gm.unlocked.has(e.to) && e.requires.every(r => gm.unlocked.has(r)) && e.lead)
-      .map(e => ({ id: 'lead:' + e.to, name: gm.case.scopes[e.to]?.name.split('—').pop().trim() ?? e.to, type: 'lead' }))
+    const known = openLeadEdges()
+      .map(e => ({ id: 'lead:' + e.to, name: shortScopeName(e.to), type: 'lead' }))
     cityMap.setSpots([...spots, ...known])
   } catch { /* the board is garnish; never let it stop the case */ }
+  renderThreads()
   renderDeduction()
   renderNotes()
   const panel = $('#tc-panel')

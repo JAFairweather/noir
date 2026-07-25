@@ -22,6 +22,17 @@ import { hash, mulberry32, pick, pickN, vigenere, tokenMatch, venueMatch, POOL, 
 
 const sortNames = (names) => [...names].sort()   // alphabetical — never culprit-first
 
+// The honest last word of every preamble (#12): curiosity is free, heat
+// has named causes and a named cure, and the threads rail is pointed out
+// once — the front door teaches the game the engine actually plays.
+const TRADECRAFT_PRIMER = [
+  '',
+  'Curiosity is free. Heat comes only from loud moves — pressing a',
+  'source, flashing money, filing a bad accusation — and "lay low"',
+  'cools it. Your open threads hang in the notebook on the right;',
+  'pull one whenever you stall.',
+]
+
 /** Deal four suspects and the three predicate sets.
  *  A passes all three. B fails access. C fails the detail. D fails the nights. */
 function dealSuspects(rand, surnames, roles) {
@@ -819,6 +830,7 @@ function webBerlin(seed) {
       '',
       'Write your reports in plain language. Type "help" at any time',
       'for field procedure. Berlin supplies the rest.',
+      ...TRADECRAFT_PRIMER,
     ].join('\n'),
     openingScene: 'street',
     board: {
@@ -1469,6 +1481,7 @@ function webNola(seed) {
       'Write your reports in plain language. Type "help" at any time',
       'for the house rules. The Quarter teaches the rest of it, and',
       'collects tuition nightly.',
+      ...TRADECRAFT_PRIMER,
     ].join('\n'),
     openingScene: 'street',
     board: {
@@ -2099,6 +2112,7 @@ function webParis(seed) {
       '',
       'Write your reports in plain language. Type "help" at any time',
       'for procedure. The city supplies everything else, at its rates.',
+      ...TRADECRAFT_PRIMER,
     ].join('\n'),
     openingScene: 'street',
     board: {
@@ -2718,6 +2732,7 @@ function webMeridian(seed) {
       '',
       'Write your reports in plain language. Type "help" at any time',
       'and the rules of this country will be read back to you.',
+      ...TRADECRAFT_PRIMER,
     ].join('\n'),
     openingScene: 'street',
     board: {
@@ -3335,7 +3350,7 @@ export function generateWorldCase(seed, pack) {
       '',
       'Write your reports in plain language. Type "help" at any time',
       'for procedure.',
-    ]).map(l => fill(l, victim)).join('\n'),
+    ]).concat(TRADECRAFT_PRIMER).map(l => fill(l, victim)).join('\n'),
     openingScene: pack.style?.scene ?? 'street',
     board: {
       suspects: sortNames(S.suspects),

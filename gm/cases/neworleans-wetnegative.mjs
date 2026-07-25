@@ -407,7 +407,15 @@ export const opening = [
 
 export const preamble = [
   'Your notebook holds what you have earned. Nothing else is yours.',
-  'Speak plainly. "help" buys you the house rules.',
+  'Speak plainly — GO somewhere, ASK someone, CHECK a thing, OPEN what',
+  'is closed. Curiosity is free; heat comes only from loud moves —',
+  'pressing a source, flashing money, a bad accusation — and "lay low"',
+  'cools it. Your open threads hang in the notebook on the right.',
+  '',
+  'A first move, if you want one: the classified ad is an acrostic.',
+  'Read it downhill, first letters first, and say where it points.',
+  '',
+  '"help" buys you the house rules.',
 ].join('\n')
 
 export const openingScene = 'street'
