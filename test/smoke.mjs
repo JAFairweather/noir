@@ -611,6 +611,28 @@ console.log('\n21. Playability: exploration is free, tradecraft cools, plain phr
     check('progress resets the escalation', !m4.includes('A thread still hangs'))
   }
 
+  // The cold game breathes (#11): tiers open with patience, spent
+  // scenes rotate in character, known names get the room's deflection.
+  {
+    const { g, s } = await mk(['decode silber', 'ask adler at josty about weiss', 'visit voss at the travel office'])
+    await s('ask adler about weiss')                    // +1
+    await s('ask adler about her son')                  // +1
+    check('gentle asking earns standing across tiers', g.npcState.adler.disposition === 2)
+    const deep = await s('ask adler what was before all this')
+    check('a patient player reaches the deepest tier', deep.includes('November'))
+    const react = await s('ask adler about voss')
+    check('a known name she has no line for gets the room, not the desk',
+      react.includes('Names are your trade') || react.includes('coats, not clerks') || react.includes('Paper does not'))
+    const f1 = await s('ask adler about the weather then')
+    const f2 = await s('ask adler for anything at all')
+    check('spent closers rotate, never the same line twice running', f1 !== f2 && f1.length > 0)
+    const before = g.npcState.adler.disposition
+    await s('adler tell me quickly')
+    check('bluntness costs standing', g.npcState.adler.disposition === before - 1)
+    await s('press adler for the name')
+    check('pressing still burns her — no regression', g.burned.has('adler'))
+  }
+
   // Corroboration (§5.2, #7): the roster answers the QUESTION the ledger
   // and Adler ask together — not the word "roster", and not one source.
   {

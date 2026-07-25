@@ -379,12 +379,25 @@ export class StubGM {
         if ((line.minDisposition ?? 0) > st.disposition) continue
         if (!line.match(t)) continue
         st.used.push(i)
-        st.disposition += line.disposition ?? 0
+        st.disposition = Math.max(0, Math.min(3, st.disposition + (line.disposition ?? 0)))
         if (line.heat) this.addHeat(line.heat)
         await this.dispatch(line.response)
         return this.checkHeat()
       }
-      return this.dispatch(npc.fallback)   // engaged, but no new ground
+      // Engaged, but no new ground (#11). A name she knows but has no
+      // line for gets an in-character deflection; otherwise the
+      // disposition-aware closers rotate, so a spent scene reads as
+      // spent — never as broken.
+      if (npc.reactiveMiss?.length &&
+          [...this.entities.keys()].some(k => k !== key && mentions(this.entities, k, t))) {
+        st.reactAt = (st.reactAt ?? 0) + 1
+        return this.dispatch(npc.reactiveMiss[(st.reactAt - 1) % npc.reactiveMiss.length])
+      }
+      const closers = (npc.fallbacks ?? [{ response: npc.fallback }])
+        .filter(f => (f.minDisposition ?? 0) <= st.disposition)
+      const pool = closers.length ? closers : [{ response: npc.fallback }]
+      st.fallAt = (st.fallAt ?? 0) + 1
+      return this.dispatch(pool[(st.fallAt - 1) % pool.length].response)
     }
 
     // Contextual hints: a near-miss earns a nudge, not the cold shoulder.

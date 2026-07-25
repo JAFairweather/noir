@@ -323,6 +323,23 @@ export const npcs = {
   adler: {
     aliases: ['ADLER', 'COAT CHECK', 'COATCHECK'],
     fallback: 'She wipes a counter that is already clean and waits for a better question.',
+    // Spent scenes still answer (#11): rotating, disposition-aware
+    // closers instead of one stock sentence —
+    fallbacks: [
+      { response: 'She wipes a counter that is already clean and waits for a better question.' },
+      { response: 'A regular lifts two fingers and she is gone a while among the coats. When she comes back, her eyes ask whether you are still here.' },
+      { response: 'The espresso machine argues with itself; she lets it win. Nothing more crosses the counter tonight.' },
+      { minDisposition: 1, response: '"I have given you what I have. Come back when one of us knows more than we did."' },
+      { minDisposition: 1, response: 'She glances at the clock, then the door, then you — in that order, twice. The order is the message.' },
+      { minDisposition: 2, response: '"Go work." She says it the way other people say take care. "The window will still be the window tomorrow."' },
+    ],
+    // — and a case name she knows but holds no line for gets the room's
+    // own deflection, not the desk's generic miss.
+    reactiveMiss: [
+      '"Names are your trade. Faces were mine, and you have had the face."',
+      '"Ask the paper that question. Paper does not lose its coat check for answering."',
+      '"I count coats, not clerks. You already hold the coat I counted."',
+    ],
     lines: [
       {
         match: (t) => t.includes('WEISS'),
@@ -348,6 +365,48 @@ export const npcs = {
         heat: 5,
         response: 'She looks at the money the way you look at weather. "The visa section pays better, ' +
           'and I do not talk to them either." The coins stay on the counter, and so does a little of your standing. (Heat rises.)',
+      },
+      {
+        // a gentle tell: remembering the person, not the source (+1)
+        match: (t) => t.includes('SON'),
+        disposition: 1,
+        response: 'Her hands stop moving for the first time tonight. "Eleven. He collects tram transfers — the ' +
+          'whole city in a shoebox under his bed." A breath. "Weiss brought him one from Hamburg once. Ask your questions."',
+      },
+      {
+        // a blunt tell: hurrying her costs standing (−1)
+        match: (t) => t.includes('HURRY') || t.includes('QUICKLY') || t.includes('RIGHT NOW'),
+        disposition: -1,
+        response: '"In a hurry." She folds the cloth in exact thirds. "So was every man who ever cost me something." ' +
+          'The counter is suddenly very interesting to her.',
+      },
+      {
+        match: (t) => t.includes('JOSTY') || t.includes('CAFE') || t.includes('ROOM'),
+        response: '"This room?" One shoulder lifts. "Coats tell you everything. Who is cold, who is flush, who is ' +
+          'wearing a dead man\'s size. The tables only tell you who wants to be seen."',
+      },
+      {
+        match: (t) => t.includes('TUESDAY') || t.includes('WINDOW'),
+        response: '"Tuesdays." She says the word like a debt. "The same night, the same table, the same badge still ' +
+          'warm from the evening window. Men keep schedules the way they keep vices — faithfully."',
+      },
+      {
+        match: (t) => t.includes('WATCHER') || t.includes('STATION') || t.includes('STREETWORK'),
+        response: '"Your own people sat where you are sitting, a month of Tuesdays, nursing the cheapest coffee on ' +
+          'the card." The rag resumes. "I remember thinking: somebody is paying for a lot of looking."',
+      },
+      {
+        match: (t) => t.includes('AFRAID') || t.includes('SAFE') || t.includes('DANGER'),
+        minDisposition: 1,
+        response: '"Afraid." She tries the word on like a coat that does not fit. "I hand a man his hat in four ' +
+          'seconds. In four seconds nobody has ever said anything worth dying for. It is the people who LINGER."',
+      },
+      {
+        match: (t) => t.includes('HUSBAND') || t.includes('FAMILY') || t.includes('BEFORE'),
+        minDisposition: 2,
+        response: '"Before this?" The clock gets a look; the answer comes anyway. "There was a shop. There was a ' +
+          'name over the door that is not over the door anymore. You want to know why I count everyone? ' +
+          'Because one November nobody counted us."',
       },
     ],
   },
