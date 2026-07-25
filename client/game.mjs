@@ -571,6 +571,7 @@ const inEditable = (el) =>
   el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)
 window.addEventListener('keydown', (e) => {
   if (inEditable(e.target)) return        // fields own their keys — notes, keys, command
+  if (e.target.closest?.('button')) return // a focused button owns Space/Enter — press it, don't spin the drum
   if (e.metaKey || e.ctrlKey || e.altKey) return   // Cmd+C must copy, not steal focus
   if (e.key === ' ') {
     e.preventDefault()
