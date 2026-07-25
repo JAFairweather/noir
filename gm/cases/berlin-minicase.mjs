@@ -49,6 +49,7 @@ export const scopes = {
 
   locker: {
     name: 'Zoo Bahnhof — Locker Nine',
+    aliases: ['LEDGER', 'SATCHEL'],
     burnable: false,
     payload: {
       kind: 'evidence',
@@ -275,11 +276,34 @@ export const edges = [
   },
 ]
 
-// The accusation endgame (§5.8). Culprit fixed by the skeleton.
+// The accusation endgame (§5.8): culprit + an evidence chain out of the
+// player's own notebook. A bare name doesn't move the desk; a suspect
+// the held papers rule out gets argued back — once — before the one
+// shot is spent. Culprit fixed by the skeleton.
 export const accusation = {
   culprit: 'BRANDT',
   wrong: ['KELLER', 'VOSS', 'ADLER', 'WEISS'],
   unlocks: 'resolution',
+  evidence: ['roster', 'adler', 'locker', 'freight'],
+  proofResponse: 'A name alone does not move Station. Show the work — "accuse brandt with ' +
+    '<the papers that put him at the window>". Two documents, minimum, out of your own notebook.',
+  contradictions: {
+    KELLER: {
+      requires: 'roster',
+      response: 'The desk slides your own photograph back across. Keller traded away every Tuesday ' +
+        'this month; put him at that window and the roster argues back. File it again and Station sends it.',
+    },
+    VOSS: {
+      requires: 'kasse',
+      response: 'You sat across from Voss for an hour and concluded it yourself: he buys access, he has ' +
+        'none of his own to sell. Your report says so. File it again and Station sends it anyway.',
+    },
+    WEISS: {
+      requires: 'freight',
+      response: 'Weiss had a paid ticket out and stayed one more Tuesday to finish the job. The freight ' +
+        'yard says what that cost him. Accuse the dead man again and Station will send it — and you will live with it.',
+    },
+  },
   correctResponse: 'Station moves before the evening window opens.',
   wrongResponse: (name) =>
     `Station moves on ${name}. The interrogation gives them nothing, because there is nothing to give. ` +
@@ -396,7 +420,7 @@ export const walkthrough = [
   'ask station for the watcher log',
   'timeline b c a',
   'check who held the tuesday duty window',
-  'accuse brandt',
+  'accuse brandt — the duty roster and adler\'s statement put him at the tuesday window',
 ]
 
 export const opening = [

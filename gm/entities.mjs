@@ -32,6 +32,7 @@ export function buildEntityIndex(caseModule) {
   for (const [key, def] of Object.entries(caseModule.scopes ?? {})) {
     add(key, key)                                   // the author's shorthand
     for (const w of nameTokens(def.name)) add(key, w)
+    for (const a of def.aliases ?? []) add(key, a)  // author-supplied synonyms
   }
   for (const [key, npc] of Object.entries(caseModule.npcs ?? {}))
     for (const a of npc.aliases ?? []) add(key, a)

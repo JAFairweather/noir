@@ -415,6 +415,29 @@ function renderDeduction() {
     const tr = document.createElement('tr')
     const th = document.createElement('th')
     th.textContent = name
+    // A committed row becomes a move (#10): once the player has marked a
+    // suspect's row, the board offers to DRAFT the accusation — culprit +
+    // the held evidence chain (§5.8) — into the command line. Nothing
+    // files until they press ENTER; the shot stays theirs to take.
+    const marked = CASE.board.columns.some((_, i) => marks[name + '|' + i] === '✓')
+    if (marked && CASE.accusation?.evidence?.length) {
+      const draft = document.createElement('button')
+      draft.className = 'deduce-draft'
+      draft.textContent = '⌖'
+      draft.title = `Draft the accusation of ${name} from your marks — you still press ENTER`
+      draft.addEventListener('click', (ev) => {
+        ev.stopPropagation()
+        const held = CASE.accusation.evidence
+          .filter(k => gm.unlocked.has(k) && CASE.scopes[k])
+          .map(k => shortScopeName(k).toLowerCase())
+        const cmd = $('#cmd')
+        cmd.value = `accuse ${name.toLowerCase()}` +
+          (held.length ? ` with ${held.join(' and ')}` : '')
+        cmd.focus()
+        if (window.innerWidth <= 720) $('#notebook').classList.remove('open')
+      })
+      th.appendChild(draft)
+    }
     tr.appendChild(th)
     CASE.board.columns.forEach((_, i) => {
       const td = document.createElement('td')

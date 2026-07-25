@@ -96,6 +96,8 @@ console.log('\n6. Finish the case anyway')
 await say('check who held the tuesday duty window')
 check('roster granted after the burn', (await notebook()).some(g => g.scopeName?.includes('Roster')))
 await say('accuse Brandt')
+check('a bare name does not spend the accusation (§5.8)', !gm.over)
+await say('accuse Brandt — the duty roster and adler\'s statement put him at the window')
 const final = await readable()
 check('accusation grants the resolution scope', final.some(s => s.data?.kind === 'epilogue' && s.status === 'ok'))
 const dispatches = await receiveRumors(relay, player, [KIND_GM_DISPATCH])
@@ -607,6 +609,35 @@ console.log('\n21. Playability: exploration is free, tradecraft cools, plain phr
     await s('decode silber')
     const m4 = await s('mumble again opaquely')
     check('progress resets the escalation', !m4.includes('A thread still hangs'))
+  }
+
+  // The accusation is an argument (§5.8, #10): name + chain, with the
+  // desk arguing back once when the player's own papers disagree.
+  {
+    const prefix = ['decode silber', 'ask adler at josty about weiss', 'check who held the tuesday duty window']
+    const { g, s } = await mk(prefix)
+    const bare = await s('accuse brandt')
+    check('right name, no chain — the desk asks for the proof', !g.over && bare.includes('Show the work'))
+    const burnedEvidence = await s('accuse brandt with the ledger and some feeling')
+    check('one citation is not a chain', !g.over && burnedEvidence.includes('Show the work'))
+    const warned = await s('accuse keller')
+    check('a suspect your own roster rules out gets argued back, unspent',
+      !g.over && warned.includes('roster argues back'))
+    await s('accuse brandt — the roster and the ledger together name him')
+    check('name + two cited documents closes the case',
+      g.over && g.unlocked.has('resolution'))
+    const { g: g2, s: s2 } = await mk(prefix)
+    await s2('accuse keller')
+    await s2('accuse keller, I insist')
+    check('insisting past the warning spends the shot and fails',
+      g2.over && !g2.unlocked.has('resolution'))
+    const { g: g3, s: s3 } = await mk(['decode silber'])
+    await s3('accuse keller')
+    check('the guard needs the contradicting paper in hand — without it the shot fires',
+      g3.over && !g3.unlocked.has('resolution'))
+    const { g: g4, s: s4 } = await mk()
+    const noname = await s4('accuse the man in the gray coat')
+    check('an accusation naming nobody is handed back, unspent', !g4.over && noname.includes('Name the man'))
   }
 
   // A held document re-reads instead of charging; puzzle gates stay shut.

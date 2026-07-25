@@ -708,6 +708,12 @@ function webBerlin(seed) {
       ...S.suspects.slice(1), herring.name, herring2.name, informant.alias,
     ],
     unlocks: 'resolution',
+    evidence: ['rota', 'keybook', 'personnel'],
+    contradictions: {
+      [S.nightCleared]: { requires: 'rota', response: `Your own rota clears : not in the building on the nights that matter. Put it to paper a second time and it goes.` },
+      [S.accessCleared]: { requires: 'keybook', response: `The key book clears : no way into the stock that walked. File it again and it goes.` },
+      [S.detailCleared]: { requires: 'personnel', response: `The particulars clear : the witness detail does not fit. Insist a second time and it goes.` },
+    },
     correctResponse: 'Station moves before the evening desk opens.',
     wrongResponse: (name) =>
       `Station moves on ${name}, and gets nothing, because there is nothing — ` +
@@ -778,7 +784,7 @@ function webBerlin(seed) {
     `ask about ${victim.toLowerCase()}'s man`,
     'pull the personnel particulars',
     'archive: why did he stop walking',
-    `accuse ${S.culprit.toLowerCase()}`,
+    `accuse ${S.culprit.toLowerCase()} — the rota, the keybook and the personnel particulars all hold his name`,
   ]
 
   return {
@@ -1364,6 +1370,12 @@ function webNola(seed) {
       ...S.suspects.slice(1), herring.name, herring2.name, informant.alias,
     ],
     unlocks: 'resolution',
+    evidence: ['rota', 'keybook', 'personnel'],
+    contradictions: {
+      [S.nightCleared]: { requires: 'rota', response: `Your own rota clears : not in the building on the nights that matter. Put it to paper a second time and it goes.` },
+      [S.accessCleared]: { requires: 'keybook', response: `The key book clears : no way into the stock that walked. File it again and it goes.` },
+      [S.detailCleared]: { requires: 'personnel', response: `The particulars clear : the witness detail does not fit. Insist a second time and it goes.` },
+    },
     correctResponse: 'The federal men move at dawn, before the shift change.',
     wrongResponse: (name) =>
       `The federal men move on ${name}, and get nothing, because there is ` +
@@ -1430,7 +1442,7 @@ function webNola(seed) {
     `ask about ${victim.toLowerCase()}'s man`,
     'pull the personnel jackets',
     'the item morgue: why did he go in the river',
-    `accuse ${S.culprit.toLowerCase()}`,
+    `accuse ${S.culprit.toLowerCase()} — the rota, the keybook and the personnel particulars all hold his name`,
   ]
 
   return {
@@ -1989,6 +2001,12 @@ function webParis(seed) {
     culprit: S.culprit,
     wrong: [...S.suspects.slice(1), herring.name, herring2.name, informant.alias],
     unlocks: 'resolution',
+    evidence: ['rota', 'keybook', 'personnel'],
+    contradictions: {
+      [S.nightCleared]: { requires: 'rota', response: `Your own rota clears : not in the building on the nights that matter. Put it to paper a second time and it goes.` },
+      [S.accessCleared]: { requires: 'keybook', response: `The key book clears : no way into the stock that walked. File it again and it goes.` },
+      [S.detailCleared]: { requires: 'personnel', response: `The particulars clear : the witness detail does not fit. Insist a second time and it goes.` },
+    },
     correctResponse: 'The desk moves before the second coffee.',
     wrongResponse: (name) =>
       `They take ${name} in the gray of the morning, and by noon he has ` +
@@ -2060,7 +2078,7 @@ function webParis(seed) {
     `ask about ${victim.toLowerCase()}'s man`,
     'pull the personnel particulars',
     'registry: why did he stop coming back',
-    `accuse ${S.culprit.toLowerCase()}`,
+    `accuse ${S.culprit.toLowerCase()} — the rota, the keybook and the personnel particulars all hold his name`,
   ]
 
   return {
@@ -2612,6 +2630,12 @@ function webMeridian(seed) {
     culprit: S.culprit,
     wrong: [...S.suspects.slice(1), herring.name, herring2.name, informant.alias],
     unlocks: 'resolution',
+    evidence: ['rota', 'keybook', 'personnel'],
+    contradictions: {
+      [S.nightCleared]: { requires: 'rota', response: `Your own rota clears : not in the building on the nights that matter. Put it to paper a second time and it goes.` },
+      [S.accessCleared]: { requires: 'keybook', response: `The key book clears : no way into the stock that walked. File it again and it goes.` },
+      [S.detailCleared]: { requires: 'personnel', response: `The particulars clear : the witness detail does not fit. Insist a second time and it goes.` },
+    },
     correctResponse: 'The captain moves at morning muster, in front of the men.',
     wrongResponse: (name) =>
       `They put ${name} on a horse for Socorro and the country watches him ` +
@@ -2679,7 +2703,7 @@ function webMeridian(seed) {
     `ask about ${victim.toLowerCase()}'s man`,
     'open the company book to the particulars',
     'the assay returns: why did he go to the wash',
-    `accuse ${S.culprit.toLowerCase()}`,
+    `accuse ${S.culprit.toLowerCase()} — the rota, the keybook and the personnel particulars all hold his name`,
   ]
 
   return {
@@ -3241,6 +3265,12 @@ export function generateWorldCase(seed, pack) {
     culprit: S.culprit,
     wrong: [...S.suspects.slice(1), herring.name, herring2.name, informant.alias],
     unlocks: 'resolution',
+    evidence: ['rota', 'keybook', 'personnel'],
+    contradictions: {
+      [S.nightCleared]: { requires: 'rota', response: `Your own rota clears : not in the building on the nights that matter. Put it to paper a second time and it goes.` },
+      [S.accessCleared]: { requires: 'keybook', response: `The key book clears : no way into the stock that walked. File it again and it goes.` },
+      [S.detailCleared]: { requires: 'personnel', response: `The particulars clear : the witness detail does not fit. Insist a second time and it goes.` },
+    },
     correctResponse: 'They are taken at the morning shift, in front of the whole floor.',
     wrongResponse: (name) =>
       `${name} is taken, and released, and the release costs you what releases cost: ` +
@@ -3307,7 +3337,7 @@ export function generateWorldCase(seed, pack) {
     `ask about ${victim.toLowerCase()}'s man`,
     `open ${L.personnel.toLowerCase()}`,
     `${pack.motiveKeyword.toLowerCase()}: why did the count die`,
-    `accuse ${S.culprit.toLowerCase()}`,
+    `accuse ${S.culprit.toLowerCase()} — the rota, the keybook and the personnel particulars all hold his name`,
   ]
 
   return {

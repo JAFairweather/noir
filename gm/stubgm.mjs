@@ -54,6 +54,7 @@ export class StubGM {
     this.heat = 0
     this.heatExplained = false
     this.missStreak = 0
+    this.accuseWarned = new Set()
     this.over = false
     this.seenReports = new Set()
     // the case's noun index (§5): entity fallback for plain phrasing
@@ -76,6 +77,7 @@ export class StubGM {
       heat: this.heat,
       heatExplained: this.heatExplained ?? false,
       missStreak: this.missStreak ?? 0,
+      accuseWarned: [...this.accuseWarned],
       over: this.over,
       seenReports: [...this.seenReports],
       npcState: this.npcState,
@@ -93,6 +95,7 @@ export class StubGM {
     gm.heat = state.heat
     gm.heatExplained = state.heatExplained ?? false
     gm.missStreak = state.missStreak ?? 0
+    gm.accuseWarned = new Set(state.accuseWarned ?? [])
     gm.over = state.over
     gm.seenReports = new Set(state.seenReports)
     gm.npcState = state.npcState ?? gm.npcState
@@ -465,15 +468,41 @@ export class StubGM {
   }
 
   async accuse(t) {
-    const { culprit, wrong, unlocks, correctResponse, wrongResponse } = this.case.accusation
-    if (t.includes(culprit)) {
-      await this.grantScope(unlocks)
-      this.over = true
-      return this.dispatch(correctResponse, { granted: unlocks, ended: 'solved' })
+    const acc = this.case.accusation
+    const { culprit, wrong, unlocks, correctResponse, wrongResponse } = acc
+    const named = t.includes(culprit) ? culprit : wrong.find(w => t.includes(w))
+    // An accusation with no recognizable name is a clerical error, not a
+    // spent shot — the one-shot only fires on a name the case knows.
+    if (!named) {
+      return this.dispatch('The desk reads the report twice and hands it back. Name the man: "accuse <name>". You file it once, and you live with it.')
     }
-    const named = wrong.find(w => t.includes(w)) ?? 'the wrong man'
+    if (named !== culprit) {
+      // The desk argues back — once (#10): if the player's own papers
+      // rule the man out, the contradiction is put to them before the
+      // one-shot is spent. Insisting a second time files it anyway.
+      const guard = acc.contradictions?.[named]
+      if (guard && this.unlocked.has(guard.requires) && !this.accuseWarned.has(named)) {
+        this.accuseWarned.add(named)
+        return this.dispatch(guard.response)
+      }
+      this.over = true
+      return this.dispatch(wrongResponse(named), { ended: 'failed' })
+    }
+    // §5.8: the right name still needs the chain. The desk asks the
+    // player to show their work — cite the papers — before it moves.
+    if (acc.evidence?.length) {
+      const needed = acc.evidenceRequired ?? 2
+      const cited = acc.evidence.filter(key =>
+        this.unlocked.has(key) && mentions(this.entities, key, t))
+      if (cited.length < needed) {
+        return this.dispatch(acc.proofResponse ??
+          `A name alone does not move the desk. Show the work — "accuse ${culprit.toLowerCase()} ` +
+          'with <the papers that put him there>". Two documents, minimum, out of your own notebook.')
+      }
+    }
+    await this.grantScope(unlocks)
     this.over = true
-    return this.dispatch(wrongResponse(named), { ended: 'failed' })
+    return this.dispatch(correctResponse, { granted: unlocks, ended: 'solved' })
   }
 
   async checkHeat() {
