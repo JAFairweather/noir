@@ -582,7 +582,7 @@ console.log('\n21. Playability: exploration is free, tradecraft cools, plain phr
     ['watcher', ['decode silber', 'ask adler at josty about weiss'],
       ['ask station for the watcher log', 'pull the streetwork detail', 'go see what station kept']],
     ['roster', ['decode silber', 'ask adler at josty about weiss'],
-      ['check who held the tuesday duty window', 'get the embassy duty roster', 'go to the embassy visa section']],
+      ['check who held the tuesday duty window', 'who was on the tuesday evening window', 'pull the duty list for tuesday evenings']],
   ]
   for (const [target, prefix, phrasings] of synonyms) {
     for (const phrase of phrasings) {
@@ -609,6 +609,40 @@ console.log('\n21. Playability: exploration is free, tradecraft cools, plain phr
     await s('decode silber')
     const m4 = await s('mumble again opaquely')
     check('progress resets the escalation', !m4.includes('A thread still hangs'))
+  }
+
+  // Corroboration (§5.2, #7): the roster answers the QUESTION the ledger
+  // and Adler ask together — not the word "roster", and not one source.
+  {
+    const { g, s } = await mk(['decode silber', 'ask adler at josty about weiss'])
+    await s('get the embassy duty roster')
+    check('naming the roster does not open the corroboration gate', !g.unlocked.has('roster') && g.heat === 0)
+    const nudged = await s('go get the roster for me')
+    check('a corroboration miss nudges toward the derived question', nudged.includes('Put the two together'))
+    await s('who held the tuesday evening window')
+    check('the derived question opens the gate', g.unlocked.has('roster'))
+    const { g: g2, s: s2 } = await mk(['decode silber'])
+    await s2('who held the tuesday evening window')
+    check('the question needs both sources in hand (adler missing)', !g2.unlocked.has('roster'))
+  }
+
+  // The tail (§5.7, #7): at heat 60 the surveillance gets a face;
+  // flagging what repeats is a real, earned cooldown.
+  {
+    const { g, s } = await mk(['decode silber', 'ask adler at josty about weiss', 'ask station for the watcher log'])
+    await s('press adler for the name')          // +40, burns her
+    await s('timeline a b c')                    // +10
+    const beat = await s('timeline a c b')       // +10 → 60: the tail appears
+    check('crossing heat.tail puts a face on the heat', g.tailFired && beat.includes('green loden'))
+    const flagged = await s('flag the man in the green loden coat')
+    check('flagging the repeat folds the tail and cools for real',
+      g.tailDone && g.heat === 30 && flagged.includes('Flagged'))
+    await s('timeline c b a')                    // +10 → 40: no second tail
+    check('the tail beat fires once per case', g.heat === 40)
+    check('tail state survives serialize/restore', (() => {
+      const g3 = StubGM.restore(new Relay(), berlin, g.serialize())
+      return g3.tailFired && g3.tailDone
+    })())
   }
 
   // The accusation is an argument (§5.8, #10): name + chain, with the

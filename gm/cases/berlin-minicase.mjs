@@ -268,10 +268,17 @@ export const edges = [
     response: 'Arrive, meet, depart — 21:15, 22:30, 23:40. He walked east toward the freight side, and now so do you.',
   },
   {
+    // Cross-file corroboration (§5.2): the question exists in no single
+    // document. The ledger (locker) says the money moved on Tuesdays;
+    // Adler says the seller came straight from the evening window. Only
+    // both together ask the registry the right question — and the desk
+    // answers the QUESTION, not the word "roster".
     to: 'roster',
-    requires: ['adler'],
-    lead: 'Adler\'s seller held the Tuesday evening window. Nobody has checked the duty roster.',
-    match: (t) => t.includes('ROSTER') || (t.includes('TUESDAY') && (t.includes('DUTY') || t.includes('WINDOW') || t.includes('CHECK'))),
+    requires: ['adler', 'locker'],
+    puzzle: 'corroborate',
+    lead: 'The ledger pays on Tuesdays; Adler says the seller held the evening window. Put the two together and ask the registry the question they make.',
+    answerKey: 'Who held the Tuesday evening window at the embassy visa section — request the duty roster for the Tuesday evening window.',
+    match: (t) => t.includes('TUESDAY') && (t.includes('WINDOW') || t.includes('DUTY') || t.includes('EVENING')),
     response: 'A friend in the registry owes Station a favor. By morning you have a photograph of the roster.',
   },
 ]
@@ -379,6 +386,31 @@ export const burnTriggers = {
   },
   heatThreshold: 80,
   heatReason: 'Asset compromised: surveillance pressure exceeded tolerance. Contact severed.',
+}
+
+// The tail (§5.7): at heat 60 the surveillance gets a face. Flag what
+// repeats across the three sightings and the desk folds him — a real
+// cooldown, earned with tradecraft instead of lost days.
+export const tail = {
+  open: [
+    'The heat has a face now. Three sightings, one day:',
+    '',
+    '  At the tram stop opposite your pension — a man in a green loden',
+    '  coat, reading yesterday\'s paper and not turning the page.',
+    '  In the barber\'s window on Kantstrasse — the same green loden,',
+    '  the same fold of newsprint.',
+    '  Under the awning at Josty — green loden, dry in the rain, a',
+    '  coffee he has not touched.',
+    '',
+    'Something in that picture repeats. Flag it for the desk and the',
+    'watchers lose their man.',
+  ].join('\n'),
+  match: (t) => t.includes('LODEN') || (t.includes('GREEN') && t.includes('COAT')) ||
+    (t.includes('NEWSPAPER') && (t.includes('FLAG') || t.includes('MAN') || t.includes('SAME'))),
+  response: 'You cross against the light, double back through the arcade, and stop at his shoulder to ask ' +
+    'for a match. Up close he is twenty-two and terrified. Flagged, named, folded — his section will not ' +
+    'run him twice, and the street goes quiet behind you. (Heat falls.)',
+  cool: 30,
 }
 
 // Heat deltas (§5.4, mini version).

@@ -55,6 +55,8 @@ export class StubGM {
     this.heatExplained = false
     this.missStreak = 0
     this.accuseWarned = new Set()
+    this.tailFired = false
+    this.tailDone = false
     this.over = false
     this.seenReports = new Set()
     // the case's noun index (§5): entity fallback for plain phrasing
@@ -78,6 +80,8 @@ export class StubGM {
       heatExplained: this.heatExplained ?? false,
       missStreak: this.missStreak ?? 0,
       accuseWarned: [...this.accuseWarned],
+      tailFired: this.tailFired ?? false,
+      tailDone: this.tailDone ?? false,
       over: this.over,
       seenReports: [...this.seenReports],
       npcState: this.npcState,
@@ -96,6 +100,8 @@ export class StubGM {
     gm.heatExplained = state.heatExplained ?? false
     gm.missStreak = state.missStreak ?? 0
     gm.accuseWarned = new Set(state.accuseWarned ?? [])
+    gm.tailFired = state.tailFired ?? false
+    gm.tailDone = state.tailDone ?? false
     gm.over = state.over
     gm.seenReports = new Set(state.seenReports)
     gm.npcState = state.npcState ?? gm.npcState
@@ -245,6 +251,16 @@ export class StubGM {
     }
     if (t === 'WEST' && this.unlocked.size === 1) {
       return this.dispatch('West of here the boulevard runs toward the Tiergarten, black branches over black water. Station did not send you here to admire it.')
+    }
+
+    // The tail (§5.7): once heat has put a recurring stranger on the
+    // player's street, flagging what repeats folds him — and cools the
+    // city for real. One beat per case; wrong guesses just miss, free.
+    const tail = this.case.tail
+    if (tail && this.tailFired && !this.tailDone && tail.match(t)) {
+      this.tailDone = true
+      this.coolHeat(tail.cool ?? 30)
+      return this.dispatch(tail.response, { cooled: tail.cool ?? 30 })
     }
 
     // Tradecraft lowers heat (§5.4) — the other half of the economy.
@@ -507,6 +523,12 @@ export class StubGM {
 
   async checkHeat() {
     const { press, heatThreshold, heatReason } = this.case.burnTriggers
+    // §5.7: crossing the tail threshold puts a face on the heat — a
+    // three-sighting beat the player can resolve for a real cooldown.
+    if (this.case.tail && !this.tailFired && this.heat >= this.case.heat.tail) {
+      this.tailFired = true
+      await this.dispatch(this.case.tail.open, { tail: true })
+    }
     if (this.heat >= heatThreshold && this.unlocked.has(press.scope) && !this.burned.has(press.scope)) {
       await this.burn(press.scope, heatReason)
       await this.dispatch('Word reaches you sideways: your one pair of eyes has gone dark. The city closed over her like water.', { burned: press.scope })

@@ -25,6 +25,24 @@ const sortNames = (names) => [...names].sort()   // alphabetical — never culpr
 // The honest last word of every preamble (#12): curiosity is free, heat
 // has named causes and a named cure, and the threads rail is pointed out
 // once — the front door teaches the game the engine actually plays.
+// The tail beat (§5.7), era-dressed: three sightings, one repeating
+// detail, a real cooldown for flagging it. Fires once, at heat.tail.
+const tailBeat = (sightings, detailWords) => ({
+  open: [
+    'The heat has a face now. Three sightings, one day:',
+    '',
+    ...sightings.map(s => `  ${s}`),
+    '',
+    'Something in that picture repeats. Flag it for the desk and the',
+    'watchers lose their man.',
+  ].join('\n'),
+  match: (t) => detailWords.some(w => t.includes(w)),
+  response: 'You double back once, stop where he must either pass you or turn, and look him in the face ' +
+    'while asking an innocent question. Flagged and folded — they will not run him at you twice, and the ' +
+    'street goes quiet behind you. (Heat falls.)',
+  cool: 30,
+})
+
 const TRADECRAFT_PRIMER = [
   '',
   'Curiosity is free. Heat comes only from loud moves — pressing a',
@@ -696,6 +714,8 @@ function webBerlin(seed) {
     },
     {
       to: 'motive', requires: ['rota', 'keybook'],
+      puzzle: 'corroborate',
+      answerKey: 'With both lists in hand, ask WHY the victim was killed — request the motive document from its keeper.',
       lead: 'Two lists in hand. The archive can still say why the courier had to stop walking.',
       match: (t) => t.includes('ARCHIVE') || t.includes('MOTIVE') || t.includes('WHY'),
       response: 'The archive clerk finds the requisition slip exactly where a dead man filed it.',
@@ -791,6 +811,14 @@ function webBerlin(seed) {
     CASE_ID, ERA, TITLE: 'The Canal Keeps Nothing', scopes, edges, accusation, burnTriggers, npcs, hints,
     cipher: { ciphertext: cipherPlain, key: workname, to: 'stash' },
     heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, layLow: 25, max: 100, tail: 60 },
+    tail: tailBeat([
+      "At the tram stop opposite your pension — a man in a gray loden",
+      "coat, reading yesterday's paper and never turning the page.",
+      "In the barber's window — the same gray loden, the same fold",
+      "of newsprint.",
+      "On the canal path — gray loden, dry under the rain, a cigarette",
+      "he never lights.",
+    ], ['LODEN', 'GRAY COAT', 'GREY COAT', 'NEWSPAPER']),
     missResponse: undefined,
     helpText: [
       'FIELD PROCEDURE — such as it is:',
@@ -1358,6 +1386,8 @@ function webNola(seed) {
     },
     {
       to: 'motive', requires: ['rota', 'keybook'],
+      puzzle: 'corroborate',
+      answerKey: 'With both lists in hand, ask WHY the victim was killed — request the motive document from its keeper.',
       lead: 'Two lists in hand. The Item\'s morgue can still say why the stringer went in the river.',
       match: (t) => t.includes('MORGUE') || t.includes('MOTIVE') || t.includes('WHY') || t.includes('ITEM'),
       response: 'The morgue clerk finds the request slips exactly where a dead man filed them.',
@@ -1448,6 +1478,14 @@ function webNola(seed) {
   return {
     CASE_ID, ERA, TITLE: 'What the River Returned', scopes, edges, accusation, burnTriggers, npcs, hints,
     heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, layLow: 25, max: 100, tail: 60 },
+    tail: tailBeat([
+      "On the banquette across from your rooming house — a man in a",
+      "seersucker jacket nursing a warm beer he never drinks.",
+      "At the lunch counter — the same seersucker, the same full glass",
+      "going flat.",
+      "Outside the Blue Room — seersucker in the doorway shade,",
+      "watching the street in the window glass.",
+    ], ['SEERSUCKER', 'WARM BEER', 'SAME JACKET']),
     missResponse: undefined,
     helpText: [
       'PROCEDURE — as much of it as survives the humidity:',
@@ -1991,6 +2029,8 @@ function webParis(seed) {
     },
     {
       to: 'motive', requires: ['rota', 'keybook'],
+      puzzle: 'corroborate',
+      answerKey: 'With both lists in hand, ask WHY the victim was killed — request the motive document from its keeper.',
       lead: 'Two lists in hand. The registry can still say why the exact man stopped coming back.',
       match: (t) => t.includes('REGISTRY') || t.includes('COUNTERFOIL') || t.includes('MOTIVE') || t.includes('WHY'),
       response: 'The registry clerk finds the slips exactly where a dead man filed them.',
@@ -2085,6 +2125,14 @@ function webParis(seed) {
     CASE_ID, ERA, TITLE: 'The Blue Hour', scopes, edges, accusation, burnTriggers, npcs, hints,
     cipher: { ciphertext: cipherPlain, key: workname, to: 'stash' },
     heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, layLow: 25, max: 100, tail: 60 },
+    tail: tailBeat([
+      "On the quai below your window — a man in a gray raincoat",
+      "feeding pigeons that are never hungry.",
+      "By the kiosk on the corner — the same raincoat, the same",
+      "crumbs, the same patient birds.",
+      "Under the awning at the tabac — raincoat buttoned, pigeons",
+      "circling, his eyes on the door you use.",
+    ], ['RAINCOAT', 'PIGEON']),
     missResponse: undefined,
     helpText: [
       'PROCEDURE — what little of it survives the winter:',
@@ -2620,6 +2668,8 @@ function webMeridian(seed) {
     },
     {
       to: 'motive', requires: ['rota', 'keybook'],
+      puzzle: 'corroborate',
+      answerKey: 'With both lists in hand, ask WHY the victim was killed — request the motive document from its keeper.',
       lead: 'Two lists in hand. The assay returns can still say why the assayer went to the wash.',
       match: (t) => t.includes('ASSAY') || t.includes('RETURNS') || t.includes('MOTIVE') || t.includes('WHY'),
       response: 'The returns come out of the chest in their season order, exactly as a careful man left them.',
@@ -2709,6 +2759,14 @@ function webMeridian(seed) {
   return {
     CASE_ID, ERA, TITLE: 'The Dry Wash', scopes, edges, accusation, burnTriggers, npcs, hints,
     heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, layLow: 25, max: 100, tail: 60 },
+    tail: tailBeat([
+      "On the ridgeline at first light — a rider on a blue roan,",
+      "holding still against the sky.",
+      "At the ford by noon — the same blue roan, drinking longer",
+      "than any horse drinks.",
+      "Against the dusk — roan and rider on the survey line, exactly",
+      "one hill behind you.",
+    ], ['ROAN', 'RIDER', 'RIDGELINE']),
     missResponse: undefined,
     helpText: [
       'PROCEDURE — the rules of this country:',
@@ -3255,6 +3313,8 @@ export function generateWorldCase(seed, pack) {
     },
     {
       to: 'motive', requires: ['rota', 'keybook'],
+      puzzle: 'corroborate',
+      answerKey: 'With both lists in hand, ask WHY the victim was killed — request the motive document from its keeper.',
       lead: `Two lists in hand. ${pack.motiveDoc} can still say why the count died.`,
       match: (t) => t.includes('WHY') || t.includes('MOTIVE') || t.includes(pack.motiveKeyword) || venueMatch(pack.motiveDoc)(t),
       response: `${pack.motiveDoc} come out in season order, exactly as a careful hand left them.`,
@@ -3344,6 +3404,14 @@ export function generateWorldCase(seed, pack) {
     CASE_ID, ERA, TITLE: pack.title, LABEL: pack.label, STYLE: pack.style ?? null,
     scopes, edges, accusation, burnTriggers, npcs, hints,
     heat: { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, layLow: 25, max: 100, tail: 60 },
+    tail: tailBeat([
+      "Across from where you sleep — a stranger with an unhurried",
+      "walk, going nowhere at walking pace.",
+      "In the market crowd — the same stranger, the same pace, half",
+      "a street behind.",
+      "At the last corner of the day — the stranger again, arriving",
+      "just after you, leaving just before.",
+    ], ['STRANGER', 'SHADOW', 'SAME MAN', 'SAME FACE']),
     missResponse: undefined,
     helpText: [
       'PROCEDURE — the rules of the engagement:',
