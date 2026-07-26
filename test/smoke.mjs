@@ -731,5 +731,35 @@ console.log('\n21. Playability: exploration is free, tradecraft cools, plain phr
   }
 }
 
+console.log('\n22. World-builder rung 1: an authored world pack plays to a solve (los-angeles-1937)')
+{
+  const { readFileSync } = await import('node:fs')
+  const payload = JSON.parse(readFileSync(new URL('../docs/worlds/los-angeles-1937.json', import.meta.url), 'utf8'))
+  const pack = payload.world
+  const { validateWorldPack, generateWorldCase } = await import('../gm/caseweb.mjs')
+  const { verifyCase } = await import('../shared/verify.mjs')
+  check('the Silver Nitrate pack validates', validateWorldPack(pack).length === 0)
+  const c1 = generateWorldCase('omega', pack)
+  check('the authored world identifies itself',
+    c1.CASE_ID === 'world:los-angeles-1937:omega' && c1.LABEL === 'LOS ANGELES 1937')
+  check('a world case is deterministic per seed',
+    generateWorldCase('omega', pack).solutionCommitment.canonical() === c1.solutionCommitment.canonical())
+  for (const seed of ['omega', 'sigma', 'kappa']) {
+    const v = await verifyCase(generateWorldCase(seed, pack))
+    check(`world seed "${seed}": the Notary passes the authored era`, v.ok && v.failures.length === 0)
+  }
+  // Beyond the Notary — actually PLAY the authored walkthrough to a solve.
+  const kase = generateWorldCase('omega', pack)
+  const r = new Relay(), p = generateSecretKey()
+  const g = new StubGM(r, kase)
+  await g.start(getPublicKey(p))
+  for (const step of kase.walkthrough) {
+    await sendFieldReport(r, p, g.pub, step, kase.CASE_ID)
+    await g.poll()
+  }
+  check('the authored walkthrough solves at heat 0',
+    g.over && g.unlocked.has('resolution') && g.heat === 0)
+}
+
 console.log(`\n${passed} passed, ${failed} failed`)
 process.exit(failed ? 1 : 0)

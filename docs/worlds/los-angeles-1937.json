@@ -1,0 +1,90 @@
+{
+  "name": "World — Los Angeles 1937",
+  "kind": "world",
+  "world": {
+    "id": "los-angeles-1937",
+    "label": "LOS ANGELES 1937",
+    "title": "Silver Nitrate",
+    "blurb": "Meridian's vault registrar is found among the negatives, the count unfinished. Every columnist in town prints the stars' secrets by dark — and about this death, printed nothing.",
+    "style": { "map": "lattice", "scene": "street" },
+    "tuning": [
+      "Chandler's rain on Hammett's bones: the glamour is a painted flat, and the wiring behind it is live.",
+      "Every scene smells of cigarette smoke, developer chemicals, orange blossom, or money.",
+      "The pictures lie for a living and the town believes them anyway — the only real magic in it.",
+      "Nitrate remembers everything and forgives nothing. Say so without saying so."
+    ],
+    "company": "Meridian Pictures",
+    "victimRole": "vault registrar of Meridian Pictures",
+    "site": "the door of Vault C, among the nitrate cans",
+    "doc": "bonded vault-withdrawal chits",
+    "room": "the cutting room",
+    "lodging": "the Rosslyn residential hotel",
+    "listNames": {
+      "rota": "the night-watch call sheet",
+      "keybook": "the vault key ledger",
+      "personnel": "the studio roster"
+    },
+    "watchName": "the studio gate log",
+    "motiveKeyword": "AUDIT",
+    "motiveDoc": "the reshoot invoices",
+    "stashPlace": "the nitrate locker on the {WORD} rack",
+    "surnames": ["CASSIDY", "MERRILL", "DELACROIX", "STROUD", "VANCE", "HOLLISTER", "ABERNATHY", "REDDING"],
+    "roles": ["assistant director of the night unit", "registrar's clerk in the vault", "publicity fixer for the front office", "head cutter of the editing floor"],
+    "victims": ["HALLORAN", "CALLOW", "MARSH", "WREN"],
+    "words": ["SPLICE", "VAULT", "GHOST"],
+    "ledger": {
+      "A": "The Angel of Crenshaw — a nun, a pistol, and a producer who prayed too late.",
+      "C": "Chinatown Nocturne — pulled from release the week the real detective sued.",
+      "E": "The Eleventh Reel — a serial whose ending no surviving print still carries.",
+      "G": "Graveyard Shift — shot nights on a cemetery set the city later paved.",
+      "H": "Hollywood Confidential — the negative burned the week the columnist vanished.",
+      "I": "The Iron Ingénue — her contract outlived her; the studio kept billing the part.",
+      "L": "Lot Thirteen — a backlot-fire picture; three grips never came off the call sheet.",
+      "O": "The Orphan Reel — a film the vault lists and no living eye has seen.",
+      "P": "Pacific Wardrobe — a costume drama that drowned its lead and reshot around her.",
+      "S": "Sunset Salvage — a repossession comedy the bank did not find funny.",
+      "T": "The Ten-Cent Tenor — a musical dubbed by a man the credits never name.",
+      "U": "Under the Marquee — a Depression weepie; the theater it played is a parking lot.",
+      "V": "The Velvet Alibi — a courtroom picture the front office used to launder a real one."
+    },
+    "informants": [
+      { "name": "MISS FONTAINE", "role": "wardrobe seamstress on the night unit", "venue": "the wardrobe loft", "alias": "FONTAINE" },
+      { "name": "OLD REYES", "role": "night projectionist", "venue": "the projection booth", "alias": "REYES" }
+    ],
+    "herrings": [
+      { "name": "BALLARD", "trade": "runs a gossip wire out of a drugstore phone booth", "clears": "was wiring three columns from the Biltmore lobby those nights, and the switchboard slips keep his hours" },
+      { "name": "KOVACS", "trade": "sells bootleg prints off a laundry truck", "clears": "sat in the county lockup on a liquor charge, booking blotter and all" }
+    ],
+    "details": [
+      { "phrase": "favored a silver cigarette case with a cracked hinge", "column": "carries a cracked silver cigarette case", "counter": "lost it in a card game at the Dunbar in June; the marker is still pinned behind the bar" },
+      { "phrase": "signed the vault slips in green editor's pencil", "column": "signs in green editor's pencil", "counter": "the cutting room ran dry of green in spring and the purchasing book shows no reorder since" },
+      { "phrase": "took the freight cage up rather than the stairs", "column": "rides the freight cage, never the stairs", "counter": "was barred from the cage after the Michaelmas jam and the gateman logged him on foot every night after" }
+    ],
+    "nights": [["THU", "THURSDAY"], ["SAT", "SATURDAY"], ["MON", "MONDAY"]],
+    "beats": [
+      "{VICTIM} signs the last reel into Vault C and pockets the key against the rule",
+      "{VICTIM} is met at the nitrate racks by someone the gate never logged in",
+      "One set of footsteps leaves by the loading door. The key does not"
+    ],
+    "openingLines": [
+      "LOS ANGELES — 1937",
+      "",
+      "The searchlights come on at dusk over the boulevards and rake",
+      "the underside of the clouds for premieres that mean nothing to",
+      "anyone east of La Brea. Meridian Pictures makes dreams by day",
+      "and keeps them in a fireproof vault by night, because dreams on",
+      "silver nitrate burn hotter than gasoline and remember more.",
+      "",
+      "This week the vault lost the man who kept its count.",
+      "{VICTIM} knew every negative that went in and came out, and was",
+      "found at the door of Vault C with the tally open and unfinished.",
+      "Every columnist in town prints the stars' sins by dark — and",
+      "about this one, they printed nothing. Bought silence develops",
+      "clearest in a town this bright.",
+      "",
+      "Four names held the keys to the front office. Three trails will",
+      "cut them down to one: the coin, the keys, and the one witness",
+      "nobody ever thought worth paying to look away."
+    ]
+  }
+}
