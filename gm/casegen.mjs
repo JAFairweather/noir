@@ -337,6 +337,10 @@ function buildBerlin(seed) {
     culprit,
     wrong: [cleared, herring.name, informant.alias, ...(herring2 ? [herring2.name] : [])],
     unlocks: 'resolution',
+    evidence: ['registry', 'informant', 'site'],
+    contradictions: {
+      [cleared]: { requires: 'registry', response: `The registry cleared ${cleared} in your own hand. Put him at that desk again and the paper argues back. File it again and Station sends it.` },
+    },
     correctResponse: 'Station moves before the evening desk opens.',
     wrongResponse: (name) =>
       `Station moves on ${name}, and gets nothing, because there is nothing. ` +
@@ -391,7 +395,7 @@ function buildBerlin(seed) {
     'ask station for the watcher log',
     `timeline ${timelineAnswer.split('').join(' ').toLowerCase()}`,
     `check who held the ${nightWord.toLowerCase()} evening desk`,
-    `accuse ${culprit.toLowerCase()}`,
+    `accuse ${culprit.toLowerCase()} — the registry and the informant hold the name`,
   ]
 
   return {
@@ -708,6 +712,10 @@ function buildNola(seed) {
     culprit,
     wrong: [cleared, herring.name, informant.alias],
     unlocks: 'resolution',
+    evidence: ['registry', 'informant', 'site'],
+    contradictions: {
+      [cleared]: { requires: 'registry', response: `The paper already cleared ${cleared} — you checked it yourself. Insist, and the parish will happily drown the file with you in it. File it again and it goes.` },
+    },
     correctResponse: 'You hand the chain — negatives, route order, tally — to the federal men before the District hears you\'ve been asking.',
     wrongResponse: (name) =>
       `You put it on ${name}, and the parish is delighted to agree — until the paperwork drowns. ` +
@@ -762,7 +770,7 @@ function buildNola(seed) {
     'check the dispatch log',
     `timeline ${timelineAnswer.split('').join(' ').toLowerCase()}`,
     'who signed the route order',
-    `accuse ${culprit.toLowerCase()}`,
+    `accuse ${culprit.toLowerCase()} — the registry and the informant hold the name`,
   ]
 
   return {

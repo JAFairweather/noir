@@ -54,6 +54,7 @@ export class StubGM {
     this.heat = 0
     this.heatExplained = false
     this.missStreak = 0
+    this.probes = {}
     this.accuseWarned = new Set()
     this.tailFired = false
     this.tailDone = false
@@ -79,6 +80,7 @@ export class StubGM {
       heat: this.heat,
       heatExplained: this.heatExplained ?? false,
       missStreak: this.missStreak ?? 0,
+      probes: this.probes ?? {},
       accuseWarned: [...this.accuseWarned],
       tailFired: this.tailFired ?? false,
       tailDone: this.tailDone ?? false,
@@ -99,6 +101,7 @@ export class StubGM {
     gm.heat = state.heat
     gm.heatExplained = state.heatExplained ?? false
     gm.missStreak = state.missStreak ?? 0
+    gm.probes = state.probes ?? {}
     gm.accuseWarned = new Set(state.accuseWarned ?? [])
     gm.tailFired = state.tailFired ?? false
     gm.tailDone = state.tailDone ?? false
@@ -446,8 +449,10 @@ export class StubGM {
       }
     }
 
-    // Bare looking around is free and answers with the state of the case.
-    if (isSurvey(t)) {
+    // Bare looking around is free and answers with the state of the
+    // case — but a look that NAMES something the case knows belongs to
+    // the miss path below, where relevance can answer it properly.
+    if (isSurvey(t) && ![...this.entities.keys()].some(k => mentions(this.entities, k, t))) {
       const open = this.case.edges.filter(e =>
         !this.unlocked.has(e.to) && e.requires.every(r => this.unlocked.has(r)) && e.lead)
       const lines = [`You take stock. ${this.unlocked.size} document${this.unlocked.size === 1 ? '' : 's'} in the notebook; the city gives nothing away for free.`]
@@ -478,6 +483,24 @@ export class StubGM {
     const open = this.case.edges.filter(e =>
       !this.unlocked.has(e.to) && e.requires.every(r => this.unlocked.has(r)) && e.lead)
     const relevant = open.find(e => mentions(this.entities, e.to, t))
+    // Dead drops & locations, the last clause (§5 type 4): casing a
+    // GUARDED drop is loud. The first look is free, the second buys an
+    // in-world warning, and systematic rattling draws heat.loiter —
+    // curiosity stays free; brute-forcing a spot does not.
+    if (relevant && (relevant.answerKey || relevant.failMatch) && isAction(t)) {
+      const n = (this.probes[relevant.to] = (this.probes[relevant.to] ?? 0) + 1)
+      if (n === 2) {
+        return this.dispatch(`${base}\n\nA thread still hangs: ${relevant.lead}\n` +
+          'Once more around this block and somebody will remember your face.')
+      }
+      if (n >= 3) {
+        this.addHeat(this.case.heat.loiter ?? 5)
+        await this.dispatch(
+          'You have been seen here too often now; across the way, a shutter moves. (Heat rises.)\n\n' +
+          `A thread still hangs: ${relevant.lead}`)
+        return this.checkHeat()
+      }
+    }
     const pick = relevant ?? (open.length ? open[(this.missStreak - 1) % open.length] : null)
     if (!pick || (!relevant && this.missStreak < 2)) return this.dispatch(base)
     let line = `${base}\n\nA thread still hangs: ${pick.lead}`

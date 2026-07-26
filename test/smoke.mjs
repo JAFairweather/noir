@@ -612,6 +612,27 @@ console.log('\n21. Playability: exploration is free, tradecraft cools, plain phr
     check('progress resets the escalation', !m4.includes('A thread still hangs'))
   }
 
+  // Dead drops, last clause (§5 type 4): casing a guarded drop is loud.
+  // Two looks free (the second warns); systematic rattling loiters.
+  {
+    const { g, s } = await mk()
+    await s('check locker three at the zoo')
+    check('the first case of a guarded drop is a free nudge', g.heat === 0)
+    const warn = await s('go through locker five at the zoo')
+    check('the second look buys an in-world warning, still free',
+      g.heat === 0 && warn.includes('remember your face'))
+    const hot = await s('try locker seven at the zoo bahnhof')
+    check('systematic rattling is loitering — heat.loiter charged',
+      g.heat === berlin.heat.loiter && hot.includes('Heat rises'))
+    check('the loiter line still points at the thread', hot.includes('decode <word>'))
+    await s('decode silber')
+    check('solving the drop ends the loitering', g.unlocked.has('locker') && g.heat === berlin.heat.loiter)
+    check('probe counts survive serialize/restore', (() => {
+      const g2 = StubGM.restore(new Relay(), berlin, g.serialize())
+      return g2.probes.locker >= 3
+    })())
+  }
+
   // The cold game breathes (#11): tiers open with patience, spent
   // scenes rotate in character, known names get the room's deflection.
   {
@@ -711,7 +732,37 @@ console.log('\n21. Playability: exploration is free, tradecraft cools, plain phr
   }
 }
 
-console.log('\n22. Photo analysis (§5.5): the image is the puzzle')
+console.log('\n22. World-builder rung 1: an authored world pack plays to a solve (los-angeles-1937)')
+{
+  const { readFileSync } = await import('node:fs')
+  const payload = JSON.parse(readFileSync(new URL('../docs/worlds/los-angeles-1937.json', import.meta.url), 'utf8'))
+  const pack = payload.world
+  const { validateWorldPack, generateWorldCase } = await import('../gm/caseweb.mjs')
+  const { verifyCase } = await import('../shared/verify.mjs')
+  check('the Silver Nitrate pack validates', validateWorldPack(pack).length === 0)
+  const c1 = generateWorldCase('omega', pack)
+  check('the authored world identifies itself',
+    c1.CASE_ID === 'world:los-angeles-1937:omega' && c1.LABEL === 'LOS ANGELES 1937')
+  check('a world case is deterministic per seed',
+    generateWorldCase('omega', pack).solutionCommitment.canonical() === c1.solutionCommitment.canonical())
+  for (const seed of ['omega', 'sigma', 'kappa']) {
+    const v = await verifyCase(generateWorldCase(seed, pack))
+    check(`world seed "${seed}": the Notary passes the authored era`, v.ok && v.failures.length === 0)
+  }
+  // Beyond the Notary — actually PLAY the authored walkthrough to a solve.
+  const kase = generateWorldCase('omega', pack)
+  const r = new Relay(), p = generateSecretKey()
+  const g = new StubGM(r, kase)
+  await g.start(getPublicKey(p))
+  for (const step of kase.walkthrough) {
+    await sendFieldReport(r, p, g.pub, step, kase.CASE_ID)
+    await g.poll()
+  }
+  check('the authored walkthrough solves at heat 0',
+    g.over && g.unlocked.has('resolution') && g.heat === 0)
+}
+
+console.log('\n23. Photo analysis (§5.5): the image is the puzzle')
 {
   // Structure: the case keys the photo gate to an edge, the carrying
   // scope ships the client overlay spec, and no document a player can

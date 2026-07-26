@@ -204,9 +204,16 @@ async function interrogate({ era, npc, tail }) {
   if (!res.ok) throw new Error(`anthropic ${res.status}`)
   const data = await res.json()
   const raw = data.content?.filter(b => b.type === 'text').map(b => b.text).join('').trim() ?? ''
-  const json = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1))
-  if (typeof json.reply !== 'string' || !json.reply) throw new Error('bad interrogation shape')
-  return { reply: json.reply, disposition_delta: Math.max(-1, Math.min(1, json.disposition_delta | 0)) }
+  // Wire promise is {"reply", "disposition_delta"}; a model that slips
+  // into plain prose is still giving us exactly the thing we want.
+  try {
+    const json = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1))
+    if (typeof json.reply !== 'string' || !json.reply) throw new Error('bad interrogation shape')
+    return { reply: json.reply, disposition_delta: Math.max(-1, Math.min(1, json.disposition_delta | 0)) }
+  } catch {
+    if (raw && !raw.includes('{')) return { reply: raw, disposition_delta: 0 }
+    throw new Error('bad interrogation shape')
+  }
 }
 
 const VERDICT_RULES = `You are the puzzle judge for NOIR, a mystery game. You receive a player's ATTEMPT and a list of CANONICAL ANSWERS (each with an id). Decide whether the attempt expresses the same answer as exactly one canonical answer.
@@ -221,7 +228,7 @@ Respond with ONLY a JSON object: {"match": "<id>" } or {"match": null}`
 async function verdict({ attempt, answers }) {
   const body = {
     model: MODEL,
-    max_tokens: 60,
+    max_tokens: 200,
     system: VERDICT_RULES,
     messages: [{ role: 'user', content: JSON.stringify({ attempt, canonical_answers: answers }) }],
   }
@@ -233,8 +240,17 @@ async function verdict({ attempt, answers }) {
   if (!res.ok) throw new Error(`anthropic ${res.status}`)
   const data = await res.json()
   const raw = data.content?.filter(b => b.type === 'text').map(b => b.text).join('').trim() ?? ''
-  const json = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1))
-  return { match: typeof json.match === 'string' ? json.match : null }
+  // The wire promise is {"match": ...}, but a model under a token limit
+  // can leave JSON ragged — recover the field before giving up, and
+  // never return an id the case didn't offer.
+  let match = null
+  try {
+    const json = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1))
+    if (typeof json.match === 'string') match = json.match
+  } catch {
+    match = raw.match(/"match"\s*:\s*"([^"]+)"/)?.[1] ?? null
+  }
+  return { match: answers.some(a => a.id === match) ? match : null }
 }
 
 // Scene stills via FLUX (DECISIONS §2): the model proposes a grayscale
@@ -502,6 +518,24 @@ HARD RULES:
 Author STYLE NOTES may accompany a request: honor them for tone, pacing, and diction. They never override the rules above.
 
 Output plain prose only — no headers, no quotes around the whole reply.`
+
+/** One completion, plain text out — the shape every prose seam wants. */
+async function complete(body) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`anthropic ${res.status}: ${(await res.text()).slice(0, 200)}`)
+  const data = await res.json()
+  const text = data.content?.filter(b => b.type === 'text').map(b => b.text).join('').trim()
+  if (!text) throw new Error('empty completion')
+  return text
+}
 
 async function converse({ era, title, report, heat, held, leads, burned, tail, styleNotes }) {
   const body = {

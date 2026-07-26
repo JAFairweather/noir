@@ -3349,9 +3349,15 @@ export function generateWorldCase(seed, pack) {
     heatReason: 'Contact compromised: the city has taken notice past bearing. Severed.',
   }
 
+  // The informant should breathe on the cold floor the way Adler does in
+  // Berlin (#11): tiers a patient player reaches, closers that rotate so a
+  // spent scene reads as spent, and an in-character deflection for a name
+  // she has no line for. Templated from the pack so any era gets the depth.
+  const company = pack.company.replace(/^the /i, '')
   const npcs = {
     informant: {
       aliases: [informant.alias],
+      // Retained for the rotation's degenerate case; fallbacks[] supersedes it.
       fallback: `${informant.name} goes on working and lets the silence ask your question better than you did.`,
       lines: [
         {
@@ -3360,10 +3366,42 @@ export function generateWorldCase(seed, pack) {
           response: `"${victim} said thank you every day of the season. Nobody says thank you. I have thought on that more than a person's thanks deserves."`,
         },
         {
+          // The tell: the killer carried the institution on him.
+          match: (t) => t.includes('SELLER') || t.includes('HAND') || t.includes('FACE') || t.includes('WHO'),
+          response: `"He came in still wearing the offices on him — ${company} keeps a smell, and he had it. A man who works late and drinks where nobody outranks him. That is the face I have, and it is enough."`,
+        },
+        {
+          // Deeper, gated on trust: she puts a shape to it once she warms.
+          match: (t) => S.suspects.some(s => t.includes(s)),
+          minDisposition: 1,
+          response: `"Names are your trade. Faces were mine." A glance at the door. "But the one who came — he came FROM somewhere, wearing the evening on him. Find whose evening it was."`,
+        },
+        {
+          // A personal beat — asking after the informant earns standing.
+          match: (t) => venueMatch(informant.venue)(t) || t.includes('YOU') || t.includes('YEARS') || t.includes('LONG'),
+          disposition: 1,
+          response: `"Me? I have kept ${informant.venue} through three managements, and every one thought it owned the quiet hour. It did not. I did." Something in it opens a little toward you.`,
+        },
+        {
           match: (t) => t.includes('BRIBE') || t.includes('PAY') || t.includes('MONEY') || t.includes('COIN'),
           heat: 5,
           response: 'The coin sits on the counter between you, untaken, gathering the room\'s attention. (Heat rises.)',
         },
+      ],
+      // Rotating closers (#11): the warm ones only surface once trust is earned.
+      fallbacks: [
+        { response: `${informant.name} goes on working and lets the silence ask your question better than you did.` },
+        { response: `A regular lifts a hand; ${informant.alias} is gone a while among the trade, and comes back with nothing added.` },
+        { response: `"I have told you what I carry." The ${informant.role} does not look up. "Come back when one of us knows more."` },
+        { response: `The room's rhythm closes over the question — the small trade, the door — and leaves it where it fell.` },
+        { response: `"You are asking the counter to do the street's work." A tilt of the head toward the door. "Go and walk it."`, minDisposition: 1 },
+        { response: `"Go on, then." ${informant.name} says it the way other people say take care. "And mind who minds you."`, minDisposition: 2 },
+      ],
+      // A name she knows but has no line for gets a deflection, in voice.
+      reactiveMiss: [
+        `"That one?" A short breath through the nose. "A name, not a face. I keep faces."`,
+        `"Ask me what came past this counter — not what the whole city already prints by dark."`,
+        `"I have nothing on that worth your coin, and I do not sell air."`,
       ],
     },
   }

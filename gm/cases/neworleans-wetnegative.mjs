@@ -350,6 +350,24 @@ export const accusation = {
   culprit: 'BROUSSARD',
   wrong: ['ARCENEAUX', 'FONTAINE', 'REMY'],
   unlocks: 'resolution',
+  // §5.8: the chain the resolution names — negative, route order,
+  // dispatch log. Two of the three, cited from the notebook, or the
+  // desk hands the file back.
+  evidence: ['levee', 'dutybook', 'patrol'],
+  proofResponse: 'A name is not a case, podna — not in this parish. Show the work: "accuse broussard ' +
+    'with <the papers that hold him>". Two pieces, minimum, out of your own notebook.',
+  contradictions: {
+    ARCENEAUX: {
+      requires: 'dutybook',
+      response: 'Your own cross-check answers you: Arceneaux was in Biloxi all week pulling redfish, ' +
+        'photographed doing it — the one alibi in this town nobody can buy. File it again and it goes.',
+    },
+    FONTAINE: {
+      requires: 'fontaine',
+      response: 'Baton Rouge, all that night, a liquor board hearing with his name in the minutes — you read ' +
+        'them yourself. Put Fontaine at the wharf and the minutes argue back. File it again and it goes.',
+    },
+  },
   correctResponse: 'You hand the chain — negative, route order, evidence log — to the federal men before the District hears you\'ve been asking.',
   wrongResponse: (name) =>
     `You put it on ${name}, and the parish is delighted to agree — for exactly as long as it takes the paperwork to drown. ` +
@@ -362,6 +380,16 @@ export const npcs = {
   remy: {
     aliases: ['REMY', 'BARTENDER', 'BARKEEP'],
     fallback: 'Remy finds a spot on the glass that isn\'t there and works it. The fan turns. You can wait him out; the beer can\'t.',
+    fallbacks: [
+      { response: 'Remy finds a spot on the glass that isn\'t there and works it. The fan turns. You can wait him out; the beer can\'t.' },
+      { response: 'He draws a beer nobody ordered and sets it in front of nobody. The Quarter\'s way of saying the well is dry tonight.' },
+      { minDisposition: 1, response: '"Podna." He says it kindly, which is how you know it\'s a door closing. "I pour. I don\'t narrate."' },
+      { minDisposition: 2, response: '"Go read your paper trail." He nods at the door, almost fond. "Come back when you can drink to something."' },
+    ],
+    reactiveMiss: [
+      '"That\'s a question for the paper, not the pourer. Paper doesn\'t lose its liquor license for answering."',
+      '"I see who drinks and who watches who drinks. Past that, podna, the zinc is my whole parish."',
+    ],
     lines: [
       {
         match: (t) => t.includes('THIBODEAUX') || t.includes('PHOTOGRAPHER'),
@@ -387,11 +415,46 @@ export const npcs = {
         response: '"Arceneaux?" A short laugh with no joke in it. "Takes with both hands, sure. But that man ' +
           'was in Biloxi pulling redfish all week and showing everybody the pictures. Wrong tree, podna."',
       },
+      {
+        // gentle tell: remember why he talks at all (+1)
+        match: (t) => t.includes('WEDDING') || t.includes('DAUGHTER'),
+        disposition: 1,
+        response: 'The rag stops on the zinc. "She danced till the band quit and he never once put the camera ' +
+          'between her and the room. That\'s the whole reason you\'re getting words instead of weather." He ' +
+          'pours you one you didn\'t order.',
+      },
+      {
+        // blunt tell: hurrying the Quarter costs (−1)
+        match: (t) => t.includes('HURRY') || t.includes('QUICKLY') || t.includes('RIGHT NOW'),
+        disposition: -1,
+        response: '"Quickly." He lets the word sit on the bar until it sweats. "Nothing good in this parish ever ' +
+          'happened quickly except a flood." The glass he was polishing gets polished again.',
+      },
+      {
+        match: (t) => t.includes('WHARF') || t.includes('RIVER') || (t.includes('UNIT') && /\b12\b/.test(t)),
+        response: '"The wharf after dark belongs to whoever the route order says it belongs to." He tips his head ' +
+          'at the ceiling fan. "Used to be Unit 12\'s. Then it was nobody\'s, for exactly one night. Ask the paper whose idea that was."',
+      },
+      {
+        match: (t) => t.includes('CAMERA') || t.includes('NEGATIVES') || t.includes('FILM'),
+        minDisposition: 1,
+        response: '"He mailed something the morning of." Quiet, to the taps. "Post office on Royal, first window. ' +
+          'A man who mails a package before a meeting knows what kind of meeting it is."',
+      },
     ],
   },
   fontaine: {
     aliases: ['FONTAINE'],
     fallback: 'Fontaine spreads his hands: the gesture of a man who has already told you everything he intends to.',
+    fallbacks: [
+      { response: 'Fontaine spreads his hands: the gesture of a man who has already told you everything he intends to.' },
+      { response: 'He consults his watch, which is to say he shows you the watch. It cost more than your retainer.' },
+      { response: '"Detective." A benediction and a dismissal in one word. He is very good at that word.' },
+    ],
+    reactiveMiss: [
+      '"You mistake my establishment for the records room. Easy error — ours has better lighting and worse paper."',
+      '"Ask me about music, tribute, or the liquor board. On all other subjects I am a very expensive mirror."',
+    ],
     lines: [
       {
         match: (t) => t.includes('PAYOFF') || t.includes('VICE') || t.includes('LAUNDER') || t.includes('MONEY'),
@@ -453,6 +516,28 @@ export const burnTriggers = {
 
 export const heat = { wrongAnswer: 10, loiter: 5, pressedInterrogation: 40, layLow: 25, max: 100, tail: 60 }
 
+// The tail (§5.7): at heat 60 the District puts a car on you. Flag what
+// repeats and the desk folds him — a real cooldown, bought with eyes.
+export const tail = {
+  open: [
+    'The heat has a shape now. Three sightings, one afternoon:',
+    '',
+    '  Across from the Blue Room — a green Falcon sedan, parish plates,',
+    '  idling with the windows up in ninety-degree wet.',
+    '  On Dauphine, opposite the darkroom — the same green Falcon,',
+    '  driver reading a menu from a place that closed last Lent.',
+    '  At the wharf gates — the Falcon again, nose out, engine running.',
+    '',
+    'Something in that picture repeats. Flag it for the desk and the',
+    'District loses its driver.',
+  ].join('\n'),
+  match: (t) => t.includes('FALCON') || t.includes('SEDAN') || (t.includes('GREEN') && (t.includes('CAR') || t.includes('PLATES'))),
+  response: 'You walk a slow square around the block and come up on the driver\'s window from behind, and tap ' +
+    'the glass, and ask him for a light. In the Quarter that is a funeral for a tail. The Falcon pulls off ' +
+    'with the menu still on the dash, and the street forgets you for a while. (Heat falls.)',
+  cool: 30,
+}
+
 export const helpText = [
   'HOW THIS WORKS — for the record, once:',
   '',
@@ -508,5 +593,5 @@ export const walkthrough = [
   'timeline b a c',
   'who signed the route order',
   'the near sleeve in frame 15 wears desk sergeant stripes',
-  'accuse broussard',
+  'accuse broussard — the wet negative and the route order hold him',
 ]
