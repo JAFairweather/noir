@@ -39,6 +39,12 @@ const SAVE_KEY = 'noir.save.v1'
 
 const { sk: playerSk, pub: playerPub } = getOrCreatePlayerKey()
 
+// The Director handle is resolved once at boot (see the start section),
+// but it MUST be declared before resolveCase runs at module top — a
+// returning world-case player hits the world: branch on line one, and a
+// `let` still in its dead zone kills the whole module (blank boot).
+let director = null
+
 // A case id is a registered module, 'gen:<seed>' (Berlin), 'gen:<era>:<seed>'
 // from casegen, or 'web:<era>:<seed>' — a deep deduction-web case.
 const resolveCase = (id) => {
@@ -631,7 +637,7 @@ $('#score-toggle').addEventListener('change', (e) => {
 
 // ------------------------------------------------------------------- start
 
-let director = null   // resolved once at boot
+// (director is declared at the top of the module, above resolveCase.)
 
 function applyCase(mod) {
   CASE = mod
